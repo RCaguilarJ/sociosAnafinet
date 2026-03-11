@@ -6,7 +6,6 @@ header("Cache-Control: post-check=0, pre-check=0", false);
 header("Pragma: no-cache");
 
 require 'db.php';
-require_once 'youtube_helpers.php';
 
 // Verificaci�n de seguridad: Si no hay sesi�n, regresa al login
 if (!isset($_SESSION['user_id'])) {
@@ -20,10 +19,6 @@ $docs_count = $pdo->query("SELECT COUNT(*) FROM contenidos WHERE tipo = 'documen
 $asociados_count = $pdo->query("SELECT COUNT(*) FROM usuarios WHERE rol = 'Asociado'")->fetchColumn();
 $foro_count = $pdo->query("SELECT COUNT(*) FROM contenidos WHERE tipo = 'foro'")->fetchColumn();
 
-$yt_videos_count = yt_get_video_count();
-if ($yt_videos_count !== null) {
-    $videos_count = $yt_videos_count;
-}
 ?>
 
 <!DOCTYPE html>
@@ -50,7 +45,8 @@ if ($yt_videos_count !== null) {
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
             <a href="<?php echo BASE_URL; ?>/biblioteca_videos.php" class="bg-[#5282B2] p-6 rounded-2xl text-white shadow-lg relative overflow-hidden block hover:opacity-95 transition">
                 <p class="text-sm opacity-80">Videos Disponibles</p>
-                <h2 class="text-3xl font-bold counter" data-target="<?php echo $videos_count; ?>"><?php echo number_format($videos_count); ?></h2>
+                <h2 class="text-3xl font-bold">Canal</h2>
+                <p class="text-xs opacity-80 mt-1">Ver canal completo</p>
                 <i class="fa-solid fa-video absolute right-4 bottom-4 text-4xl opacity-20"></i>
             </a>
             <a href="<?php echo BASE_URL; ?>/biblioteca_archivos.php" class="bg-[#E67E22] p-6 rounded-2xl text-white shadow-lg relative overflow-hidden block hover:opacity-95 transition">
@@ -217,8 +213,6 @@ if ($yt_videos_count !== null) {
 </script>
 </body>
 </html>
-
-
 
 
 
