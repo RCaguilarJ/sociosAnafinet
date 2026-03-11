@@ -48,26 +48,26 @@ if ($yt_videos_count !== null) {
         </header>
 
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
-            <div class="bg-[#5282B2] p-6 rounded-2xl text-white shadow-lg relative overflow-hidden">
+            <a href="biblioteca_videos.php" class="bg-[#5282B2] p-6 rounded-2xl text-white shadow-lg relative overflow-hidden block hover:opacity-95 transition">
                 <p class="text-sm opacity-80">Videos Disponibles</p>
                 <h2 class="text-3xl font-bold counter" data-target="<?php echo $videos_count; ?>"><?php echo number_format($videos_count); ?></h2>
                 <i class="fa-solid fa-video absolute right-4 bottom-4 text-4xl opacity-20"></i>
-            </div>
-            <div class="bg-[#E67E22] p-6 rounded-2xl text-white shadow-lg relative overflow-hidden">
+            </a>
+            <a href="biblioteca_archivos.php" class="bg-[#E67E22] p-6 rounded-2xl text-white shadow-lg relative overflow-hidden block hover:opacity-95 transition">
                 <p class="text-sm opacity-80">Documentos</p>
                 <h2 class="text-3xl font-bold counter" data-target="<?php echo $docs_count; ?>"><?php echo number_format($docs_count); ?></h2>
                 <i class="fa-solid fa-file-lines absolute right-4 bottom-4 text-4xl opacity-20"></i>
-            </div>
-            <div class="bg-[#9B59B6] p-6 rounded-2xl text-white shadow-lg relative overflow-hidden">
+            </a>
+            <a href="lista_asociados.php" class="bg-[#9B59B6] p-6 rounded-2xl text-white shadow-lg relative overflow-hidden block hover:opacity-95 transition">
                 <p class="text-sm opacity-80">Asociados Activos</p>
                 <h2 class="text-3xl font-bold counter" data-target="<?php echo $asociados_count; ?>"><?php echo number_format($asociados_count); ?></h2>
                 <i class="fa-solid fa-users absolute right-4 bottom-4 text-4xl opacity-20"></i>
-            </div>
-            <div class="bg-[#2ECC71] p-6 rounded-2xl text-white shadow-lg relative overflow-hidden">
+            </a>
+            <a href="foro.php" class="bg-[#2ECC71] p-6 rounded-2xl text-white shadow-lg relative overflow-hidden block hover:opacity-95 transition">
                 <p class="text-sm opacity-80">Temas del Foro</p>
                 <h2 class="text-3xl font-bold counter" data-target="<?php echo $foro_count; ?>"><?php echo number_format($foro_count); ?></h2>
                 <i class="fa-solid fa-comments absolute right-4 bottom-4 text-4xl opacity-20"></i>
-            </div>
+            </a>
         </div>
 
         <section class="space-y-8">
@@ -80,7 +80,7 @@ if ($yt_videos_count !== null) {
                         </span>
                         <span class="font-semibold text-gray-800">Biblioteca de Videos</span>
                     </a>
-                    <a href="#" class="bg-white p-4 rounded-xl border border-gray-100 shadow-sm flex items-center gap-4 hover:shadow-md transition">
+                    <a href="biblioteca_archivos.php" class="bg-white p-4 rounded-xl border border-gray-100 shadow-sm flex items-center gap-4 hover:shadow-md transition">
                         <span class="w-11 h-11 rounded-xl bg-green-500 flex items-center justify-center text-white">
                             <i class="fa-regular fa-file-lines"></i>
                         </span>
@@ -92,19 +92,19 @@ if ($yt_videos_count !== null) {
                         </span>
                         <span class="font-semibold text-gray-800">Revista Conciencia Fiscal</span>
                     </a>
-                    <a href="#" class="bg-white p-4 rounded-xl border border-gray-100 shadow-sm flex items-center gap-4 hover:shadow-md transition">
+                    <a href="lista_asociados.php" class="bg-white p-4 rounded-xl border border-gray-100 shadow-sm flex items-center gap-4 hover:shadow-md transition">
                         <span class="w-11 h-11 rounded-xl bg-orange-500 flex items-center justify-center text-white">
                             <i class="fa-solid fa-users"></i>
                         </span>
                         <span class="font-semibold text-gray-800">Lista de Asociados</span>
                     </a>
-                    <a href="#" class="bg-white p-4 rounded-xl border border-gray-100 shadow-sm flex items-center gap-4 hover:shadow-md transition">
+                    <a href="links_interes.php" class="bg-white p-4 rounded-xl border border-gray-100 shadow-sm flex items-center gap-4 hover:shadow-md transition">
                         <span class="w-11 h-11 rounded-xl bg-cyan-500 flex items-center justify-center text-white">
                             <i class="fa-solid fa-link"></i>
                         </span>
                         <span class="font-semibold text-gray-800">Links de Interés</span>
                     </a>
-                    <a href="#" class="bg-white p-4 rounded-xl border border-gray-100 shadow-sm flex items-center gap-4 hover:shadow-md transition">
+                    <a href="foro.php" class="bg-white p-4 rounded-xl border border-gray-100 shadow-sm flex items-center gap-4 hover:shadow-md transition">
                         <span class="w-11 h-11 rounded-xl bg-pink-500 flex items-center justify-center text-white">
                             <i class="fa-regular fa-comments"></i>
                         </span>
@@ -223,5 +223,4 @@ if ($yt_videos_count !== null) {
 </script>
 </body>
 </html>
-
 

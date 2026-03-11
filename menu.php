@@ -22,6 +22,7 @@ $menuItems = [
     ['key' => 'asociados', 'label' => 'Lista de Asociados', 'href' => 'lista_asociados.php', 'icon' => 'fa-users'],
     ['key' => 'links', 'label' => 'Links de Inter&eacute;s', 'href' => 'links_interes.php', 'icon' => 'fa-link'],
     ['key' => 'foro', 'label' => 'Foro Fiscal', 'href' => 'foro.php', 'icon' => 'fa-comments', 'iconStyle' => 'regular'],
+    ['key' => 'foro_nuevo', 'label' => 'Nuevo Tema', 'href' => 'foro.php?nuevo=1', 'icon' => 'fa-plus'],
 ];
 
 if (is_admin_role($userRole)) {

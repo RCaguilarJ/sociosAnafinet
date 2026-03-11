@@ -80,7 +80,7 @@ $temas = $stmt->fetchAll();
 </head>
 <body class="bg-slate-50 min-h-screen">
     <?php
-    $activePage = 'foro';
+    $activePage = isset($_GET['nuevo']) ? 'foro_nuevo' : 'foro';
     require 'menu.php';
     ?>
 
@@ -205,7 +205,8 @@ $temas = $stmt->fetchAll();
         </div>
     </main>
 
-    <div id="modalTema" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+    <?php $openModal = isset($_GET['nuevo']) && $_GET['nuevo'] === '1'; ?>
+    <div id="modalTema" class="<?php echo $openModal ? '' : 'hidden'; ?> fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
         <div class="bg-white w-full max-w-lg rounded-3xl p-8 shadow-2xl">
             <h2 class="text-xl font-bold mb-4">Crear Nuevo Tema</h2>
             <form action="crear_tema.php" method="POST" class="space-y-4">
