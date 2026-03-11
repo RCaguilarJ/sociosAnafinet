@@ -65,7 +65,7 @@ function normalize_category(string $categoria): string
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="<?php echo BASE_URL; ?>/assets/tailwind.build.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <title>Links de Inter&eacute;s - Anafinet</title>
 </head>
@@ -82,7 +82,7 @@ function normalize_category(string $categoria): string
                 <p class="text-gray-500">Acceso r&aacute;pido a portales oficiales y herramientas fiscales.</p>
             </div>
             <?php if ($isAdmin): ?>
-                <a href="links_interes_admin.php" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-blue-600 text-white text-xs font-bold hover:bg-blue-700 transition">
+                <a href="<?php echo BASE_URL; ?>/links_interes_admin.php" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-blue-600 text-white text-xs font-bold hover:bg-blue-700 transition">
                     <i class="fa-solid fa-pen-to-square"></i> Administrar Links
                 </a>
             <?php endif; ?>
@@ -154,4 +154,7 @@ function normalize_category(string $categoria): string
     </main>
 </body>
 </html>
+
+
+
 

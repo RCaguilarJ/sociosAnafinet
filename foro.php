@@ -74,7 +74,7 @@ $temas = $stmt->fetchAll();
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="<?php echo BASE_URL; ?>/assets/tailwind.build.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <title>Foro Fiscal - Anafinet</title>
 </head>
@@ -209,7 +209,7 @@ $temas = $stmt->fetchAll();
     <div id="modalTema" class="<?php echo $openModal ? '' : 'hidden'; ?> fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
         <div class="bg-white w-full max-w-lg rounded-3xl p-8 shadow-2xl">
             <h2 class="text-xl font-bold mb-4">Crear Nuevo Tema</h2>
-            <form action="crear_tema.php" method="POST" class="space-y-4">
+            <form action="<?php echo BASE_URL; ?>/crear_tema.php" method="POST" class="space-y-4">
                 <input type="text" name="titulo" placeholder="Título de tu duda fiscal" required class="w-full p-3 bg-slate-50 border-none rounded-xl outline-none focus:ring-2 focus:ring-blue-500">
                 <select name="categoria" class="w-full p-3 bg-slate-50 border-none rounded-xl outline-none focus:ring-2 focus:ring-blue-500">
                     <option value="General">Categoría: General</option>
@@ -227,3 +227,6 @@ $temas = $stmt->fetchAll();
 
 </body>
 </html>
+
+
+

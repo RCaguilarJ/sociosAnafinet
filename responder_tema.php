@@ -39,7 +39,7 @@ try {
         exit();
     }
 
-    $stmt = $pdo->prepare("INSERT INTO foro_respuestas (tema_id, usuario_id, contenido) VALUES (?, ?, ?)");
+    $stmt = $pdo->prepare("INSERT INTO foro_respuestas (tema_id, usuario_id, respuesta) VALUES (?, ?, ?)");
     $stmt->execute([$temaId, $usuario_id, $contenido]);
 
     $detalle = 'Respuesta en tema: ' . (string)$tema['titulo'];

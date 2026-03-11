@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 session_start();
 require 'db.php';
 require_once 'role_helpers.php';
@@ -214,7 +214,7 @@ foreach ($topicOptions as $key => $label) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <script src="https://cdn.tailwindcss.com?plugins=line-clamp"></script>
+    <link rel="stylesheet" href="<?php echo BASE_URL; ?>/assets/tailwind.build.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <title>Biblioteca de Archivos - Anafinet</title>
 </head>
@@ -314,7 +314,7 @@ foreach ($topicOptions as $key => $label) {
             </div>
             <div>
                 <?php if ($isAdmin): ?>
-                    <a href="subir_archivo.php" class="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-blue-600 text-white font-semibold hover:bg-blue-700 transition">
+                    <a href="<?php echo BASE_URL; ?>/subir_archivo.php" class="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-blue-600 text-white font-semibold hover:bg-blue-700 transition">
                         <i class="fa-solid fa-cloud-arrow-up"></i> Subir documento
                     </a>
                 <?php else: ?>
@@ -409,3 +409,6 @@ document.addEventListener('DOMContentLoaded', () => {
 <?php endif; ?>
 </body>
 </html>
+
+
+

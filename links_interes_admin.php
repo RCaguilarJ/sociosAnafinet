@@ -91,7 +91,7 @@ sort($categoryOptions);
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="<?php echo BASE_URL; ?>/assets/tailwind.build.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <title>Administrar Links - Anafinet</title>
 </head>
@@ -107,7 +107,7 @@ sort($categoryOptions);
                 <h1 class="text-2xl font-bold text-gray-800">Administrar Links de Inter&eacute;s</h1>
                 <p class="text-sm text-gray-500">Gestiona los recursos visibles en la secci&oacute;n de links.</p>
             </div>
-            <a href="links_interes.php" class="inline-flex items-center gap-2 text-sm font-semibold text-blue-600 hover:text-blue-700">
+            <a href="<?php echo BASE_URL; ?>/links_interes.php" class="inline-flex items-center gap-2 text-sm font-semibold text-blue-600 hover:text-blue-700">
                 <i class="fa-solid fa-arrow-up-right-from-square"></i> Ver vista p&uacute;blica
             </a>
         </header>
@@ -205,3 +205,6 @@ sort($categoryOptions);
     </main>
 </body>
 </html>
+
+
+

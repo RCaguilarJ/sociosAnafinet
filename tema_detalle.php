@@ -2,102 +2,6 @@
 session_start();
 require 'db.php';
 
-if (!isset($_SESSION['user_id'])) { header("Location: index.php"); exit(); }
-
-$tema_id = $_GET['id'] ?? 0;
-
-// 1. Obtener el tema principal con datos del autor
-$stmt_tema = $pdo->prepare("SELECT t.*, u.nombre as autor, u.rol 
-                            FROM foro_temas t 
-                            JOIN usuarios u ON t.usuario_id = u.id 
-                            WHERE t.id = ?");
-$stmt_tema->execute([$tema_id]);
-$tema = $stmt_tema->fetch();
-
-if (!$tema) { exit("Tema no encontrado"); }
-
-// 2. Obtener todas las respuestas
-$stmt_resp = $pdo->prepare("SELECT r.*, u.nombre as autor 
-                            FROM foro_respuestas r 
-                            JOIN usuarios u ON r.usuario_id = u.id 
-                            WHERE r.tema_id = ? 
-                            ORDER BY r.creado_at ASC");
-$stmt_resp->execute([$tema_id]);
-$respuestas = $stmt_resp->fetchAll();
-?>
-
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <title><?php echo htmlspecialchars($tema['titulo']); ?> - Anafinet</title>
-</head>
-<body class="bg-slate-50 flex min-h-screen">
-
-    <?php include 'sidebar_template.php'; ?>
-
-    <main class="flex-1 p-8">
-        <a href="foro.php" class="text-blue-600 text-sm font-bold flex items-center mb-6 hover:underline">
-            <i class="fa-solid fa-arrow-left mr-2"></i> Volver al Foro
-        </a>
-
-        <article class="bg-white p-8 rounded-3xl shadow-sm border border-gray-100 mb-8">
-            <div class="flex items-center space-x-3 mb-4">
-                <span class="bg-blue-50 text-blue-600 text-[10px] font-bold px-2 py-1 rounded uppercase">
-                    <?php echo $tema['categoria']; ?>
-                </span>
-                <span class="text-xs text-gray-400"><?php echo date("d M, Y", strtotime($tema['creado_at'])); ?></span>
-            </div>
-            <h1 class="text-3xl font-bold text-gray-800 mb-4"><?php echo htmlspecialchars($tema['titulo']); ?></h1>
-            <div class="flex items-center space-x-3 mb-6 pb-6 border-b border-gray-50">
-                <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 text-xs font-bold">
-                    <?php echo strtoupper(substr($tema['autor'], 0, 1)); ?>
-                </div>
-                <p class="text-sm text-gray-600 font-medium"><?php echo htmlspecialchars($tema['autor']); ?> <span class="text-gray-400 font-normal">(<?php echo $tema['rol']; ?>)</span></p>
-            </div>
-            <p class="text-gray-700 leading-relaxed"><?php echo nl2br(htmlspecialchars($tema['contenido'])); ?></p>
-        </article>
-
-        <h3 class="font-bold text-gray-800 mb-6 flex items-center">
-            <i class="fa-regular fa-comments mr-2 text-blue-500"></i> Respuestas (<?php echo count($respuestas); ?>)
-        </h3>
-
-        <div class="space-y-4 mb-10">
-            <?php foreach ($respuestas as $r): ?>
-            <div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm ml-4 md:ml-10">
-                <div class="flex items-center justify-between mb-3">
-                    <p class="text-sm font-bold text-gray-700"><?php echo htmlspecialchars($r['autor']); ?></p>
-                    <span class="text-[10px] text-gray-400"><?php echo date("d/m/Y H:i", strtotime($r['creado_at'])); ?></span>
-                </div>
-                <p class="text-gray-600 text-sm"><?php echo nl2br(htmlspecialchars($r['respuesta'])); ?></p>
-            </div>
-            <?php endforeach; ?>
-        </div>
-
-        <div class="bg-white p-6 rounded-3xl border border-gray-100 shadow-lg">
-            <h4 class="font-bold text-gray-800 mb-4">Escribir una respuesta</h4>
-            <form action="responder_tema.php" method="POST" class="space-y-4">
-                <input type="hidden" name="tema_id" value="<?php echo $tema_id; ?>">
-                <textarea name="respuesta" rows="4" placeholder="Escribe tu comentario o solución técnica..." required 
-                          class="w-full p-4 bg-slate-50 border-none rounded-2xl outline-none focus:ring-2 focus:ring-blue-500"></textarea>
-                <div class="flex justify-end">
-                    <button type="submit" class="bg-blue-600 text-white px-8 py-3 rounded-xl font-bold hover:bg-blue-700 transition">
-                        Responder
-                    </button>
-                </div>
-            </form>
-        </div>
-    </main>
-
-</body>
-</html>
-<?php
-session_start();
-require 'db.php';
-
 if (!isset($_SESSION['user_id'])) {
     header("Location: index.php");
     exit();
@@ -162,7 +66,7 @@ $error = $_GET['error'] ?? '';
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="<?php echo BASE_URL; ?>/assets/tailwind.build.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <title>Tema - Foro Fiscal</title>
 </head>
@@ -174,7 +78,7 @@ $error = $_GET['error'] ?? '';
 
     <main class="md:ml-64 p-8">
         <header class="mb-6">
-            <a href="foro.php" class="text-xs text-blue-600 font-semibold inline-flex items-center gap-2">
+            <a href="<?php echo BASE_URL; ?>/foro.php" class="text-xs text-blue-600 font-semibold inline-flex items-center gap-2">
                 <i class="fa-solid fa-arrow-left"></i> Volver al foro
             </a>
         </header>
@@ -199,9 +103,9 @@ $error = $_GET['error'] ?? '';
                 </div>
                 <div class="flex items-center gap-3 text-xs text-gray-500">
                     <span><i class="fa-regular fa-comment-dots mr-1"></i> <?php echo $respTotal; ?> respuestas</span>
-                    <form action="toggle_like.php" method="POST">
+                    <form action="<?php echo BASE_URL; ?>/toggle_like.php" method="POST">
                         <input type="hidden" name="tema_id" value="<?php echo (int)$temaId; ?>">
-                        <input type="hidden" name="redirect" value="<?php echo htmlspecialchars("tema_detalle.php?id={$temaId}&rpage={$respPage}"); ?>">
+                        <input type="hidden" name="redirect" value="<?php echo htmlspecialchars("tema_detalle.php?id={$temaId}&rpage={$respPage}#respuestas"); ?>">
                         <button class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold <?php echo $userLiked ? 'bg-red-50 text-red-600' : 'bg-slate-100 text-gray-600'; ?>">
                             <i class="fa-<?php echo $userLiked ? 'solid' : 'regular'; ?> fa-heart"></i>
                             <?php echo $likesCount; ?>
@@ -232,7 +136,7 @@ $error = $_GET['error'] ?? '';
                                 <span><?php echo date("d M, Y H:i", strtotime((string)$resp['creado_at'])); ?></span>
                             </div>
                             <div class="text-sm text-gray-600 leading-relaxed">
-                                <?php echo nl2br(htmlspecialchars((string)$resp['contenido'])); ?>
+                                <?php echo nl2br(htmlspecialchars((string)$resp['respuesta'])); ?>
                             </div>
                         </div>
                     <?php endforeach; ?>
@@ -249,7 +153,7 @@ $error = $_GET['error'] ?? '';
                     }
                     ?>
                     <?php for ($p = $start; $p <= $end; $p++): ?>
-                        <a href="<?php echo "tema_detalle.php?id={$temaId}&rpage={$p}"; ?>"
+                        <a href="<?php echo "tema_detalle.php?id={$temaId}&rpage={$p}#respuestas"; ?>"
                            class="w-9 h-9 rounded-lg flex items-center justify-center text-xs font-bold border <?php echo $p === $respPage ? 'bg-blue-600 text-white border-blue-600' : 'border-gray-200 text-gray-500 hover:bg-gray-50'; ?>">
                             <?php echo $p; ?>
                         </a>
@@ -260,7 +164,7 @@ $error = $_GET['error'] ?? '';
 
         <div class="mt-10 bg-white p-6 rounded-3xl border border-gray-100 shadow-sm">
             <h3 class="font-bold text-gray-800 mb-4">Responder</h3>
-            <form action="responder_tema.php" method="POST" class="space-y-4">
+            <form action="<?php echo BASE_URL; ?>/responder_tema.php" method="POST" class="space-y-4">
                 <input type="hidden" name="tema_id" value="<?php echo (int)$temaId; ?>">
                 <textarea name="contenido" rows="4" placeholder="Escribe tu respuesta..." required class="w-full p-3 bg-slate-50 border-none rounded-xl outline-none focus:ring-2 focus:ring-blue-500"></textarea>
                 <button class="bg-blue-600 text-white px-6 py-2 rounded-xl font-bold">Publicar Respuesta</button>
@@ -269,3 +173,6 @@ $error = $_GET['error'] ?? '';
     </main>
 </body>
 </html>
+
+
+

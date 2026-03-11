@@ -1,4 +1,14 @@
 <?php
+require_once 'config.php';
+// Ruta base del proyecto (ajusta si se despliega en subcarpeta)
+if (!defined('BASE_URL')) {
+    $baseUrl = getenv('BASE_URL');
+    if ($baseUrl === false || $baseUrl === '') {
+        $baseUrl = '/asociadosAnafinet';
+    }
+    define('BASE_URL', rtrim($baseUrl, '/'));
+}
+
 // Configuración de la base de datos
 $host = 'localhost';
 $db   = 'anafinet_db';
@@ -19,3 +29,5 @@ try {
      throw new \PDOException($e->getMessage(), (int)$e->getCode());
 }
 ?>
+
+

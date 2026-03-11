@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 session_start();
 require 'db.php';
 require_once 'role_helpers.php';
@@ -47,90 +47,110 @@ $mensaje = '';
 $mensajeTipo = 'success';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && $isAdmin) {
-    $titulo = trim($_POST['titulo'] ?? '');
-    $tema = trim($_POST['tema'] ?? '');
-    $archivo = $_FILES['archivo'] ?? null;
-
-    $permitidos = ['pdf', 'doc', 'docx', 'xls', 'xlsx'];
-    $max_size = 5 * 1024 * 1024;
-    $allowedMimes = [
-        'application/pdf',
-        'application/msword',
-        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-        'application/vnd.ms-excel',
-        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-    ];
-
-    if ($titulo === '') {
-        $mensaje = 'Error: El titulo es obligatorio.';
-        $mensajeTipo = 'error';
-    } elseif ($tema === '' || !array_key_exists($tema, $topicOptions)) {
-        $mensaje = 'Error: Selecciona un tema valido.';
-        $mensajeTipo = 'error';
-    } elseif (!$archivo || ($archivo['error'] ?? UPLOAD_ERR_NO_FILE) === UPLOAD_ERR_NO_FILE) {
-        $mensaje = 'Error: Selecciona un archivo para subir.';
-        $mensajeTipo = 'error';
-    } elseif (($archivo['error'] ?? UPLOAD_ERR_OK) !== UPLOAD_ERR_OK) {
-        $mensaje = 'Error: Hubo un problema al subir el archivo.';
+    if (empty($_POST) && empty($_FILES) && !empty($_SERVER['CONTENT_LENGTH'])) {
+        $postMax = ini_get('post_max_size');
+        $uploadMax = ini_get('upload_max_filesize');
+        $mensaje = "Error: La carga fue bloqueada por el limite de PHP (post_max_size={$postMax}, upload_max_filesize={$uploadMax}).";
         $mensajeTipo = 'error';
     } else {
-        $extension = strtolower(pathinfo($archivo['name'], PATHINFO_EXTENSION));
-        if (!in_array($extension, $permitidos, true)) {
-            $mensaje = 'Error: Solo se permiten archivos PDF, Word o Excel.';
+        $titulo = trim($_POST['titulo'] ?? '');
+        $tema = trim($_POST['tema'] ?? '');
+        $archivo = $_FILES['archivo'] ?? null;
+
+        $permitidos = ['pdf', 'doc', 'docx', 'xls', 'xlsx'];
+        $max_size = 5 * 1024 * 1024;
+        $allowedMimes = [
+            'application/pdf',
+            'application/msword',
+            'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            'application/vnd.ms-excel',
+            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        ];
+
+        if ($titulo === '') {
+            $mensaje = 'Error: El titulo es obligatorio.';
             $mensajeTipo = 'error';
-        } elseif ($archivo['size'] > $max_size) {
-            $mensaje = 'Error: El archivo es demasiado pesado (Max 5MB).';
+        } elseif ($tema === '' || !array_key_exists($tema, $topicOptions)) {
+            $mensaje = 'Error: Selecciona un tema valido.';
+            $mensajeTipo = 'error';
+        } elseif (!$archivo || ($archivo['error'] ?? UPLOAD_ERR_NO_FILE) === UPLOAD_ERR_NO_FILE) {
+            $mensaje = 'Error: Selecciona un archivo para subir.';
+            $mensajeTipo = 'error';
+        } elseif (($archivo['error'] ?? UPLOAD_ERR_OK) !== UPLOAD_ERR_OK) {
+            $err = $archivo['error'] ?? UPLOAD_ERR_OK;
+            if ($err === UPLOAD_ERR_INI_SIZE || $err === UPLOAD_ERR_FORM_SIZE) {
+                $mensaje = 'Error: El archivo excede el limite permitido por PHP (upload_max_filesize/post_max_size).';
+            } elseif ($err === UPLOAD_ERR_PARTIAL) {
+                $mensaje = 'Error: El archivo se subio de forma incompleta.';
+            } elseif ($err === UPLOAD_ERR_NO_TMP_DIR) {
+                $mensaje = 'Error: Falta la carpeta temporal de PHP.';
+            } elseif ($err === UPLOAD_ERR_CANT_WRITE) {
+                $mensaje = 'Error: No se pudo escribir el archivo en el disco.';
+            } elseif ($err === UPLOAD_ERR_EXTENSION) {
+                $mensaje = 'Error: La carga fue detenida por una extension de PHP.';
+            } else {
+                $mensaje = 'Error: Hubo un problema al subir el archivo.';
+            }
             $mensajeTipo = 'error';
         } else {
-            $mimeOk = true;
-            if (class_exists('finfo')) {
-                $finfo = new finfo(FILEINFO_MIME_TYPE);
-                $mime = $finfo->file($archivo['tmp_name']);
-                if (!in_array($mime, $allowedMimes, true)) {
-                    $mimeOk = false;
-                }
-            }
-
-            if (!$mimeOk) {
-                $mensaje = 'Error: El tipo de archivo no es valido.';
+            $extension = strtolower(pathinfo($archivo['name'], PATHINFO_EXTENSION));
+            if (!in_array($extension, $permitidos, true)) {
+                $mensaje = 'Error: Solo se permiten archivos PDF, Word o Excel.';
+                $mensajeTipo = 'error';
+            } elseif ($archivo['size'] > $max_size) {
+                $mensaje = 'Error: El archivo es demasiado pesado (Max 5MB).';
                 $mensajeTipo = 'error';
             } else {
-                $uploadsDir = __DIR__ . '/uploads/documentos';
-                if (!is_dir($uploadsDir)) {
-                    mkdir($uploadsDir, 0775, true);
+                $mimeOk = true;
+                if (class_exists('finfo')) {
+                    $finfo = new finfo(FILEINFO_MIME_TYPE);
+                    $mime = $finfo->file($archivo['tmp_name']);
+                    if (!in_array($mime, $allowedMimes, true)) {
+                        $mimeOk = false;
+                    }
                 }
-                if (!is_writable($uploadsDir)) {
-                    $mensaje = 'Error: La carpeta de documentos no tiene permisos de escritura.';
+
+                if (!$mimeOk) {
+                    $mensaje = 'Error: El tipo de archivo no es valido.';
                     $mensajeTipo = 'error';
                 } else {
-                    $baseName = pathinfo($archivo['name'], PATHINFO_FILENAME);
-                    $safeBase = preg_replace('/[^A-Za-z0-9_-]/', '_', $baseName);
-                    if ($safeBase === '') {
-                        $safeBase = 'documento';
+                    $uploadsDir = __DIR__ . '/uploads/documentos';
+                    if (!is_dir($uploadsDir)) {
+                        mkdir($uploadsDir, 0775, true);
                     }
-                    $token = bin2hex(random_bytes(4));
-                    $nombre_final = time() . '_' . $token . '_' . $safeBase . '.' . $extension;
-                    $ruta_destino = $uploadsDir . DIRECTORY_SEPARATOR . $nombre_final;
+                    if (!is_writable($uploadsDir)) {
+                        $mensaje = 'Error: La carpeta de documentos no tiene permisos de escritura.';
+                        $mensajeTipo = 'error';
+                    } else {
+                        $baseName = pathinfo($archivo['name'], PATHINFO_FILENAME);
+                        $safeBase = preg_replace('/[^A-Za-z0-9_-]/', '_', $baseName);
+                        if ($safeBase === '') {
+                            $safeBase = 'documento';
+                        }
+                        $token = bin2hex(random_bytes(4));
+                        $nombre_final = time() . '_' . $token . '_' . $safeBase . '.' . $extension;
+                        $ruta_destino = $uploadsDir . DIRECTORY_SEPARATOR . $nombre_final;
 
-                    if (move_uploaded_file($archivo['tmp_name'], $ruta_destino)) {
-                        try {
-                            $stmt = $pdo->prepare("INSERT INTO contenidos (tipo, titulo, url_recurso, fecha_publicacion, tema) VALUES ('documento', ?, ?, CURDATE(), ?)");
-                            $stmt->execute([$titulo, $nombre_final, $tema]);
-                            $mensaje = 'Archivo subido con exito.';
-                            $mensajeTipo = 'success';
-                        } catch (PDOException $e) {
-                            $sqlState = $e->getCode();
-                            $msg = $e->getMessage();
-                            if ($sqlState === '42S22' || stripos($msg, 'Unknown column') !== false) {
-                                $mensaje = 'Error: La columna tema no existe en la tabla contenidos. Ejecuta: ALTER TABLE contenidos ADD COLUMN tema VARCHAR(100) NULL;';
-                            } else {
-                                $mensaje = 'Error al guardar el registro en la base de datos.';
+                        if (move_uploaded_file($archivo['tmp_name'], $ruta_destino)) {
+                            try {
+                                $stmt = $pdo->prepare("INSERT INTO contenidos (tipo, titulo, url_recurso, fecha_publicacion, tema) VALUES ('documento', ?, ?, CURDATE(), ?)");
+                                $stmt->execute([$titulo, $nombre_final, $tema]);
+                                $mensaje = 'Archivo subido con exito.';
+                                $mensajeTipo = 'success';
+                            } catch (PDOException $e) {
+                                $sqlState = $e->getCode();
+                                $msg = $e->getMessage();
+                                if ($sqlState === '42S22' || stripos($msg, 'Unknown column') !== false) {
+                                    $mensaje = 'Error: La columna tema no existe en la tabla contenidos. Ejecuta: ALTER TABLE contenidos ADD COLUMN tema VARCHAR(100) NULL;';
+                                } else {
+                                    $mensaje = 'Error al guardar el registro en la base de datos.';
+                                }
+                                $mensajeTipo = 'error';
                             }
+                        } else {
+                            $mensaje = 'Error al mover el archivo al servidor.';
                             $mensajeTipo = 'error';
                         }
-                    } else {
-                        $mensaje = 'Error al mover el archivo al servidor.';
-                        $mensajeTipo = 'error';
                     }
                 }
             }
@@ -144,7 +164,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $isAdmin) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="<?php echo BASE_URL; ?>/assets/tailwind.build.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <title>Subir Documento - Anafinet</title>
 </head>
@@ -191,20 +211,36 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $isAdmin) {
                     </select>
                 </div>
 
-                <div class="border-2 border-dashed border-gray-200 rounded-2xl p-8 text-center hover:border-blue-400 transition cursor-pointer relative">
-                    <input type="file" name="archivo" required accept=".pdf,.doc,.docx,.xls,.xlsx"
-                           class="absolute inset-0 w-full h-full opacity-0 cursor-pointer">
-                    <i class="fa-solid fa-cloud-arrow-up text-3xl text-gray-300 mb-2"></i>
-                    <p class="text-sm text-gray-400">Haz clic o arrastra tu archivo aqui</p>
+                <div class="border-2 border-dashed border-gray-200 rounded-2xl p-8 text-center hover:border-blue-400 transition relative">
+                    <input id="archivo" type="file" name="archivo" required accept=".pdf,.doc,.docx,.xls,.xlsx"
+                           class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10">
+                    <div class="pointer-events-none">
+                        <i class="fa-solid fa-cloud-arrow-up text-3xl text-gray-300 mb-2"></i>
+                        <p class="text-sm text-gray-400">Haz clic o arrastra tu archivo aqui</p>
                     <p class="text-[10px] text-gray-300 uppercase mt-1">PDF, DOCX, XLSX hasta 5MB</p>
+                    <p class="text-[10px] text-gray-300 mt-1">Limite servidor: <?php echo ini_get('upload_max_filesize'); ?> (post_max_size <?php echo ini_get('post_max_size'); ?>)</p>
+                        <p id="archivoNombre" class="mt-3 text-xs text-gray-500">Ningun archivo seleccionado</p>
+                    </div>
                 </div>
 
                 <button type="submit" class="w-full bg-blue-600 text-white py-3 rounded-xl font-bold shadow-lg hover:bg-blue-700 transition">
                     Publicar Documento
                 </button>
             </form>
+            <script>
+                const inputArchivo = document.getElementById('archivo');
+                const labelArchivo = document.getElementById('archivoNombre');
+                if (inputArchivo && labelArchivo) {
+                    inputArchivo.addEventListener('change', () => {
+                        const file = inputArchivo.files && inputArchivo.files[0];
+                        labelArchivo.textContent = file ? file.name : 'Ningun archivo seleccionado';
+                    });
+                }
+            </script>
             <?php endif; ?>
         </div>
     </main>
 </body>
 </html>
+
+

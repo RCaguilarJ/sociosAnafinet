@@ -1,5 +1,9 @@
-﻿<?php
+<?php
+require_once 'config.php';
 require_once 'role_helpers.php';
+
+$baseUrl = defined('BASE_URL') ? BASE_URL : '';
+$basePrefix = $baseUrl !== '' ? $baseUrl . '/' : '';
 
 $activePage = $activePage ?? '';
 $userName = $_SESSION['user_name'] ?? 'Usuario';
@@ -14,20 +18,19 @@ if (isset($pdo)) {
 }
 
 $menuItems = [
-    ['key' => 'dashboard', 'label' => 'Dashboard', 'href' => 'dashboard.php', 'icon' => 'fa-house'],
-    ['key' => 'perfil', 'label' => 'Mi Perfil', 'href' => 'perfil.php', 'icon' => 'fa-user', 'iconStyle' => 'regular'],
-    ['key' => 'videos', 'label' => 'Biblioteca de Videos', 'href' => 'biblioteca_videos.php', 'icon' => 'fa-video'],
-    ['key' => 'archivos', 'label' => 'Biblioteca de Archivos', 'href' => 'biblioteca_archivos.php', 'icon' => 'fa-file-lines', 'iconStyle' => 'regular'],
-    ['key' => 'revista', 'label' => 'Revista Conciencia Fiscal', 'href' => '#', 'icon' => 'fa-book-open', 'iconStyle' => 'regular'],
-    ['key' => 'asociados', 'label' => 'Lista de Asociados', 'href' => 'lista_asociados.php', 'icon' => 'fa-users'],
-    ['key' => 'links', 'label' => 'Links de Inter&eacute;s', 'href' => 'links_interes.php', 'icon' => 'fa-link'],
-    ['key' => 'foro', 'label' => 'Foro Fiscal', 'href' => 'foro.php', 'icon' => 'fa-comments', 'iconStyle' => 'regular'],
-    ['key' => 'foro_nuevo', 'label' => 'Nuevo Tema', 'href' => 'foro.php?nuevo=1', 'icon' => 'fa-plus'],
+    ['key' => 'dashboard', 'label' => 'Dashboard', 'href' => $basePrefix . 'dashboard.php', 'icon' => 'fa-house'],
+    ['key' => 'perfil', 'label' => 'Mi Perfil', 'href' => $basePrefix . 'perfil.php', 'icon' => 'fa-user', 'iconStyle' => 'regular'],
+    ['key' => 'videos', 'label' => 'Biblioteca de Videos', 'href' => $basePrefix . 'biblioteca_videos.php', 'icon' => 'fa-video'],
+    ['key' => 'archivos', 'label' => 'Biblioteca de Archivos', 'href' => $basePrefix . 'biblioteca_archivos.php', 'icon' => 'fa-file-lines', 'iconStyle' => 'regular'],
+    ['key' => 'asociados', 'label' => 'Lista de Asociados', 'href' => $basePrefix . 'lista_asociados.php', 'icon' => 'fa-users'],
+    ['key' => 'links', 'label' => 'Links de Inter&eacute;s', 'href' => $basePrefix . 'links_interes.php', 'icon' => 'fa-link'],
+    ['key' => 'foro', 'label' => 'Foro Fiscal', 'href' => $basePrefix . 'foro.php', 'icon' => 'fa-comments', 'iconStyle' => 'regular'],
+    ['key' => 'foro_nuevo', 'label' => 'Nuevo Tema', 'href' => $basePrefix . 'foro.php?nuevo=1', 'icon' => 'fa-plus'],
 ];
 
 if (is_admin_role($userRole)) {
-    $menuItems[] = ['key' => 'subir_documentos', 'label' => 'Subir Documentos', 'href' => 'subir_archivo.php', 'icon' => 'fa-cloud-arrow-up'];
-    $menuItems[] = ['key' => 'links_admin', 'label' => 'Administrar Links', 'href' => 'links_interes_admin.php', 'icon' => 'fa-pen-to-square'];
+    $menuItems[] = ['key' => 'subir_documentos', 'label' => 'Subir Documentos', 'href' => $basePrefix . 'subir_archivo.php', 'icon' => 'fa-cloud-arrow-up'];
+    $menuItems[] = ['key' => 'links_admin', 'label' => 'Administrar Links', 'href' => $basePrefix . 'links_interes_admin.php', 'icon' => 'fa-pen-to-square'];
 }
 
 function menu_link_classes(string $key, string $activePage): string
@@ -45,7 +48,7 @@ function menu_link_classes(string $key, string $activePage): string
         <i class="fa-solid fa-bars"></i>
     </button>
     <div class="flex items-center gap-2">
-        <img src="logo.avif" alt="Logo Anafinet" class="h-8 w-auto">
+        <img src="<?php echo $basePrefix; ?>logo.avif" alt="Logo Anafinet" class="h-8 w-auto">
         <span class="font-semibold text-gray-800">Anafinet</span>
     </div>
     <div class="w-10 h-10"></div>
@@ -56,7 +59,7 @@ function menu_link_classes(string $key, string $activePage): string
 <aside id="sideMenu" class="fixed top-0 left-0 h-screen w-72 max-w-[85vw] md:w-64 bg-white border-r border-gray-200 p-6 space-y-8 z-50 transform -translate-x-full md:translate-x-0 transition overflow-y-auto">
     <div class="flex items-start justify-between">
         <div class="text-center w-full">
-            <img src="logo.avif" alt="Logo Anafinet" class="w-28 mx-auto mb-4">
+            <img src="<?php echo $basePrefix; ?>logo.avif" alt="Logo Anafinet" class="w-28 mx-auto mb-4">
             <h3 class="font-bold text-gray-800"><?php echo htmlspecialchars($userName); ?></h3>
             <p class="text-xs text-gray-400"><?php echo htmlspecialchars($userRole); ?></p>
         </div>
@@ -75,10 +78,10 @@ function menu_link_classes(string $key, string $activePage): string
             </a>
         <?php endforeach; ?>
         <hr class="my-4">
-        <a href="logout.php" class="flex items-center gap-3 px-4 py-3 text-red-500 hover:bg-red-50 rounded-xl transition">
+        <a href="<?php echo $basePrefix; ?>logout.php" class="flex items-center gap-3 px-4 py-3 text-red-500 hover:bg-red-50 rounded-xl transition">
             <i class="fa-solid fa-right-from-bracket"></i> <span>Cerrar Sesi&oacute;n</span>
         </a>
-        <a href="index.php" class="flex items-center gap-2 px-4 py-2 text-xs text-gray-400 hover:text-gray-600 transition">
+        <a href="<?php echo $basePrefix; ?>index.php" class="flex items-center gap-2 px-4 py-2 text-xs text-gray-400 hover:text-gray-600 transition">
             <i class="fa-solid fa-arrow-left"></i> <span>Volver al sitio</span>
         </a>
     </nav>
@@ -112,3 +115,4 @@ document.addEventListener('DOMContentLoaded', () => {
     overlay?.addEventListener('click', closeMenu);
 });
 </script>
+

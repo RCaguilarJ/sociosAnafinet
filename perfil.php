@@ -137,8 +137,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 }
                             }
 
-                            imagedestroy($srcImg);
-                            imagedestroy($dstImg);
+                            // Image resources are automatically destroyed when out of scope in PHP 8.0+
                         }
                     }
                 }
@@ -264,7 +263,7 @@ $ubicacion = trim($ciudad . ($ciudad !== '' && $estado !== '' ? ', ' : '') . $es
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="<?php echo BASE_URL; ?>/assets/tailwind.build.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <title>Mi Perfil - Anafinet</title>
 </head>
@@ -345,7 +344,7 @@ $ubicacion = trim($ciudad . ($ciudad !== '' && $estado !== '' ? ', ' : '') . $es
                             <button class="bg-green-600 text-white px-4 py-2 rounded-lg text-xs font-bold flex items-center" type="submit" form="perfilForm">
                                 <i class="fa-regular fa-floppy-disk mr-2"></i> Guardar
                             </button>
-                            <a href="perfil.php?tab=informacion" class="text-gray-500 hover:text-gray-700 text-xs font-semibold">Cancelar</a>
+                            <a href="<?php echo BASE_URL; ?>/perfil.php?tab=informacion" class="text-gray-500 hover:text-gray-700 text-xs font-semibold">Cancelar</a>
                         </div>
                     </div>
 
@@ -422,7 +421,7 @@ $ubicacion = trim($ciudad . ($ciudad !== '' && $estado !== '' ? ', ' : '') . $es
                             <p class="text-xs text-gray-400">Descarga tu certificado oficial de ANAFINET</p>
                         </div>
                     </div>
-                    <a href="generar_certificado.php" target="_blank" class="bg-[#E67E22] text-white px-6 py-2 rounded-xl font-bold hover:bg-orange-600 transition shadow-lg flex items-center">
+                    <a href="<?php echo BASE_URL; ?>/generar_certificado.php" target="_blank" class="bg-[#E67E22] text-white px-6 py-2 rounded-xl font-bold hover:bg-orange-600 transition shadow-lg flex items-center">
                         <i class="fa-solid fa-download mr-2"></i> Descargar Certificado
                     </a>
                 </div>
@@ -499,7 +498,7 @@ $ubicacion = trim($ciudad . ($ciudad !== '' && $estado !== '' ? ', ' : '') . $es
                     <h3 class="font-bold text-gray-800 mb-6 flex items-center">
                         <i class="fa-solid fa-lock mr-2 text-blue-500"></i> Cambiar Contrase&ntilde;a
                     </h3>
-                    <form action="update_password.php" method="POST" class="space-y-4">
+                    <form action="<?php echo BASE_URL; ?>/update_password.php" method="POST" class="space-y-4">
                         <div>
                             <label class="block text-xs font-bold text-gray-400 uppercase mb-1">Contrase&ntilde;a Actual</label>
                             <input type="password" name="current" class="w-full p-2 border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-blue-500">
@@ -553,3 +552,6 @@ $ubicacion = trim($ciudad . ($ciudad !== '' && $estado !== '' ? ', ' : '') . $es
     </main>
 </body>
 </html>
+
+
+

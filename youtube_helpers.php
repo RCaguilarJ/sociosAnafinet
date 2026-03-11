@@ -21,7 +21,6 @@ function yt_fetch_cached_json(string $cacheFile, int $ttl, string $url): ?array
     curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
     $response = curl_exec($ch);
     $err = curl_errno($ch);
-    curl_close($ch);
 
     if ($err || !$response) {
         return null;
@@ -65,7 +64,7 @@ function yt_extract_handle_from_input(string $input): ?string
 
 function yt_get_channel_id(): ?string
 {
-    global $YT_API_KEY, $YT_CHANNEL_ID, $YT_CHANNEL_SOURCE;
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                global $YT_API_KEY, $YT_CHANNEL_ID, $YT_CHANNEL_SOURCE;
 
     if (!empty($YT_CHANNEL_ID)) {
         return $YT_CHANNEL_ID;
