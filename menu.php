@@ -20,12 +20,13 @@ $menuItems = [
     ['key' => 'archivos', 'label' => 'Biblioteca de Archivos', 'href' => 'biblioteca_archivos.php', 'icon' => 'fa-file-lines', 'iconStyle' => 'regular'],
     ['key' => 'revista', 'label' => 'Revista Conciencia Fiscal', 'href' => '#', 'icon' => 'fa-book-open', 'iconStyle' => 'regular'],
     ['key' => 'asociados', 'label' => 'Lista de Asociados', 'href' => 'lista_asociados.php', 'icon' => 'fa-users'],
-    ['key' => 'links', 'label' => 'Links de Inter&eacute;s', 'href' => '#', 'icon' => 'fa-link'],
-    ['key' => 'foro', 'label' => 'Foro Fiscal', 'href' => '#', 'icon' => 'fa-comments', 'iconStyle' => 'regular'],
+    ['key' => 'links', 'label' => 'Links de Inter&eacute;s', 'href' => 'links_interes.php', 'icon' => 'fa-link'],
+    ['key' => 'foro', 'label' => 'Foro Fiscal', 'href' => 'foro.php', 'icon' => 'fa-comments', 'iconStyle' => 'regular'],
 ];
 
 if (is_admin_role($userRole)) {
     $menuItems[] = ['key' => 'subir_documentos', 'label' => 'Subir Documentos', 'href' => 'subir_archivo.php', 'icon' => 'fa-cloud-arrow-up'];
+    $menuItems[] = ['key' => 'links_admin', 'label' => 'Administrar Links', 'href' => 'links_interes_admin.php', 'icon' => 'fa-pen-to-square'];
 }
 
 function menu_link_classes(string $key, string $activePage): string
@@ -81,6 +82,13 @@ function menu_link_classes(string $key, string $activePage): string
         </a>
     </nav>
 </aside>
+
+<style>
+@media (min-width: 768px) {
+    body { height: 100vh; overflow: hidden; }
+    main { height: 100vh; overflow-y: auto; }
+}
+</style>
 
 <script>
 document.addEventListener('DOMContentLoaded', () => {
