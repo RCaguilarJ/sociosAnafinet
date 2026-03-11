@@ -1,0 +1,2197 @@
+{
+  "kind": "youtube#playlistItemListResponse",
+  "etag": "C9GxqqHlUW499a8ItuYGgiR19B4",
+  "nextPageToken": "EAAaH1BUOkNKWUJJaEJGT1RFM1JUQkZNak5GTURORU0wWXo",
+  "prevPageToken": "EAEaHlBUOkNHUWlFRGM0TURZd05VSkROamxETmtNeU5UQQ",
+  "items": [
+    {
+      "kind": "youtube#playlistItem",
+      "etag": "_1qS59Efu3_6J5gbbrgxVwvfkvw",
+      "id": "VVU1X3lfSV80WDVzLTExU014UEExd1VnLmtvbUd6dFM5bExj",
+      "snippet": {
+        "publishedAt": "2020-11-09T18:44:38Z",
+        "channelId": "UC5_y_I_4X5s-11SMxPA1wUg",
+        "title": "ANALISIS CONTABLE - FISCAL: Compras No Registradas en Contabilidad",
+        "description": "Sesiones en vivo en el Aula Virtual de Anafinet\nacceso en http://www.anafinet.org/online",
+        "thumbnails": {
+          "default": {
+            "url": "https://i.ytimg.com/vi/komGztS9lLc/default.jpg",
+            "width": 120,
+            "height": 90
+          },
+          "medium": {
+            "url": "https://i.ytimg.com/vi/komGztS9lLc/mqdefault.jpg",
+            "width": 320,
+            "height": 180
+          },
+          "high": {
+            "url": "https://i.ytimg.com/vi/komGztS9lLc/hqdefault.jpg",
+            "width": 480,
+            "height": 360
+          }
+        },
+        "channelTitle": "Anafinet",
+        "playlistId": "UU5_y_I_4X5s-11SMxPA1wUg",
+        "position": 100,
+        "resourceId": {
+          "kind": "youtube#video",
+          "videoId": "komGztS9lLc"
+        },
+        "videoOwnerChannelTitle": "Anafinet",
+        "videoOwnerChannelId": "UC5_y_I_4X5s-11SMxPA1wUg"
+      },
+      "contentDetails": {
+        "videoId": "komGztS9lLc",
+        "videoPublishedAt": "2020-11-09T18:44:38Z"
+      }
+    },
+    {
+      "kind": "youtube#playlistItem",
+      "etag": "OQeezo-VGBLe7CRBgnNgAf2C9lE",
+      "id": "VVU1X3lfSV80WDVzLTExU014UEExd1VnLldtNUc5WkRTeHE4",
+      "snippet": {
+        "publishedAt": "2020-11-06T19:33:11Z",
+        "channelId": "UC5_y_I_4X5s-11SMxPA1wUg",
+        "title": "FISCAL Y CONTABLE ON LINE - Blíndate Contra la Discrepancia Fiscal",
+        "description": "Sesiones en vivo en el Aula Virtual de Anafinet\nacceso en http://www.anafinet.org/online",
+        "thumbnails": {
+          "default": {
+            "url": "https://i.ytimg.com/vi/Wm5G9ZDSxq8/default.jpg",
+            "width": 120,
+            "height": 90
+          },
+          "medium": {
+            "url": "https://i.ytimg.com/vi/Wm5G9ZDSxq8/mqdefault.jpg",
+            "width": 320,
+            "height": 180
+          },
+          "high": {
+            "url": "https://i.ytimg.com/vi/Wm5G9ZDSxq8/hqdefault.jpg",
+            "width": 480,
+            "height": 360
+          }
+        },
+        "channelTitle": "Anafinet",
+        "playlistId": "UU5_y_I_4X5s-11SMxPA1wUg",
+        "position": 101,
+        "resourceId": {
+          "kind": "youtube#video",
+          "videoId": "Wm5G9ZDSxq8"
+        },
+        "videoOwnerChannelTitle": "Anafinet",
+        "videoOwnerChannelId": "UC5_y_I_4X5s-11SMxPA1wUg"
+      },
+      "contentDetails": {
+        "videoId": "Wm5G9ZDSxq8",
+        "videoPublishedAt": "2020-11-06T19:33:11Z"
+      }
+    },
+    {
+      "kind": "youtube#playlistItem",
+      "etag": "ArXPeLSNRtfVm5KeCcDUPoFrB34",
+      "id": "VVU1X3lfSV80WDVzLTExU014UEExd1VnLjRxSVR2S0pMQ0tJ",
+      "snippet": {
+        "publishedAt": "2020-11-06T18:58:48Z",
+        "channelId": "UC5_y_I_4X5s-11SMxPA1wUg",
+        "title": "ARMONIA PROFESIONAL - Finanzas Personales en la Nueva Normalidad",
+        "description": "Sesiones en vivo en el Aula Virtual de Anafinet\nacceso en http://www.anafinet.org/online",
+        "thumbnails": {
+          "default": {
+            "url": "https://i.ytimg.com/vi/4qITvKJLCKI/default.jpg",
+            "width": 120,
+            "height": 90
+          },
+          "medium": {
+            "url": "https://i.ytimg.com/vi/4qITvKJLCKI/mqdefault.jpg",
+            "width": 320,
+            "height": 180
+          },
+          "high": {
+            "url": "https://i.ytimg.com/vi/4qITvKJLCKI/hqdefault.jpg",
+            "width": 480,
+            "height": 360
+          }
+        },
+        "channelTitle": "Anafinet",
+        "playlistId": "UU5_y_I_4X5s-11SMxPA1wUg",
+        "position": 102,
+        "resourceId": {
+          "kind": "youtube#video",
+          "videoId": "4qITvKJLCKI"
+        },
+        "videoOwnerChannelTitle": "Anafinet",
+        "videoOwnerChannelId": "UC5_y_I_4X5s-11SMxPA1wUg"
+      },
+      "contentDetails": {
+        "videoId": "4qITvKJLCKI",
+        "videoPublishedAt": "2020-11-06T18:58:48Z"
+      }
+    },
+    {
+      "kind": "youtube#playlistItem",
+      "etag": "BijlDXyclmmHni55WVOg2N7R9rA",
+      "id": "VVU1X3lfSV80WDVzLTExU014UEExd1VnLlJnOXlSdzZPNGZJ",
+      "snippet": {
+        "publishedAt": "2020-11-06T18:42:52Z",
+        "channelId": "UC5_y_I_4X5s-11SMxPA1wUg",
+        "title": "LA HORA DE GRUPO COIN - No Deducibles - 2da Sesión",
+        "description": "Sesiones en vivo en el Aula Virtual de Anafinet\nacceso en http://www.anafinet.org/online",
+        "thumbnails": {
+          "default": {
+            "url": "https://i.ytimg.com/vi/Rg9yRw6O4fI/default.jpg",
+            "width": 120,
+            "height": 90
+          },
+          "medium": {
+            "url": "https://i.ytimg.com/vi/Rg9yRw6O4fI/mqdefault.jpg",
+            "width": 320,
+            "height": 180
+          },
+          "high": {
+            "url": "https://i.ytimg.com/vi/Rg9yRw6O4fI/hqdefault.jpg",
+            "width": 480,
+            "height": 360
+          }
+        },
+        "channelTitle": "Anafinet",
+        "playlistId": "UU5_y_I_4X5s-11SMxPA1wUg",
+        "position": 103,
+        "resourceId": {
+          "kind": "youtube#video",
+          "videoId": "Rg9yRw6O4fI"
+        },
+        "videoOwnerChannelTitle": "Anafinet",
+        "videoOwnerChannelId": "UC5_y_I_4X5s-11SMxPA1wUg"
+      },
+      "contentDetails": {
+        "videoId": "Rg9yRw6O4fI",
+        "videoPublishedAt": "2020-11-06T18:42:52Z"
+      }
+    },
+    {
+      "kind": "youtube#playlistItem",
+      "etag": "kQxIOuaJb4oZSsEZ4dd_Ca1v9WE",
+      "id": "VVU1X3lfSV80WDVzLTExU014UEExd1VnLmRtUXQzcjhHOFNn",
+      "snippet": {
+        "publishedAt": "2020-11-06T18:25:56Z",
+        "channelId": "UC5_y_I_4X5s-11SMxPA1wUg",
+        "title": "COMISION FISCAL DE ANAFINET - Limitante en la Deducción de Intereses",
+        "description": "Sesiones en vivo en el Aula Virtual de Anafinet\nacceso en http://www.anafinet.org/online",
+        "thumbnails": {
+          "default": {
+            "url": "https://i.ytimg.com/vi/dmQt3r8G8Sg/default.jpg",
+            "width": 120,
+            "height": 90
+          },
+          "medium": {
+            "url": "https://i.ytimg.com/vi/dmQt3r8G8Sg/mqdefault.jpg",
+            "width": 320,
+            "height": 180
+          },
+          "high": {
+            "url": "https://i.ytimg.com/vi/dmQt3r8G8Sg/hqdefault.jpg",
+            "width": 480,
+            "height": 360
+          },
+          "standard": {
+            "url": "https://i.ytimg.com/vi/dmQt3r8G8Sg/sddefault.jpg",
+            "width": 640,
+            "height": 480
+          }
+        },
+        "channelTitle": "Anafinet",
+        "playlistId": "UU5_y_I_4X5s-11SMxPA1wUg",
+        "position": 104,
+        "resourceId": {
+          "kind": "youtube#video",
+          "videoId": "dmQt3r8G8Sg"
+        },
+        "videoOwnerChannelTitle": "Anafinet",
+        "videoOwnerChannelId": "UC5_y_I_4X5s-11SMxPA1wUg"
+      },
+      "contentDetails": {
+        "videoId": "dmQt3r8G8Sg",
+        "videoPublishedAt": "2020-11-06T18:25:56Z"
+      }
+    },
+    {
+      "kind": "youtube#playlistItem",
+      "etag": "1wEx15xAVoKiB1wKqjHfs8n9s_Y",
+      "id": "VVU1X3lfSV80WDVzLTExU014UEExd1VnLnNwczR3Vk1iMDZZ",
+      "snippet": {
+        "publishedAt": "2020-11-02T20:03:55Z",
+        "channelId": "UC5_y_I_4X5s-11SMxPA1wUg",
+        "title": "REFLEXIONARIO FISCAL - Ventajas de la Colegiación",
+        "description": "Sesiones en vivo en el Aula Virtual de Anafinet\nacceso en http://www.anafinet.org/online",
+        "thumbnails": {
+          "default": {
+            "url": "https://i.ytimg.com/vi/sps4wVMb06Y/default.jpg",
+            "width": 120,
+            "height": 90
+          },
+          "medium": {
+            "url": "https://i.ytimg.com/vi/sps4wVMb06Y/mqdefault.jpg",
+            "width": 320,
+            "height": 180
+          },
+          "high": {
+            "url": "https://i.ytimg.com/vi/sps4wVMb06Y/hqdefault.jpg",
+            "width": 480,
+            "height": 360
+          },
+          "standard": {
+            "url": "https://i.ytimg.com/vi/sps4wVMb06Y/sddefault.jpg",
+            "width": 640,
+            "height": 480
+          }
+        },
+        "channelTitle": "Anafinet",
+        "playlistId": "UU5_y_I_4X5s-11SMxPA1wUg",
+        "position": 105,
+        "resourceId": {
+          "kind": "youtube#video",
+          "videoId": "sps4wVMb06Y"
+        },
+        "videoOwnerChannelTitle": "Anafinet",
+        "videoOwnerChannelId": "UC5_y_I_4X5s-11SMxPA1wUg"
+      },
+      "contentDetails": {
+        "videoId": "sps4wVMb06Y",
+        "videoPublishedAt": "2020-11-02T20:03:55Z"
+      }
+    },
+    {
+      "kind": "youtube#playlistItem",
+      "etag": "Ure2cfyUYnTq5Lk7i-i6Fiog8uQ",
+      "id": "VVU1X3lfSV80WDVzLTExU014UEExd1VnLjlwRXpkYmMxTURj",
+      "snippet": {
+        "publishedAt": "2020-11-02T19:32:59Z",
+        "channelId": "UC5_y_I_4X5s-11SMxPA1wUg",
+        "title": "ANÁLISIS CONTABLE - FISCAL : Propuesta de Reformas al CFF -2da Parte",
+        "description": "Sesiones en vivo en el Aula Virtual de Anafinet\nacceso en http://www.anafinet.org/online",
+        "thumbnails": {
+          "default": {
+            "url": "https://i.ytimg.com/vi/9pEzdbc1MDc/default.jpg",
+            "width": 120,
+            "height": 90
+          },
+          "medium": {
+            "url": "https://i.ytimg.com/vi/9pEzdbc1MDc/mqdefault.jpg",
+            "width": 320,
+            "height": 180
+          },
+          "high": {
+            "url": "https://i.ytimg.com/vi/9pEzdbc1MDc/hqdefault.jpg",
+            "width": 480,
+            "height": 360
+          }
+        },
+        "channelTitle": "Anafinet",
+        "playlistId": "UU5_y_I_4X5s-11SMxPA1wUg",
+        "position": 106,
+        "resourceId": {
+          "kind": "youtube#video",
+          "videoId": "9pEzdbc1MDc"
+        },
+        "videoOwnerChannelTitle": "Anafinet",
+        "videoOwnerChannelId": "UC5_y_I_4X5s-11SMxPA1wUg"
+      },
+      "contentDetails": {
+        "videoId": "9pEzdbc1MDc",
+        "videoPublishedAt": "2020-11-02T19:32:59Z"
+      }
+    },
+    {
+      "kind": "youtube#playlistItem",
+      "etag": "jBEmZqN0KC9q5LuzNIQjk-mOGV8",
+      "id": "VVU1X3lfSV80WDVzLTExU014UEExd1VnLmxkOVFmLUxaQjc0",
+      "snippet": {
+        "publishedAt": "2020-11-02T19:11:33Z",
+        "channelId": "UC5_y_I_4X5s-11SMxPA1wUg",
+        "title": "COMISION FISCAL DE ANAFINET - Entre SIPRED y DISSIF",
+        "description": "Sesiones en vivo en el Aula Virtual de Anafinet\nacceso en http://www.anafinet.org/online",
+        "thumbnails": {
+          "default": {
+            "url": "https://i.ytimg.com/vi/ld9Qf-LZB74/default.jpg",
+            "width": 120,
+            "height": 90
+          },
+          "medium": {
+            "url": "https://i.ytimg.com/vi/ld9Qf-LZB74/mqdefault.jpg",
+            "width": 320,
+            "height": 180
+          },
+          "high": {
+            "url": "https://i.ytimg.com/vi/ld9Qf-LZB74/hqdefault.jpg",
+            "width": 480,
+            "height": 360
+          },
+          "standard": {
+            "url": "https://i.ytimg.com/vi/ld9Qf-LZB74/sddefault.jpg",
+            "width": 640,
+            "height": 480
+          }
+        },
+        "channelTitle": "Anafinet",
+        "playlistId": "UU5_y_I_4X5s-11SMxPA1wUg",
+        "position": 107,
+        "resourceId": {
+          "kind": "youtube#video",
+          "videoId": "ld9Qf-LZB74"
+        },
+        "videoOwnerChannelTitle": "Anafinet",
+        "videoOwnerChannelId": "UC5_y_I_4X5s-11SMxPA1wUg"
+      },
+      "contentDetails": {
+        "videoId": "ld9Qf-LZB74",
+        "videoPublishedAt": "2020-11-02T19:11:33Z"
+      }
+    },
+    {
+      "kind": "youtube#playlistItem",
+      "etag": "irxYuB_ohyxLukzyaeFqBScZ5iw",
+      "id": "VVU1X3lfSV80WDVzLTExU014UEExd1VnLlhCZ2IyVEdzNkFj",
+      "snippet": {
+        "publishedAt": "2020-11-02T18:38:42Z",
+        "channelId": "UC5_y_I_4X5s-11SMxPA1wUg",
+        "title": "FORO FISCAL - Consignación de Sueldos y Salarios Ante la Autoridad Laboral",
+        "description": "Sesiones en vivo en el Aula Virtual de Anafinet\nacceso en http://www.anafinet.org/online",
+        "thumbnails": {
+          "default": {
+            "url": "https://i.ytimg.com/vi/XBgb2TGs6Ac/default.jpg",
+            "width": 120,
+            "height": 90
+          },
+          "medium": {
+            "url": "https://i.ytimg.com/vi/XBgb2TGs6Ac/mqdefault.jpg",
+            "width": 320,
+            "height": 180
+          },
+          "high": {
+            "url": "https://i.ytimg.com/vi/XBgb2TGs6Ac/hqdefault.jpg",
+            "width": 480,
+            "height": 360
+          }
+        },
+        "channelTitle": "Anafinet",
+        "playlistId": "UU5_y_I_4X5s-11SMxPA1wUg",
+        "position": 108,
+        "resourceId": {
+          "kind": "youtube#video",
+          "videoId": "XBgb2TGs6Ac"
+        },
+        "videoOwnerChannelTitle": "Anafinet",
+        "videoOwnerChannelId": "UC5_y_I_4X5s-11SMxPA1wUg"
+      },
+      "contentDetails": {
+        "videoId": "XBgb2TGs6Ac",
+        "videoPublishedAt": "2020-11-02T18:38:42Z"
+      }
+    },
+    {
+      "kind": "youtube#playlistItem",
+      "etag": "SmQVJcWQtD_33bBt4iKRdsvyRtk",
+      "id": "VVU1X3lfSV80WDVzLTExU014UEExd1VnLkdreTkydnNKTTJn",
+      "snippet": {
+        "publishedAt": "2020-11-02T18:22:13Z",
+        "channelId": "UC5_y_I_4X5s-11SMxPA1wUg",
+        "title": "ANAFINET REP. DE CHIAPAS - Discrepancia Fiscal",
+        "description": "Sesiones en vivo en el Aula Virtual de Anafinet\nacceso en http://www.anafinet.org/online",
+        "thumbnails": {
+          "default": {
+            "url": "https://i.ytimg.com/vi/Gky92vsJM2g/default.jpg",
+            "width": 120,
+            "height": 90
+          },
+          "medium": {
+            "url": "https://i.ytimg.com/vi/Gky92vsJM2g/mqdefault.jpg",
+            "width": 320,
+            "height": 180
+          },
+          "high": {
+            "url": "https://i.ytimg.com/vi/Gky92vsJM2g/hqdefault.jpg",
+            "width": 480,
+            "height": 360
+          },
+          "standard": {
+            "url": "https://i.ytimg.com/vi/Gky92vsJM2g/sddefault.jpg",
+            "width": 640,
+            "height": 480
+          }
+        },
+        "channelTitle": "Anafinet",
+        "playlistId": "UU5_y_I_4X5s-11SMxPA1wUg",
+        "position": 109,
+        "resourceId": {
+          "kind": "youtube#video",
+          "videoId": "Gky92vsJM2g"
+        },
+        "videoOwnerChannelTitle": "Anafinet",
+        "videoOwnerChannelId": "UC5_y_I_4X5s-11SMxPA1wUg"
+      },
+      "contentDetails": {
+        "videoId": "Gky92vsJM2g",
+        "videoPublishedAt": "2020-11-02T18:22:13Z"
+      }
+    },
+    {
+      "kind": "youtube#playlistItem",
+      "etag": "Dab2nLb2dE8Rjk9mhDUkqFYbd0A",
+      "id": "VVU1X3lfSV80WDVzLTExU014UEExd1VnLmZSZzQ4T1NWRV9j",
+      "snippet": {
+        "publishedAt": "2020-10-31T18:04:25Z",
+        "channelId": "UC5_y_I_4X5s-11SMxPA1wUg",
+        "title": "ANAFINET REP. DE CDMX - Pensiones y Modificación a la Modalidad 40 - 2da Parte",
+        "description": "Sesiones en vivo en el Aula Virtual de Anafinet\nacceso en http://www.anafinet.org/online",
+        "thumbnails": {
+          "default": {
+            "url": "https://i.ytimg.com/vi/fRg48OSVE_c/default.jpg",
+            "width": 120,
+            "height": 90
+          },
+          "medium": {
+            "url": "https://i.ytimg.com/vi/fRg48OSVE_c/mqdefault.jpg",
+            "width": 320,
+            "height": 180
+          },
+          "high": {
+            "url": "https://i.ytimg.com/vi/fRg48OSVE_c/hqdefault.jpg",
+            "width": 480,
+            "height": 360
+          },
+          "standard": {
+            "url": "https://i.ytimg.com/vi/fRg48OSVE_c/sddefault.jpg",
+            "width": 640,
+            "height": 480
+          }
+        },
+        "channelTitle": "Anafinet",
+        "playlistId": "UU5_y_I_4X5s-11SMxPA1wUg",
+        "position": 110,
+        "resourceId": {
+          "kind": "youtube#video",
+          "videoId": "fRg48OSVE_c"
+        },
+        "videoOwnerChannelTitle": "Anafinet",
+        "videoOwnerChannelId": "UC5_y_I_4X5s-11SMxPA1wUg"
+      },
+      "contentDetails": {
+        "videoId": "fRg48OSVE_c",
+        "videoPublishedAt": "2020-10-31T18:04:25Z"
+      }
+    },
+    {
+      "kind": "youtube#playlistItem",
+      "etag": "6q843EyAjBx7e4hiQppWfGAMSYI",
+      "id": "VVU1X3lfSV80WDVzLTExU014UEExd1VnLjdzdUFYeDJUcmhr",
+      "snippet": {
+        "publishedAt": "2020-10-16T23:49:51Z",
+        "channelId": "UC5_y_I_4X5s-11SMxPA1wUg",
+        "title": "PANORAMA TRIBUTARIO - Escritorio Virtual del IMSS",
+        "description": "Sesiones en vivo en el Aula Virtual de Anafinet\nacceso en http://www.anafinet.org/online",
+        "thumbnails": {
+          "default": {
+            "url": "https://i.ytimg.com/vi/7suAXx2Trhk/default.jpg",
+            "width": 120,
+            "height": 90
+          },
+          "medium": {
+            "url": "https://i.ytimg.com/vi/7suAXx2Trhk/mqdefault.jpg",
+            "width": 320,
+            "height": 180
+          },
+          "high": {
+            "url": "https://i.ytimg.com/vi/7suAXx2Trhk/hqdefault.jpg",
+            "width": 480,
+            "height": 360
+          },
+          "standard": {
+            "url": "https://i.ytimg.com/vi/7suAXx2Trhk/sddefault.jpg",
+            "width": 640,
+            "height": 480
+          }
+        },
+        "channelTitle": "Anafinet",
+        "playlistId": "UU5_y_I_4X5s-11SMxPA1wUg",
+        "position": 111,
+        "resourceId": {
+          "kind": "youtube#video",
+          "videoId": "7suAXx2Trhk"
+        },
+        "videoOwnerChannelTitle": "Anafinet",
+        "videoOwnerChannelId": "UC5_y_I_4X5s-11SMxPA1wUg"
+      },
+      "contentDetails": {
+        "videoId": "7suAXx2Trhk",
+        "videoPublishedAt": "2020-10-16T23:49:51Z"
+      }
+    },
+    {
+      "kind": "youtube#playlistItem",
+      "etag": "tilOu6gtaXfzKGrpGdQeUj5bZDc",
+      "id": "VVU1X3lfSV80WDVzLTExU014UEExd1VnLlNkQmJYLWNMNXVF",
+      "snippet": {
+        "publishedAt": "2020-10-16T23:28:57Z",
+        "channelId": "UC5_y_I_4X5s-11SMxPA1wUg",
+        "title": "REFLEXIONARIO FISCAL - Mi Cuenta y la Reforma Infonavit",
+        "description": "Sesiones en vivo en el Aula Virtual de Anafinet\nacceso en http://www.anafinet.org/online",
+        "thumbnails": {
+          "default": {
+            "url": "https://i.ytimg.com/vi/SdBbX-cL5uE/default.jpg",
+            "width": 120,
+            "height": 90
+          },
+          "medium": {
+            "url": "https://i.ytimg.com/vi/SdBbX-cL5uE/mqdefault.jpg",
+            "width": 320,
+            "height": 180
+          },
+          "high": {
+            "url": "https://i.ytimg.com/vi/SdBbX-cL5uE/hqdefault.jpg",
+            "width": 480,
+            "height": 360
+          },
+          "standard": {
+            "url": "https://i.ytimg.com/vi/SdBbX-cL5uE/sddefault.jpg",
+            "width": 640,
+            "height": 480
+          }
+        },
+        "channelTitle": "Anafinet",
+        "playlistId": "UU5_y_I_4X5s-11SMxPA1wUg",
+        "position": 112,
+        "resourceId": {
+          "kind": "youtube#video",
+          "videoId": "SdBbX-cL5uE"
+        },
+        "videoOwnerChannelTitle": "Anafinet",
+        "videoOwnerChannelId": "UC5_y_I_4X5s-11SMxPA1wUg"
+      },
+      "contentDetails": {
+        "videoId": "SdBbX-cL5uE",
+        "videoPublishedAt": "2020-10-16T23:28:57Z"
+      }
+    },
+    {
+      "kind": "youtube#playlistItem",
+      "etag": "siYnfKaf8pd_l807GlcosRaShVA",
+      "id": "VVU1X3lfSV80WDVzLTExU014UEExd1VnLlFmdGlIZUFwWGlz",
+      "snippet": {
+        "publishedAt": "2020-10-15T00:31:08Z",
+        "channelId": "UC5_y_I_4X5s-11SMxPA1wUg",
+        "title": "Conversa. Sobre la Propuesta de Reforma al CFF  y su Impacto en la Esfera Juridica del Contribuyente",
+        "description": "COMISION FISCAL DE ANAFINET - Conversatorio Sobre la Propuesta de Reforma al CFF  y su Impacto en la Esfera Juridica del Contribuyente\nSesiones en vivo en el Aula Virtual de Anafinet\nacceso en http://www.anafinet.org/online",
+        "thumbnails": {
+          "default": {
+            "url": "https://i.ytimg.com/vi/QftiHeApXis/default.jpg",
+            "width": 120,
+            "height": 90
+          },
+          "medium": {
+            "url": "https://i.ytimg.com/vi/QftiHeApXis/mqdefault.jpg",
+            "width": 320,
+            "height": 180
+          },
+          "high": {
+            "url": "https://i.ytimg.com/vi/QftiHeApXis/hqdefault.jpg",
+            "width": 480,
+            "height": 360
+          },
+          "standard": {
+            "url": "https://i.ytimg.com/vi/QftiHeApXis/sddefault.jpg",
+            "width": 640,
+            "height": 480
+          }
+        },
+        "channelTitle": "Anafinet",
+        "playlistId": "UU5_y_I_4X5s-11SMxPA1wUg",
+        "position": 113,
+        "resourceId": {
+          "kind": "youtube#video",
+          "videoId": "QftiHeApXis"
+        },
+        "videoOwnerChannelTitle": "Anafinet",
+        "videoOwnerChannelId": "UC5_y_I_4X5s-11SMxPA1wUg"
+      },
+      "contentDetails": {
+        "videoId": "QftiHeApXis",
+        "videoPublishedAt": "2020-10-15T00:31:08Z"
+      }
+    },
+    {
+      "kind": "youtube#playlistItem",
+      "etag": "ogfvtM4PfjbdMyOfI6rVuqoj2vI",
+      "id": "VVU1X3lfSV80WDVzLTExU014UEExd1VnLjFQUXpLYk1lV0ln",
+      "snippet": {
+        "publishedAt": "2020-10-15T00:02:04Z",
+        "channelId": "UC5_y_I_4X5s-11SMxPA1wUg",
+        "title": "ANAFINET REP. DE CHIAPAS - Asamblea de Socios o Accionistas",
+        "description": "Sesiones en vivo en el Aula Virtual de Anafinet\nacceso en http://www.anafinet.org/online",
+        "thumbnails": {
+          "default": {
+            "url": "https://i.ytimg.com/vi/1PQzKbMeWIg/default.jpg",
+            "width": 120,
+            "height": 90
+          },
+          "medium": {
+            "url": "https://i.ytimg.com/vi/1PQzKbMeWIg/mqdefault.jpg",
+            "width": 320,
+            "height": 180
+          },
+          "high": {
+            "url": "https://i.ytimg.com/vi/1PQzKbMeWIg/hqdefault.jpg",
+            "width": 480,
+            "height": 360
+          },
+          "standard": {
+            "url": "https://i.ytimg.com/vi/1PQzKbMeWIg/sddefault.jpg",
+            "width": 640,
+            "height": 480
+          }
+        },
+        "channelTitle": "Anafinet",
+        "playlistId": "UU5_y_I_4X5s-11SMxPA1wUg",
+        "position": 114,
+        "resourceId": {
+          "kind": "youtube#video",
+          "videoId": "1PQzKbMeWIg"
+        },
+        "videoOwnerChannelTitle": "Anafinet",
+        "videoOwnerChannelId": "UC5_y_I_4X5s-11SMxPA1wUg"
+      },
+      "contentDetails": {
+        "videoId": "1PQzKbMeWIg",
+        "videoPublishedAt": "2020-10-15T00:02:04Z"
+      }
+    },
+    {
+      "kind": "youtube#playlistItem",
+      "etag": "0OEH2URLhZT6cQT3OTu_oXwmbV0",
+      "id": "VVU1X3lfSV80WDVzLTExU014UEExd1VnLnV1YzlrZHNkYVVZ",
+      "snippet": {
+        "publishedAt": "2020-10-12T23:42:39Z",
+        "channelId": "UC5_y_I_4X5s-11SMxPA1wUg",
+        "title": "ANAFINET REP. DE CDMX - Pensiones y Modificación a la Modalidad 40",
+        "description": "Sesiones en vivo en el Aula Virtual de Anafinet\nacceso en http://www.anafinet.org/online",
+        "thumbnails": {
+          "default": {
+            "url": "https://i.ytimg.com/vi/uuc9kdsdaUY/default.jpg",
+            "width": 120,
+            "height": 90
+          },
+          "medium": {
+            "url": "https://i.ytimg.com/vi/uuc9kdsdaUY/mqdefault.jpg",
+            "width": 320,
+            "height": 180
+          },
+          "high": {
+            "url": "https://i.ytimg.com/vi/uuc9kdsdaUY/hqdefault.jpg",
+            "width": 480,
+            "height": 360
+          },
+          "standard": {
+            "url": "https://i.ytimg.com/vi/uuc9kdsdaUY/sddefault.jpg",
+            "width": 640,
+            "height": 480
+          }
+        },
+        "channelTitle": "Anafinet",
+        "playlistId": "UU5_y_I_4X5s-11SMxPA1wUg",
+        "position": 115,
+        "resourceId": {
+          "kind": "youtube#video",
+          "videoId": "uuc9kdsdaUY"
+        },
+        "videoOwnerChannelTitle": "Anafinet",
+        "videoOwnerChannelId": "UC5_y_I_4X5s-11SMxPA1wUg"
+      },
+      "contentDetails": {
+        "videoId": "uuc9kdsdaUY",
+        "videoPublishedAt": "2020-10-12T23:42:39Z"
+      }
+    },
+    {
+      "kind": "youtube#playlistItem",
+      "etag": "I6nMAd66GivYeR92cMzHJ3VZYws",
+      "id": "VVU1X3lfSV80WDVzLTExU014UEExd1VnLmQwM1ZVRkczeXFB",
+      "snippet": {
+        "publishedAt": "2020-10-09T17:34:55Z",
+        "channelId": "UC5_y_I_4X5s-11SMxPA1wUg",
+        "title": "COMO HACER UN PROYECTO DE INVESTIGACION -  Diseño Metodológico - Operacionalización de Variables",
+        "description": "Sesiones en vivo en el Aula Virtual de Anafinet\nacceso en http://www.anafinet.org/online",
+        "thumbnails": {
+          "default": {
+            "url": "https://i.ytimg.com/vi/d03VUFG3yqA/default.jpg",
+            "width": 120,
+            "height": 90
+          },
+          "medium": {
+            "url": "https://i.ytimg.com/vi/d03VUFG3yqA/mqdefault.jpg",
+            "width": 320,
+            "height": 180
+          },
+          "high": {
+            "url": "https://i.ytimg.com/vi/d03VUFG3yqA/hqdefault.jpg",
+            "width": 480,
+            "height": 360
+          }
+        },
+        "channelTitle": "Anafinet",
+        "playlistId": "UU5_y_I_4X5s-11SMxPA1wUg",
+        "position": 116,
+        "resourceId": {
+          "kind": "youtube#video",
+          "videoId": "d03VUFG3yqA"
+        },
+        "videoOwnerChannelTitle": "Anafinet",
+        "videoOwnerChannelId": "UC5_y_I_4X5s-11SMxPA1wUg"
+      },
+      "contentDetails": {
+        "videoId": "d03VUFG3yqA",
+        "videoPublishedAt": "2020-10-09T17:34:55Z"
+      }
+    },
+    {
+      "kind": "youtube#playlistItem",
+      "etag": "PYA2XnLej79axqk1IlRGrgGojYU",
+      "id": "VVU1X3lfSV80WDVzLTExU014UEExd1VnLlpUN0gxMzJtVW5J",
+      "snippet": {
+        "publishedAt": "2020-10-09T17:18:33Z",
+        "channelId": "UC5_y_I_4X5s-11SMxPA1wUg",
+        "title": "COMISION FISCAL DE ANAFINET - Análisis de los ingresos Asimilados a Salarios",
+        "description": "Sesiones en vivo en el Aula Virtual de Anafinet\nacceso en http://www.anafinet.org/online",
+        "thumbnails": {
+          "default": {
+            "url": "https://i.ytimg.com/vi/ZT7H132mUnI/default.jpg",
+            "width": 120,
+            "height": 90
+          },
+          "medium": {
+            "url": "https://i.ytimg.com/vi/ZT7H132mUnI/mqdefault.jpg",
+            "width": 320,
+            "height": 180
+          },
+          "high": {
+            "url": "https://i.ytimg.com/vi/ZT7H132mUnI/hqdefault.jpg",
+            "width": 480,
+            "height": 360
+          },
+          "standard": {
+            "url": "https://i.ytimg.com/vi/ZT7H132mUnI/sddefault.jpg",
+            "width": 640,
+            "height": 480
+          }
+        },
+        "channelTitle": "Anafinet",
+        "playlistId": "UU5_y_I_4X5s-11SMxPA1wUg",
+        "position": 117,
+        "resourceId": {
+          "kind": "youtube#video",
+          "videoId": "ZT7H132mUnI"
+        },
+        "videoOwnerChannelTitle": "Anafinet",
+        "videoOwnerChannelId": "UC5_y_I_4X5s-11SMxPA1wUg"
+      },
+      "contentDetails": {
+        "videoId": "ZT7H132mUnI",
+        "videoPublishedAt": "2020-10-09T17:18:33Z"
+      }
+    },
+    {
+      "kind": "youtube#playlistItem",
+      "etag": "jOxWtPgW1PERcDnyzkvaIqSe4bk",
+      "id": "VVU1X3lfSV80WDVzLTExU014UEExd1VnLlJzT1lUdnFhSzJZ",
+      "snippet": {
+        "publishedAt": "2020-10-07T17:01:31Z",
+        "channelId": "UC5_y_I_4X5s-11SMxPA1wUg",
+        "title": "REINVENTA TU EMPRESA -  Coaching Para Ventas",
+        "description": "Sesiones en vivo en el Aula Virtual de Anafinet\nacceso en http://www.anafinet.org/online",
+        "thumbnails": {
+          "default": {
+            "url": "https://i.ytimg.com/vi/RsOYTvqaK2Y/default.jpg",
+            "width": 120,
+            "height": 90
+          },
+          "medium": {
+            "url": "https://i.ytimg.com/vi/RsOYTvqaK2Y/mqdefault.jpg",
+            "width": 320,
+            "height": 180
+          },
+          "high": {
+            "url": "https://i.ytimg.com/vi/RsOYTvqaK2Y/hqdefault.jpg",
+            "width": 480,
+            "height": 360
+          },
+          "standard": {
+            "url": "https://i.ytimg.com/vi/RsOYTvqaK2Y/sddefault.jpg",
+            "width": 640,
+            "height": 480
+          }
+        },
+        "channelTitle": "Anafinet",
+        "playlistId": "UU5_y_I_4X5s-11SMxPA1wUg",
+        "position": 118,
+        "resourceId": {
+          "kind": "youtube#video",
+          "videoId": "RsOYTvqaK2Y"
+        },
+        "videoOwnerChannelTitle": "Anafinet",
+        "videoOwnerChannelId": "UC5_y_I_4X5s-11SMxPA1wUg"
+      },
+      "contentDetails": {
+        "videoId": "RsOYTvqaK2Y",
+        "videoPublishedAt": "2020-10-07T17:01:31Z"
+      }
+    },
+    {
+      "kind": "youtube#playlistItem",
+      "etag": "pWQDmiL0rGknpTiBxWpjyE4CKNE",
+      "id": "VVU1X3lfSV80WDVzLTExU014UEExd1VnLndneE1jR0kwR3Rv",
+      "snippet": {
+        "publishedAt": "2020-10-07T00:02:07Z",
+        "channelId": "UC5_y_I_4X5s-11SMxPA1wUg",
+        "title": "ANAFINET REP. DE CDMX -  Tratamiento Fiscal de las Personas Físicas y Morales -  3ra Sesión",
+        "description": "Sesiones en vivo en el Aula Virtual de Anafinet\nacceso en http://www.anafinet.org/online",
+        "thumbnails": {
+          "default": {
+            "url": "https://i.ytimg.com/vi/wgxMcGI0Gto/default.jpg",
+            "width": 120,
+            "height": 90
+          },
+          "medium": {
+            "url": "https://i.ytimg.com/vi/wgxMcGI0Gto/mqdefault.jpg",
+            "width": 320,
+            "height": 180
+          },
+          "high": {
+            "url": "https://i.ytimg.com/vi/wgxMcGI0Gto/hqdefault.jpg",
+            "width": 480,
+            "height": 360
+          },
+          "standard": {
+            "url": "https://i.ytimg.com/vi/wgxMcGI0Gto/sddefault.jpg",
+            "width": 640,
+            "height": 480
+          }
+        },
+        "channelTitle": "Anafinet",
+        "playlistId": "UU5_y_I_4X5s-11SMxPA1wUg",
+        "position": 119,
+        "resourceId": {
+          "kind": "youtube#video",
+          "videoId": "wgxMcGI0Gto"
+        },
+        "videoOwnerChannelTitle": "Anafinet",
+        "videoOwnerChannelId": "UC5_y_I_4X5s-11SMxPA1wUg"
+      },
+      "contentDetails": {
+        "videoId": "wgxMcGI0Gto",
+        "videoPublishedAt": "2020-10-07T00:02:07Z"
+      }
+    },
+    {
+      "kind": "youtube#playlistItem",
+      "etag": "iC0thGL8tice5zrSq5oaFyKrCOU",
+      "id": "VVU1X3lfSV80WDVzLTExU014UEExd1VnLmVHZTFjVWNQb2pF",
+      "snippet": {
+        "publishedAt": "2020-10-02T22:32:25Z",
+        "channelId": "UC5_y_I_4X5s-11SMxPA1wUg",
+        "title": "ESTOICISMO FISCAL - El Antes y Después de la Previsión Social Para ISR, Puntos a Considerar",
+        "description": "Sesiones en vivo en el Aula Virtual de Anafinet\nacceso en http://www.anafinet.org/online",
+        "thumbnails": {
+          "default": {
+            "url": "https://i.ytimg.com/vi/eGe1cUcPojE/default.jpg",
+            "width": 120,
+            "height": 90
+          },
+          "medium": {
+            "url": "https://i.ytimg.com/vi/eGe1cUcPojE/mqdefault.jpg",
+            "width": 320,
+            "height": 180
+          },
+          "high": {
+            "url": "https://i.ytimg.com/vi/eGe1cUcPojE/hqdefault.jpg",
+            "width": 480,
+            "height": 360
+          },
+          "standard": {
+            "url": "https://i.ytimg.com/vi/eGe1cUcPojE/sddefault.jpg",
+            "width": 640,
+            "height": 480
+          }
+        },
+        "channelTitle": "Anafinet",
+        "playlistId": "UU5_y_I_4X5s-11SMxPA1wUg",
+        "position": 120,
+        "resourceId": {
+          "kind": "youtube#video",
+          "videoId": "eGe1cUcPojE"
+        },
+        "videoOwnerChannelTitle": "Anafinet",
+        "videoOwnerChannelId": "UC5_y_I_4X5s-11SMxPA1wUg"
+      },
+      "contentDetails": {
+        "videoId": "eGe1cUcPojE",
+        "videoPublishedAt": "2020-10-02T22:32:25Z"
+      }
+    },
+    {
+      "kind": "youtube#playlistItem",
+      "etag": "h_43FXu_qrNO-qxRyU1SZHNzESc",
+      "id": "VVU1X3lfSV80WDVzLTExU014UEExd1VnLnhxSjhCTlhqZV9V",
+      "snippet": {
+        "publishedAt": "2020-10-02T22:13:32Z",
+        "channelId": "UC5_y_I_4X5s-11SMxPA1wUg",
+        "title": "ANALISIS CONTABLE -FISCAL:Analizando las Propuestas de Reformas a la Ley de ISR Para 2021-2da Sesión",
+        "description": "Sesiones en vivo en el Aula Virtual de Anafinet\nacceso en http://www.anafinet.org/online",
+        "thumbnails": {
+          "default": {
+            "url": "https://i.ytimg.com/vi/xqJ8BNXje_U/default.jpg",
+            "width": 120,
+            "height": 90
+          },
+          "medium": {
+            "url": "https://i.ytimg.com/vi/xqJ8BNXje_U/mqdefault.jpg",
+            "width": 320,
+            "height": 180
+          },
+          "high": {
+            "url": "https://i.ytimg.com/vi/xqJ8BNXje_U/hqdefault.jpg",
+            "width": 480,
+            "height": 360
+          }
+        },
+        "channelTitle": "Anafinet",
+        "playlistId": "UU5_y_I_4X5s-11SMxPA1wUg",
+        "position": 121,
+        "resourceId": {
+          "kind": "youtube#video",
+          "videoId": "xqJ8BNXje_U"
+        },
+        "videoOwnerChannelTitle": "Anafinet",
+        "videoOwnerChannelId": "UC5_y_I_4X5s-11SMxPA1wUg"
+      },
+      "contentDetails": {
+        "videoId": "xqJ8BNXje_U",
+        "videoPublishedAt": "2020-10-02T22:13:32Z"
+      }
+    },
+    {
+      "kind": "youtube#playlistItem",
+      "etag": "WphwNM_0vqN7sItjbtf4qqYgH1w",
+      "id": "VVU1X3lfSV80WDVzLTExU014UEExd1VnLnJMaHJTY2hCZnY0",
+      "snippet": {
+        "publishedAt": "2020-10-01T23:06:09Z",
+        "channelId": "UC5_y_I_4X5s-11SMxPA1wUg",
+        "title": "PARTICIPANDO EN GRUPO - Obligaciones Fiscales de Personas Morales - 2da Sesión - (01/10/2020)",
+        "description": "Sesiones en vivo en el Aula Virtual de Anafinet\nacceso en http://www.anafinet.org/online",
+        "thumbnails": {
+          "default": {
+            "url": "https://i.ytimg.com/vi/rLhrSchBfv4/default.jpg",
+            "width": 120,
+            "height": 90
+          },
+          "medium": {
+            "url": "https://i.ytimg.com/vi/rLhrSchBfv4/mqdefault.jpg",
+            "width": 320,
+            "height": 180
+          },
+          "high": {
+            "url": "https://i.ytimg.com/vi/rLhrSchBfv4/hqdefault.jpg",
+            "width": 480,
+            "height": 360
+          }
+        },
+        "channelTitle": "Anafinet",
+        "playlistId": "UU5_y_I_4X5s-11SMxPA1wUg",
+        "position": 122,
+        "resourceId": {
+          "kind": "youtube#video",
+          "videoId": "rLhrSchBfv4"
+        },
+        "videoOwnerChannelTitle": "Anafinet",
+        "videoOwnerChannelId": "UC5_y_I_4X5s-11SMxPA1wUg"
+      },
+      "contentDetails": {
+        "videoId": "rLhrSchBfv4",
+        "videoPublishedAt": "2020-10-01T23:06:09Z"
+      }
+    },
+    {
+      "kind": "youtube#playlistItem",
+      "etag": "PTA5-JGOzMoBjyb1aOtAuEAorNw",
+      "id": "VVU1X3lfSV80WDVzLTExU014UEExd1VnLjhjdFhteW5fLU9z",
+      "snippet": {
+        "publishedAt": "2020-10-01T22:50:19Z",
+        "channelId": "UC5_y_I_4X5s-11SMxPA1wUg",
+        "title": "LA HORA DE GRUPO COIN - Deducciones - 9na Sesión",
+        "description": "Sesiones en vivo en el Aula Virtual de Anafinet\nacceso en http://www.anafinet.org/online",
+        "thumbnails": {
+          "default": {
+            "url": "https://i.ytimg.com/vi/8ctXmyn_-Os/default.jpg",
+            "width": 120,
+            "height": 90
+          },
+          "medium": {
+            "url": "https://i.ytimg.com/vi/8ctXmyn_-Os/mqdefault.jpg",
+            "width": 320,
+            "height": 180
+          },
+          "high": {
+            "url": "https://i.ytimg.com/vi/8ctXmyn_-Os/hqdefault.jpg",
+            "width": 480,
+            "height": 360
+          }
+        },
+        "channelTitle": "Anafinet",
+        "playlistId": "UU5_y_I_4X5s-11SMxPA1wUg",
+        "position": 123,
+        "resourceId": {
+          "kind": "youtube#video",
+          "videoId": "8ctXmyn_-Os"
+        },
+        "videoOwnerChannelTitle": "Anafinet",
+        "videoOwnerChannelId": "UC5_y_I_4X5s-11SMxPA1wUg"
+      },
+      "contentDetails": {
+        "videoId": "8ctXmyn_-Os",
+        "videoPublishedAt": "2020-10-01T22:50:19Z"
+      }
+    },
+    {
+      "kind": "youtube#playlistItem",
+      "etag": "x64FHYJpKo5_jf_WAb4MGuOGaAc",
+      "id": "VVU1X3lfSV80WDVzLTExU014UEExd1VnLmRUSzBxQ2ZMM2FZ",
+      "snippet": {
+        "publishedAt": "2020-09-30T23:36:35Z",
+        "channelId": "UC5_y_I_4X5s-11SMxPA1wUg",
+        "title": "Med. Digitales Como Herramienta Principal de Recaudación Para Gobierno Federal en Tiempos de Covid19",
+        "description": "COMISION FISCAL DE ANAFINET - Medios Digitales Como Herramienta Principal de Recaudación Para Gobierno Federal en Tiempos de Covid-19\nSesiones en vivo en el Aula Virtual de Anafinet\nacceso en http://www.anafinet.org/online",
+        "thumbnails": {
+          "default": {
+            "url": "https://i.ytimg.com/vi/dTK0qCfL3aY/default.jpg",
+            "width": 120,
+            "height": 90
+          },
+          "medium": {
+            "url": "https://i.ytimg.com/vi/dTK0qCfL3aY/mqdefault.jpg",
+            "width": 320,
+            "height": 180
+          },
+          "high": {
+            "url": "https://i.ytimg.com/vi/dTK0qCfL3aY/hqdefault.jpg",
+            "width": 480,
+            "height": 360
+          },
+          "standard": {
+            "url": "https://i.ytimg.com/vi/dTK0qCfL3aY/sddefault.jpg",
+            "width": 640,
+            "height": 480
+          }
+        },
+        "channelTitle": "Anafinet",
+        "playlistId": "UU5_y_I_4X5s-11SMxPA1wUg",
+        "position": 124,
+        "resourceId": {
+          "kind": "youtube#video",
+          "videoId": "dTK0qCfL3aY"
+        },
+        "videoOwnerChannelTitle": "Anafinet",
+        "videoOwnerChannelId": "UC5_y_I_4X5s-11SMxPA1wUg"
+      },
+      "contentDetails": {
+        "videoId": "dTK0qCfL3aY",
+        "videoPublishedAt": "2020-09-30T23:36:35Z"
+      }
+    },
+    {
+      "kind": "youtube#playlistItem",
+      "etag": "aIPLR95a6kFo72J3xtgHphh9a2U",
+      "id": "VVU1X3lfSV80WDVzLTExU014UEExd1VnLmd5VW1qdGRXamZN",
+      "snippet": {
+        "publishedAt": "2020-09-30T23:11:06Z",
+        "channelId": "UC5_y_I_4X5s-11SMxPA1wUg",
+        "title": "INTTEGRA SISTEMAS - Configuración de IDSE en Internet Explorer",
+        "description": "Sesiones en vivo en el Aula Virtual de Anafinet\nacceso en http://www.anafinet.org/online",
+        "thumbnails": {
+          "default": {
+            "url": "https://i.ytimg.com/vi/gyUmjtdWjfM/default.jpg",
+            "width": 120,
+            "height": 90
+          },
+          "medium": {
+            "url": "https://i.ytimg.com/vi/gyUmjtdWjfM/mqdefault.jpg",
+            "width": 320,
+            "height": 180
+          },
+          "high": {
+            "url": "https://i.ytimg.com/vi/gyUmjtdWjfM/hqdefault.jpg",
+            "width": 480,
+            "height": 360
+          }
+        },
+        "channelTitle": "Anafinet",
+        "playlistId": "UU5_y_I_4X5s-11SMxPA1wUg",
+        "position": 125,
+        "resourceId": {
+          "kind": "youtube#video",
+          "videoId": "gyUmjtdWjfM"
+        },
+        "videoOwnerChannelTitle": "Anafinet",
+        "videoOwnerChannelId": "UC5_y_I_4X5s-11SMxPA1wUg"
+      },
+      "contentDetails": {
+        "videoId": "gyUmjtdWjfM",
+        "videoPublishedAt": "2020-09-30T23:11:06Z"
+      }
+    },
+    {
+      "kind": "youtube#playlistItem",
+      "etag": "fw66yJQG6k7nAHyfyl9P6FfSb5M",
+      "id": "VVU1X3lfSV80WDVzLTExU014UEExd1VnLkotaWRpSmlhTHNR",
+      "snippet": {
+        "publishedAt": "2020-09-29T18:27:38Z",
+        "channelId": "UC5_y_I_4X5s-11SMxPA1wUg",
+        "title": "ANAFINET REP. DE CHIAPAS - Defensa Fiscal Ante el Rechazo de las Deducciones",
+        "description": "Sesiones en vivo en el Aula Virtual de Anafinet\nacceso en http://www.anafinet.org/online",
+        "thumbnails": {
+          "default": {
+            "url": "https://i.ytimg.com/vi/J-idiJiaLsQ/default.jpg",
+            "width": 120,
+            "height": 90
+          },
+          "medium": {
+            "url": "https://i.ytimg.com/vi/J-idiJiaLsQ/mqdefault.jpg",
+            "width": 320,
+            "height": 180
+          },
+          "high": {
+            "url": "https://i.ytimg.com/vi/J-idiJiaLsQ/hqdefault.jpg",
+            "width": 480,
+            "height": 360
+          },
+          "standard": {
+            "url": "https://i.ytimg.com/vi/J-idiJiaLsQ/sddefault.jpg",
+            "width": 640,
+            "height": 480
+          }
+        },
+        "channelTitle": "Anafinet",
+        "playlistId": "UU5_y_I_4X5s-11SMxPA1wUg",
+        "position": 126,
+        "resourceId": {
+          "kind": "youtube#video",
+          "videoId": "J-idiJiaLsQ"
+        },
+        "videoOwnerChannelTitle": "Anafinet",
+        "videoOwnerChannelId": "UC5_y_I_4X5s-11SMxPA1wUg"
+      },
+      "contentDetails": {
+        "videoId": "J-idiJiaLsQ",
+        "videoPublishedAt": "2020-09-29T18:27:38Z"
+      }
+    },
+    {
+      "kind": "youtube#playlistItem",
+      "etag": "7no_nxt8udesbGlIuBYVMfEyWoc",
+      "id": "VVU1X3lfSV80WDVzLTExU014UEExd1VnLk92Y0VsTUZpQzlv",
+      "snippet": {
+        "publishedAt": "2020-09-29T18:07:13Z",
+        "channelId": "UC5_y_I_4X5s-11SMxPA1wUg",
+        "title": "ANAFINET REP. DE CDMX - Régimen Jurídico de las Sociedades y Asociaciones Civiles",
+        "description": "Sesiones en vivo en el Aula Virtual de Anafinet\nacceso en http://www.anafinet.org/online",
+        "thumbnails": {
+          "default": {
+            "url": "https://i.ytimg.com/vi/OvcElMFiC9o/default.jpg",
+            "width": 120,
+            "height": 90
+          },
+          "medium": {
+            "url": "https://i.ytimg.com/vi/OvcElMFiC9o/mqdefault.jpg",
+            "width": 320,
+            "height": 180
+          },
+          "high": {
+            "url": "https://i.ytimg.com/vi/OvcElMFiC9o/hqdefault.jpg",
+            "width": 480,
+            "height": 360
+          },
+          "standard": {
+            "url": "https://i.ytimg.com/vi/OvcElMFiC9o/sddefault.jpg",
+            "width": 640,
+            "height": 480
+          }
+        },
+        "channelTitle": "Anafinet",
+        "playlistId": "UU5_y_I_4X5s-11SMxPA1wUg",
+        "position": 127,
+        "resourceId": {
+          "kind": "youtube#video",
+          "videoId": "OvcElMFiC9o"
+        },
+        "videoOwnerChannelTitle": "Anafinet",
+        "videoOwnerChannelId": "UC5_y_I_4X5s-11SMxPA1wUg"
+      },
+      "contentDetails": {
+        "videoId": "OvcElMFiC9o",
+        "videoPublishedAt": "2020-09-29T18:07:13Z"
+      }
+    },
+    {
+      "kind": "youtube#playlistItem",
+      "etag": "qezepErBxRkwqEwflq9N3Y3J0DQ",
+      "id": "VVU1X3lfSV80WDVzLTExU014UEExd1VnLk8xMEVaSzljTHYw",
+      "snippet": {
+        "publishedAt": "2020-09-25T23:27:42Z",
+        "channelId": "UC5_y_I_4X5s-11SMxPA1wUg",
+        "title": "REFLEXIONARIO FISCAL - Determinación del SBC por Semana Reducida",
+        "description": "Sesiones en vivo en el Aula Virtual de Anafinet\nacceso en http://www.anafinet.org/online",
+        "thumbnails": {
+          "default": {
+            "url": "https://i.ytimg.com/vi/O10EZK9cLv0/default.jpg",
+            "width": 120,
+            "height": 90
+          },
+          "medium": {
+            "url": "https://i.ytimg.com/vi/O10EZK9cLv0/mqdefault.jpg",
+            "width": 320,
+            "height": 180
+          },
+          "high": {
+            "url": "https://i.ytimg.com/vi/O10EZK9cLv0/hqdefault.jpg",
+            "width": 480,
+            "height": 360
+          },
+          "standard": {
+            "url": "https://i.ytimg.com/vi/O10EZK9cLv0/sddefault.jpg",
+            "width": 640,
+            "height": 480
+          }
+        },
+        "channelTitle": "Anafinet",
+        "playlistId": "UU5_y_I_4X5s-11SMxPA1wUg",
+        "position": 128,
+        "resourceId": {
+          "kind": "youtube#video",
+          "videoId": "O10EZK9cLv0"
+        },
+        "videoOwnerChannelTitle": "Anafinet",
+        "videoOwnerChannelId": "UC5_y_I_4X5s-11SMxPA1wUg"
+      },
+      "contentDetails": {
+        "videoId": "O10EZK9cLv0",
+        "videoPublishedAt": "2020-09-25T23:27:42Z"
+      }
+    },
+    {
+      "kind": "youtube#playlistItem",
+      "etag": "R1WCTCgOYzpD9DNeYzTSOXyjzzc",
+      "id": "VVU1X3lfSV80WDVzLTExU014UEExd1VnLlJXelJ5eFlfbUxR",
+      "snippet": {
+        "publishedAt": "2020-09-24T23:23:18Z",
+        "channelId": "UC5_y_I_4X5s-11SMxPA1wUg",
+        "title": "PARTICIPANDO EN GRUPO - Obligaciones Fiscales de Personas Morales",
+        "description": "Sesiones en vivo en el Aula Virtual de Anafinet\nacceso en http://www.anafinet.org/online",
+        "thumbnails": {
+          "default": {
+            "url": "https://i.ytimg.com/vi/RWzRyxY_mLQ/default.jpg",
+            "width": 120,
+            "height": 90
+          },
+          "medium": {
+            "url": "https://i.ytimg.com/vi/RWzRyxY_mLQ/mqdefault.jpg",
+            "width": 320,
+            "height": 180
+          },
+          "high": {
+            "url": "https://i.ytimg.com/vi/RWzRyxY_mLQ/hqdefault.jpg",
+            "width": 480,
+            "height": 360
+          }
+        },
+        "channelTitle": "Anafinet",
+        "playlistId": "UU5_y_I_4X5s-11SMxPA1wUg",
+        "position": 129,
+        "resourceId": {
+          "kind": "youtube#video",
+          "videoId": "RWzRyxY_mLQ"
+        },
+        "videoOwnerChannelTitle": "Anafinet",
+        "videoOwnerChannelId": "UC5_y_I_4X5s-11SMxPA1wUg"
+      },
+      "contentDetails": {
+        "videoId": "RWzRyxY_mLQ",
+        "videoPublishedAt": "2020-09-24T23:23:18Z"
+      }
+    },
+    {
+      "kind": "youtube#playlistItem",
+      "etag": "0EbXei6KBc_ow5qNqDIDoh1PNis",
+      "id": "VVU1X3lfSV80WDVzLTExU014UEExd1VnLnRjTk1hdUpZM1d3",
+      "snippet": {
+        "publishedAt": "2020-09-24T23:11:31Z",
+        "channelId": "UC5_y_I_4X5s-11SMxPA1wUg",
+        "title": "FISCAL Y CONTABLE ON LINE - Propuesta de Reforma al CFF 2021",
+        "description": "Sesiones en vivo en el Aula Virtual de Anafinet\nacceso en http://www.anafinet.org/online",
+        "thumbnails": {
+          "default": {
+            "url": "https://i.ytimg.com/vi/tcNMauJY3Ww/default.jpg",
+            "width": 120,
+            "height": 90
+          },
+          "medium": {
+            "url": "https://i.ytimg.com/vi/tcNMauJY3Ww/mqdefault.jpg",
+            "width": 320,
+            "height": 180
+          },
+          "high": {
+            "url": "https://i.ytimg.com/vi/tcNMauJY3Ww/hqdefault.jpg",
+            "width": 480,
+            "height": 360
+          }
+        },
+        "channelTitle": "Anafinet",
+        "playlistId": "UU5_y_I_4X5s-11SMxPA1wUg",
+        "position": 130,
+        "resourceId": {
+          "kind": "youtube#video",
+          "videoId": "tcNMauJY3Ww"
+        },
+        "videoOwnerChannelTitle": "Anafinet",
+        "videoOwnerChannelId": "UC5_y_I_4X5s-11SMxPA1wUg"
+      },
+      "contentDetails": {
+        "videoId": "tcNMauJY3Ww",
+        "videoPublishedAt": "2020-09-24T23:11:31Z"
+      }
+    },
+    {
+      "kind": "youtube#playlistItem",
+      "etag": "lkPMbwoi0AvbZSSfZ27XmgTYN_s",
+      "id": "VVU1X3lfSV80WDVzLTExU014UEExd1VnLm9tb1o1eVdaYnhR",
+      "snippet": {
+        "publishedAt": "2020-09-24T22:48:26Z",
+        "channelId": "UC5_y_I_4X5s-11SMxPA1wUg",
+        "title": "ARMONIA PROFESIONAL - Estado Flow",
+        "description": "Sesiones en vivo en el Aula Virtual de Anafinet\nacceso en http://www.anafinet.org/online",
+        "thumbnails": {
+          "default": {
+            "url": "https://i.ytimg.com/vi/omoZ5yWZbxQ/default.jpg",
+            "width": 120,
+            "height": 90
+          },
+          "medium": {
+            "url": "https://i.ytimg.com/vi/omoZ5yWZbxQ/mqdefault.jpg",
+            "width": 320,
+            "height": 180
+          },
+          "high": {
+            "url": "https://i.ytimg.com/vi/omoZ5yWZbxQ/hqdefault.jpg",
+            "width": 480,
+            "height": 360
+          }
+        },
+        "channelTitle": "Anafinet",
+        "playlistId": "UU5_y_I_4X5s-11SMxPA1wUg",
+        "position": 131,
+        "resourceId": {
+          "kind": "youtube#video",
+          "videoId": "omoZ5yWZbxQ"
+        },
+        "videoOwnerChannelTitle": "Anafinet",
+        "videoOwnerChannelId": "UC5_y_I_4X5s-11SMxPA1wUg"
+      },
+      "contentDetails": {
+        "videoId": "omoZ5yWZbxQ",
+        "videoPublishedAt": "2020-09-24T22:48:26Z"
+      }
+    },
+    {
+      "kind": "youtube#playlistItem",
+      "etag": "f84m-cHVo-QJ_myI0XuAx6tpZiI",
+      "id": "VVU1X3lfSV80WDVzLTExU014UEExd1VnLkI1c1NoZENYYUVj",
+      "snippet": {
+        "publishedAt": "2020-09-23T23:00:57Z",
+        "channelId": "UC5_y_I_4X5s-11SMxPA1wUg",
+        "title": "COMISION FISCAL DE ANAFINET - Tratamiento Fiscal de los Honorarios al Consejo de Administración",
+        "description": "Sesiones en vivo en el Aula Virtual de Anafinet\nacceso en http://www.anafinet.org/online",
+        "thumbnails": {
+          "default": {
+            "url": "https://i.ytimg.com/vi/B5sShdCXaEc/default.jpg",
+            "width": 120,
+            "height": 90
+          },
+          "medium": {
+            "url": "https://i.ytimg.com/vi/B5sShdCXaEc/mqdefault.jpg",
+            "width": 320,
+            "height": 180
+          },
+          "high": {
+            "url": "https://i.ytimg.com/vi/B5sShdCXaEc/hqdefault.jpg",
+            "width": 480,
+            "height": 360
+          },
+          "standard": {
+            "url": "https://i.ytimg.com/vi/B5sShdCXaEc/sddefault.jpg",
+            "width": 640,
+            "height": 480
+          }
+        },
+        "channelTitle": "Anafinet",
+        "playlistId": "UU5_y_I_4X5s-11SMxPA1wUg",
+        "position": 132,
+        "resourceId": {
+          "kind": "youtube#video",
+          "videoId": "B5sShdCXaEc"
+        },
+        "videoOwnerChannelTitle": "Anafinet",
+        "videoOwnerChannelId": "UC5_y_I_4X5s-11SMxPA1wUg"
+      },
+      "contentDetails": {
+        "videoId": "B5sShdCXaEc",
+        "videoPublishedAt": "2020-09-23T23:00:57Z"
+      }
+    },
+    {
+      "kind": "youtube#playlistItem",
+      "etag": "utokMcRbEz-Jb21fWNZYFk3J7po",
+      "id": "VVU1X3lfSV80WDVzLTExU014UEExd1VnLktfenNKOUx6V3ZB",
+      "snippet": {
+        "publishedAt": "2020-09-23T22:39:57Z",
+        "channelId": "UC5_y_I_4X5s-11SMxPA1wUg",
+        "title": "LA HORA DE LOS CONTADORES DE CANCUN - Asignación de Costos Para Toma de Decisiones",
+        "description": "Sesiones en vivo en el Aula Virtual de Anafinet\nacceso en http://www.anafinet.org/online",
+        "thumbnails": {
+          "default": {
+            "url": "https://i.ytimg.com/vi/K_zsJ9LzWvA/default.jpg",
+            "width": 120,
+            "height": 90
+          },
+          "medium": {
+            "url": "https://i.ytimg.com/vi/K_zsJ9LzWvA/mqdefault.jpg",
+            "width": 320,
+            "height": 180
+          },
+          "high": {
+            "url": "https://i.ytimg.com/vi/K_zsJ9LzWvA/hqdefault.jpg",
+            "width": 480,
+            "height": 360
+          }
+        },
+        "channelTitle": "Anafinet",
+        "playlistId": "UU5_y_I_4X5s-11SMxPA1wUg",
+        "position": 133,
+        "resourceId": {
+          "kind": "youtube#video",
+          "videoId": "K_zsJ9LzWvA"
+        },
+        "videoOwnerChannelTitle": "Anafinet",
+        "videoOwnerChannelId": "UC5_y_I_4X5s-11SMxPA1wUg"
+      },
+      "contentDetails": {
+        "videoId": "K_zsJ9LzWvA",
+        "videoPublishedAt": "2020-09-23T22:39:57Z"
+      }
+    },
+    {
+      "kind": "youtube#playlistItem",
+      "etag": "CKKTrZ4dl2i8ac2QxktxqNpN7Ww",
+      "id": "VVU1X3lfSV80WDVzLTExU014UEExd1VnLlVLeEtFcWtIMHZ3",
+      "snippet": {
+        "publishedAt": "2020-09-21T23:03:16Z",
+        "channelId": "UC5_y_I_4X5s-11SMxPA1wUg",
+        "title": "ANAFINET REP. DE CDMX - Elaboración de una Calculadora de Salario Diario Integrado en Excel",
+        "description": "Sesiones en vivo en el Aula Virtual de Anafinet\nacceso en http://www.anafinet.org/online",
+        "thumbnails": {
+          "default": {
+            "url": "https://i.ytimg.com/vi/UKxKEqkH0vw/default.jpg",
+            "width": 120,
+            "height": 90
+          },
+          "medium": {
+            "url": "https://i.ytimg.com/vi/UKxKEqkH0vw/mqdefault.jpg",
+            "width": 320,
+            "height": 180
+          },
+          "high": {
+            "url": "https://i.ytimg.com/vi/UKxKEqkH0vw/hqdefault.jpg",
+            "width": 480,
+            "height": 360
+          },
+          "standard": {
+            "url": "https://i.ytimg.com/vi/UKxKEqkH0vw/sddefault.jpg",
+            "width": 640,
+            "height": 480
+          }
+        },
+        "channelTitle": "Anafinet",
+        "playlistId": "UU5_y_I_4X5s-11SMxPA1wUg",
+        "position": 134,
+        "resourceId": {
+          "kind": "youtube#video",
+          "videoId": "UKxKEqkH0vw"
+        },
+        "videoOwnerChannelTitle": "Anafinet",
+        "videoOwnerChannelId": "UC5_y_I_4X5s-11SMxPA1wUg"
+      },
+      "contentDetails": {
+        "videoId": "UKxKEqkH0vw",
+        "videoPublishedAt": "2020-09-21T23:03:16Z"
+      }
+    },
+    {
+      "kind": "youtube#playlistItem",
+      "etag": "tMkog-8DY5q6DXzv0upyXiW-iB4",
+      "id": "VVU1X3lfSV80WDVzLTExU014UEExd1VnLkZ1RVkyVng1Wl9z",
+      "snippet": {
+        "publishedAt": "2020-09-18T22:44:46Z",
+        "channelId": "UC5_y_I_4X5s-11SMxPA1wUg",
+        "title": "INNOVACION PARA EL DESARROLLO EMPRESARIAL - Innovación y Liderazgo",
+        "description": "Sesiones en vivo en el Aula Virtual de Anafinet\nacceso en http://www.anafinet.org/online",
+        "thumbnails": {
+          "default": {
+            "url": "https://i.ytimg.com/vi/FuEY2Vx5Z_s/default.jpg",
+            "width": 120,
+            "height": 90
+          },
+          "medium": {
+            "url": "https://i.ytimg.com/vi/FuEY2Vx5Z_s/mqdefault.jpg",
+            "width": 320,
+            "height": 180
+          },
+          "high": {
+            "url": "https://i.ytimg.com/vi/FuEY2Vx5Z_s/hqdefault.jpg",
+            "width": 480,
+            "height": 360
+          },
+          "standard": {
+            "url": "https://i.ytimg.com/vi/FuEY2Vx5Z_s/sddefault.jpg",
+            "width": 640,
+            "height": 480
+          }
+        },
+        "channelTitle": "Anafinet",
+        "playlistId": "UU5_y_I_4X5s-11SMxPA1wUg",
+        "position": 135,
+        "resourceId": {
+          "kind": "youtube#video",
+          "videoId": "FuEY2Vx5Z_s"
+        },
+        "videoOwnerChannelTitle": "Anafinet",
+        "videoOwnerChannelId": "UC5_y_I_4X5s-11SMxPA1wUg"
+      },
+      "contentDetails": {
+        "videoId": "FuEY2Vx5Z_s",
+        "videoPublishedAt": "2020-09-18T22:44:46Z"
+      }
+    },
+    {
+      "kind": "youtube#playlistItem",
+      "etag": "LMy1OBXGm0ess2WTkP3FMTwowJM",
+      "id": "VVU1X3lfSV80WDVzLTExU014UEExd1VnLmc2VlhWZkREcXlN",
+      "snippet": {
+        "publishedAt": "2020-09-18T22:25:21Z",
+        "channelId": "UC5_y_I_4X5s-11SMxPA1wUg",
+        "title": "ANALISIS CONTABLE - FISCAL: Analizando Propuestas de Reformas a la Ley de ISR para 2021",
+        "description": "Sesiones en vivo en el Aula Virtual de Anafinet\nacceso en http://www.anafinet.org/online",
+        "thumbnails": {
+          "default": {
+            "url": "https://i.ytimg.com/vi/g6VXVfDDqyM/default.jpg",
+            "width": 120,
+            "height": 90
+          },
+          "medium": {
+            "url": "https://i.ytimg.com/vi/g6VXVfDDqyM/mqdefault.jpg",
+            "width": 320,
+            "height": 180
+          },
+          "high": {
+            "url": "https://i.ytimg.com/vi/g6VXVfDDqyM/hqdefault.jpg",
+            "width": 480,
+            "height": 360
+          }
+        },
+        "channelTitle": "Anafinet",
+        "playlistId": "UU5_y_I_4X5s-11SMxPA1wUg",
+        "position": 136,
+        "resourceId": {
+          "kind": "youtube#video",
+          "videoId": "g6VXVfDDqyM"
+        },
+        "videoOwnerChannelTitle": "Anafinet",
+        "videoOwnerChannelId": "UC5_y_I_4X5s-11SMxPA1wUg"
+      },
+      "contentDetails": {
+        "videoId": "g6VXVfDDqyM",
+        "videoPublishedAt": "2020-09-18T22:25:21Z"
+      }
+    },
+    {
+      "kind": "youtube#playlistItem",
+      "etag": "Cot7I1_XwZKffLt91et0_zdKQfs",
+      "id": "VVU1X3lfSV80WDVzLTExU014UEExd1VnLkdDbzlyRFFXd2JN",
+      "snippet": {
+        "publishedAt": "2020-09-18T22:06:36Z",
+        "channelId": "UC5_y_I_4X5s-11SMxPA1wUg",
+        "title": "LA HORA DE GRUPO COIN - MEXICO, ECONOMIA Y PROYECCION",
+        "description": "Sesiones en vivo en el Aula Virtual de Anafinet\nacceso en http://www.anafinet.org/online",
+        "thumbnails": {
+          "default": {
+            "url": "https://i.ytimg.com/vi/GCo9rDQWwbM/default.jpg",
+            "width": 120,
+            "height": 90
+          },
+          "medium": {
+            "url": "https://i.ytimg.com/vi/GCo9rDQWwbM/mqdefault.jpg",
+            "width": 320,
+            "height": 180
+          },
+          "high": {
+            "url": "https://i.ytimg.com/vi/GCo9rDQWwbM/hqdefault.jpg",
+            "width": 480,
+            "height": 360
+          }
+        },
+        "channelTitle": "Anafinet",
+        "playlistId": "UU5_y_I_4X5s-11SMxPA1wUg",
+        "position": 137,
+        "resourceId": {
+          "kind": "youtube#video",
+          "videoId": "GCo9rDQWwbM"
+        },
+        "videoOwnerChannelTitle": "Anafinet",
+        "videoOwnerChannelId": "UC5_y_I_4X5s-11SMxPA1wUg"
+      },
+      "contentDetails": {
+        "videoId": "GCo9rDQWwbM",
+        "videoPublishedAt": "2020-09-18T22:06:36Z"
+      }
+    },
+    {
+      "kind": "youtube#playlistItem",
+      "etag": "t5sq4owInpOWPCqoXuwSEmqXtYo",
+      "id": "VVU1X3lfSV80WDVzLTExU014UEExd1VnLjdFZ3RiZjV6MTBj",
+      "snippet": {
+        "publishedAt": "2020-09-15T00:52:53Z",
+        "channelId": "UC5_y_I_4X5s-11SMxPA1wUg",
+        "title": "ANAFINET REP. DE CDMX - Comprendiendo la Contabilidad",
+        "description": "Sesiones en vivo en el Aula Virtual de Anafinet\nacceso en http://www.anafinet.org/online",
+        "thumbnails": {
+          "default": {
+            "url": "https://i.ytimg.com/vi/7Egtbf5z10c/default.jpg",
+            "width": 120,
+            "height": 90
+          },
+          "medium": {
+            "url": "https://i.ytimg.com/vi/7Egtbf5z10c/mqdefault.jpg",
+            "width": 320,
+            "height": 180
+          },
+          "high": {
+            "url": "https://i.ytimg.com/vi/7Egtbf5z10c/hqdefault.jpg",
+            "width": 480,
+            "height": 360
+          },
+          "standard": {
+            "url": "https://i.ytimg.com/vi/7Egtbf5z10c/sddefault.jpg",
+            "width": 640,
+            "height": 480
+          }
+        },
+        "channelTitle": "Anafinet",
+        "playlistId": "UU5_y_I_4X5s-11SMxPA1wUg",
+        "position": 138,
+        "resourceId": {
+          "kind": "youtube#video",
+          "videoId": "7Egtbf5z10c"
+        },
+        "videoOwnerChannelTitle": "Anafinet",
+        "videoOwnerChannelId": "UC5_y_I_4X5s-11SMxPA1wUg"
+      },
+      "contentDetails": {
+        "videoId": "7Egtbf5z10c",
+        "videoPublishedAt": "2020-09-15T00:52:53Z"
+      }
+    },
+    {
+      "kind": "youtube#playlistItem",
+      "etag": "b3Elt7FEq1b0M1gy6Y6qS2fqAS8",
+      "id": "VVU1X3lfSV80WDVzLTExU014UEExd1VnLlpMZDczSWJVcTY4",
+      "snippet": {
+        "publishedAt": "2020-09-15T00:37:37Z",
+        "channelId": "UC5_y_I_4X5s-11SMxPA1wUg",
+        "title": "ABC PRECIOS DE TRANSFERENCIA - Precios de Transferencia Durante la Pandemia",
+        "description": "Sesiones en vivo en el Aula Virtual de Anafinet\nacceso en http://www.anafinet.org/online",
+        "thumbnails": {
+          "default": {
+            "url": "https://i.ytimg.com/vi/ZLd73IbUq68/default.jpg",
+            "width": 120,
+            "height": 90
+          },
+          "medium": {
+            "url": "https://i.ytimg.com/vi/ZLd73IbUq68/mqdefault.jpg",
+            "width": 320,
+            "height": 180
+          },
+          "high": {
+            "url": "https://i.ytimg.com/vi/ZLd73IbUq68/hqdefault.jpg",
+            "width": 480,
+            "height": 360
+          },
+          "standard": {
+            "url": "https://i.ytimg.com/vi/ZLd73IbUq68/sddefault.jpg",
+            "width": 640,
+            "height": 480
+          }
+        },
+        "channelTitle": "Anafinet",
+        "playlistId": "UU5_y_I_4X5s-11SMxPA1wUg",
+        "position": 139,
+        "resourceId": {
+          "kind": "youtube#video",
+          "videoId": "ZLd73IbUq68"
+        },
+        "videoOwnerChannelTitle": "Anafinet",
+        "videoOwnerChannelId": "UC5_y_I_4X5s-11SMxPA1wUg"
+      },
+      "contentDetails": {
+        "videoId": "ZLd73IbUq68",
+        "videoPublishedAt": "2020-09-15T00:37:37Z"
+      }
+    },
+    {
+      "kind": "youtube#playlistItem",
+      "etag": "QKDLP7lTtUajd0PiIzkLtOMImj4",
+      "id": "VVU1X3lfSV80WDVzLTExU014UEExd1VnLkIyRHdaOUVDNk40",
+      "snippet": {
+        "publishedAt": "2020-09-15T00:15:19Z",
+        "channelId": "UC5_y_I_4X5s-11SMxPA1wUg",
+        "title": "PANORAMA TRIBUTARIO - El Fisco y el Contribuyente",
+        "description": "Sesiones en vivo en el Aula Virtual de Anafinet\nacceso en http://www.anafinet.org/online",
+        "thumbnails": {
+          "default": {
+            "url": "https://i.ytimg.com/vi/B2DwZ9EC6N4/default.jpg",
+            "width": 120,
+            "height": 90
+          },
+          "medium": {
+            "url": "https://i.ytimg.com/vi/B2DwZ9EC6N4/mqdefault.jpg",
+            "width": 320,
+            "height": 180
+          },
+          "high": {
+            "url": "https://i.ytimg.com/vi/B2DwZ9EC6N4/hqdefault.jpg",
+            "width": 480,
+            "height": 360
+          },
+          "standard": {
+            "url": "https://i.ytimg.com/vi/B2DwZ9EC6N4/sddefault.jpg",
+            "width": 640,
+            "height": 480
+          }
+        },
+        "channelTitle": "Anafinet",
+        "playlistId": "UU5_y_I_4X5s-11SMxPA1wUg",
+        "position": 140,
+        "resourceId": {
+          "kind": "youtube#video",
+          "videoId": "B2DwZ9EC6N4"
+        },
+        "videoOwnerChannelTitle": "Anafinet",
+        "videoOwnerChannelId": "UC5_y_I_4X5s-11SMxPA1wUg"
+      },
+      "contentDetails": {
+        "videoId": "B2DwZ9EC6N4",
+        "videoPublishedAt": "2020-09-15T00:15:19Z"
+      }
+    },
+    {
+      "kind": "youtube#playlistItem",
+      "etag": "oGukp3lgRPrKeb7lUbsEXjt5fds",
+      "id": "VVU1X3lfSV80WDVzLTExU014UEExd1VnLi1JN0F2RjRWWktj",
+      "snippet": {
+        "publishedAt": "2020-09-15T00:00:57Z",
+        "channelId": "UC5_y_I_4X5s-11SMxPA1wUg",
+        "title": "REFLEXIONARIO FISCAL - Deducciones Personales",
+        "description": "Sesiones en vivo en el Aula Virtual de Anafinet\nacceso en http://www.anafinet.org/online",
+        "thumbnails": {
+          "default": {
+            "url": "https://i.ytimg.com/vi/-I7AvF4VZKc/default.jpg",
+            "width": 120,
+            "height": 90
+          },
+          "medium": {
+            "url": "https://i.ytimg.com/vi/-I7AvF4VZKc/mqdefault.jpg",
+            "width": 320,
+            "height": 180
+          },
+          "high": {
+            "url": "https://i.ytimg.com/vi/-I7AvF4VZKc/hqdefault.jpg",
+            "width": 480,
+            "height": 360
+          },
+          "standard": {
+            "url": "https://i.ytimg.com/vi/-I7AvF4VZKc/sddefault.jpg",
+            "width": 640,
+            "height": 480
+          }
+        },
+        "channelTitle": "Anafinet",
+        "playlistId": "UU5_y_I_4X5s-11SMxPA1wUg",
+        "position": 141,
+        "resourceId": {
+          "kind": "youtube#video",
+          "videoId": "-I7AvF4VZKc"
+        },
+        "videoOwnerChannelTitle": "Anafinet",
+        "videoOwnerChannelId": "UC5_y_I_4X5s-11SMxPA1wUg"
+      },
+      "contentDetails": {
+        "videoId": "-I7AvF4VZKc",
+        "videoPublishedAt": "2020-09-15T00:00:57Z"
+      }
+    },
+    {
+      "kind": "youtube#playlistItem",
+      "etag": "HJxEogNjPErLzF15Xb0c2woWfwg",
+      "id": "VVU1X3lfSV80WDVzLTExU014UEExd1VnLjFuYmxLdHJqcjBV",
+      "snippet": {
+        "publishedAt": "2020-09-14T23:43:25Z",
+        "channelId": "UC5_y_I_4X5s-11SMxPA1wUg",
+        "title": "ANALISIS CONTABLE - FISCAL :  Las consecuencias de estar como no localizado ante la autoridad fiscal",
+        "description": "Sesiones en vivo en el Aula Virtual de Anafinet\nacceso en http://www.anafinet.org/online",
+        "thumbnails": {
+          "default": {
+            "url": "https://i.ytimg.com/vi/1nblKtrjr0U/default.jpg",
+            "width": 120,
+            "height": 90
+          },
+          "medium": {
+            "url": "https://i.ytimg.com/vi/1nblKtrjr0U/mqdefault.jpg",
+            "width": 320,
+            "height": 180
+          },
+          "high": {
+            "url": "https://i.ytimg.com/vi/1nblKtrjr0U/hqdefault.jpg",
+            "width": 480,
+            "height": 360
+          }
+        },
+        "channelTitle": "Anafinet",
+        "playlistId": "UU5_y_I_4X5s-11SMxPA1wUg",
+        "position": 142,
+        "resourceId": {
+          "kind": "youtube#video",
+          "videoId": "1nblKtrjr0U"
+        },
+        "videoOwnerChannelTitle": "Anafinet",
+        "videoOwnerChannelId": "UC5_y_I_4X5s-11SMxPA1wUg"
+      },
+      "contentDetails": {
+        "videoId": "1nblKtrjr0U",
+        "videoPublishedAt": "2020-09-14T23:43:25Z"
+      }
+    },
+    {
+      "kind": "youtube#playlistItem",
+      "etag": "UZGyvYAvleMNafHfm-iD7eMLKMc",
+      "id": "VVU1X3lfSV80WDVzLTExU014UEExd1VnLkJwMFA4VFBZaFhv",
+      "snippet": {
+        "publishedAt": "2020-09-14T23:28:08Z",
+        "channelId": "UC5_y_I_4X5s-11SMxPA1wUg",
+        "title": "COMO HACER UN PROYECTO DE INVESTIGACION - Diseño Metodológico",
+        "description": "Sesiones en vivo en el Aula Virtual de Anafinet\nacceso en http://www.anafinet.org/online",
+        "thumbnails": {
+          "default": {
+            "url": "https://i.ytimg.com/vi/Bp0P8TPYhXo/default.jpg",
+            "width": 120,
+            "height": 90
+          },
+          "medium": {
+            "url": "https://i.ytimg.com/vi/Bp0P8TPYhXo/mqdefault.jpg",
+            "width": 320,
+            "height": 180
+          },
+          "high": {
+            "url": "https://i.ytimg.com/vi/Bp0P8TPYhXo/hqdefault.jpg",
+            "width": 480,
+            "height": 360
+          },
+          "standard": {
+            "url": "https://i.ytimg.com/vi/Bp0P8TPYhXo/sddefault.jpg",
+            "width": 640,
+            "height": 480
+          }
+        },
+        "channelTitle": "Anafinet",
+        "playlistId": "UU5_y_I_4X5s-11SMxPA1wUg",
+        "position": 143,
+        "resourceId": {
+          "kind": "youtube#video",
+          "videoId": "Bp0P8TPYhXo"
+        },
+        "videoOwnerChannelTitle": "Anafinet",
+        "videoOwnerChannelId": "UC5_y_I_4X5s-11SMxPA1wUg"
+      },
+      "contentDetails": {
+        "videoId": "Bp0P8TPYhXo",
+        "videoPublishedAt": "2020-09-14T23:28:08Z"
+      }
+    },
+    {
+      "kind": "youtube#playlistItem",
+      "etag": "dxfOGeNOjTJsd9oakiZ6y6LF8N8",
+      "id": "VVU1X3lfSV80WDVzLTExU014UEExd1VnLkkzckMwU0RkUDZV",
+      "snippet": {
+        "publishedAt": "2020-09-14T22:35:53Z",
+        "channelId": "UC5_y_I_4X5s-11SMxPA1wUg",
+        "title": "FISCAL Y CONTABLE ON LINE - Comentarios a Paquete Económico",
+        "description": "Sesiones en vivo en el Aula Virtual de Anafinet\nacceso en http://www.anafinet.org/online",
+        "thumbnails": {
+          "default": {
+            "url": "https://i.ytimg.com/vi/I3rC0SDdP6U/default.jpg",
+            "width": 120,
+            "height": 90
+          },
+          "medium": {
+            "url": "https://i.ytimg.com/vi/I3rC0SDdP6U/mqdefault.jpg",
+            "width": 320,
+            "height": 180
+          },
+          "high": {
+            "url": "https://i.ytimg.com/vi/I3rC0SDdP6U/hqdefault.jpg",
+            "width": 480,
+            "height": 360
+          }
+        },
+        "channelTitle": "Anafinet",
+        "playlistId": "UU5_y_I_4X5s-11SMxPA1wUg",
+        "position": 144,
+        "resourceId": {
+          "kind": "youtube#video",
+          "videoId": "I3rC0SDdP6U"
+        },
+        "videoOwnerChannelTitle": "Anafinet",
+        "videoOwnerChannelId": "UC5_y_I_4X5s-11SMxPA1wUg"
+      },
+      "contentDetails": {
+        "videoId": "I3rC0SDdP6U",
+        "videoPublishedAt": "2020-09-14T22:35:53Z"
+      }
+    },
+    {
+      "kind": "youtube#playlistItem",
+      "etag": "ypibIfaciH081wyrIySpuY2jVr4",
+      "id": "VVU1X3lfSV80WDVzLTExU014UEExd1VnLnF1NGYxd1hUTDc4",
+      "snippet": {
+        "publishedAt": "2020-09-14T22:17:16Z",
+        "channelId": "UC5_y_I_4X5s-11SMxPA1wUg",
+        "title": "ARMONIA PROFESIONAL - Rencuadrando la Adversidad",
+        "description": "Sesiones en vivo en el Aula Virtual de Anafinet\nacceso en http://www.anafinet.org/online",
+        "thumbnails": {
+          "default": {
+            "url": "https://i.ytimg.com/vi/qu4f1wXTL78/default.jpg",
+            "width": 120,
+            "height": 90
+          },
+          "medium": {
+            "url": "https://i.ytimg.com/vi/qu4f1wXTL78/mqdefault.jpg",
+            "width": 320,
+            "height": 180
+          },
+          "high": {
+            "url": "https://i.ytimg.com/vi/qu4f1wXTL78/hqdefault.jpg",
+            "width": 480,
+            "height": 360
+          }
+        },
+        "channelTitle": "Anafinet",
+        "playlistId": "UU5_y_I_4X5s-11SMxPA1wUg",
+        "position": 145,
+        "resourceId": {
+          "kind": "youtube#video",
+          "videoId": "qu4f1wXTL78"
+        },
+        "videoOwnerChannelTitle": "Anafinet",
+        "videoOwnerChannelId": "UC5_y_I_4X5s-11SMxPA1wUg"
+      },
+      "contentDetails": {
+        "videoId": "qu4f1wXTL78",
+        "videoPublishedAt": "2020-09-14T22:17:16Z"
+      }
+    },
+    {
+      "kind": "youtube#playlistItem",
+      "etag": "3iQbQxvDKsS4dqEyMuUD3piNUFY",
+      "id": "VVU1X3lfSV80WDVzLTExU014UEExd1VnLnVJcnNlY1lqRmxF",
+      "snippet": {
+        "publishedAt": "2020-09-14T21:57:25Z",
+        "channelId": "UC5_y_I_4X5s-11SMxPA1wUg",
+        "title": "LA HORA DE GRUPO COIN - Algunos Aspectos del Paquete Fiscal 2021",
+        "description": "Sesiones en vivo en el Aula Virtual de Anafinet\nacceso en http://www.anafinet.org/online",
+        "thumbnails": {
+          "default": {
+            "url": "https://i.ytimg.com/vi/uIrsecYjFlE/default.jpg",
+            "width": 120,
+            "height": 90
+          },
+          "medium": {
+            "url": "https://i.ytimg.com/vi/uIrsecYjFlE/mqdefault.jpg",
+            "width": 320,
+            "height": 180
+          },
+          "high": {
+            "url": "https://i.ytimg.com/vi/uIrsecYjFlE/hqdefault.jpg",
+            "width": 480,
+            "height": 360
+          }
+        },
+        "channelTitle": "Anafinet",
+        "playlistId": "UU5_y_I_4X5s-11SMxPA1wUg",
+        "position": 146,
+        "resourceId": {
+          "kind": "youtube#video",
+          "videoId": "uIrsecYjFlE"
+        },
+        "videoOwnerChannelTitle": "Anafinet",
+        "videoOwnerChannelId": "UC5_y_I_4X5s-11SMxPA1wUg"
+      },
+      "contentDetails": {
+        "videoId": "uIrsecYjFlE",
+        "videoPublishedAt": "2020-09-14T21:57:25Z"
+      }
+    },
+    {
+      "kind": "youtube#playlistItem",
+      "etag": "AFdDKHZynYJ-9ld5S8XirAXRFq0",
+      "id": "VVU1X3lfSV80WDVzLTExU014UEExd1VnLlFEOVJ4d1p2WVdn",
+      "snippet": {
+        "publishedAt": "2020-09-10T18:07:55Z",
+        "channelId": "UC5_y_I_4X5s-11SMxPA1wUg",
+        "title": "COMISION FISCAL DE ANAFINET - Compliance Fiscal Como Herramienta de Planeación Estratégica",
+        "description": "Sesiones en vivo en el Aula Virtual de Anafinet\nacceso en http://www.anafinet.org/online",
+        "thumbnails": {
+          "default": {
+            "url": "https://i.ytimg.com/vi/QD9RxwZvYWg/default.jpg",
+            "width": 120,
+            "height": 90
+          },
+          "medium": {
+            "url": "https://i.ytimg.com/vi/QD9RxwZvYWg/mqdefault.jpg",
+            "width": 320,
+            "height": 180
+          },
+          "high": {
+            "url": "https://i.ytimg.com/vi/QD9RxwZvYWg/hqdefault.jpg",
+            "width": 480,
+            "height": 360
+          },
+          "standard": {
+            "url": "https://i.ytimg.com/vi/QD9RxwZvYWg/sddefault.jpg",
+            "width": 640,
+            "height": 480
+          }
+        },
+        "channelTitle": "Anafinet",
+        "playlistId": "UU5_y_I_4X5s-11SMxPA1wUg",
+        "position": 147,
+        "resourceId": {
+          "kind": "youtube#video",
+          "videoId": "QD9RxwZvYWg"
+        },
+        "videoOwnerChannelTitle": "Anafinet",
+        "videoOwnerChannelId": "UC5_y_I_4X5s-11SMxPA1wUg"
+      },
+      "contentDetails": {
+        "videoId": "QD9RxwZvYWg",
+        "videoPublishedAt": "2020-09-10T18:07:55Z"
+      }
+    },
+    {
+      "kind": "youtube#playlistItem",
+      "etag": "SS6DPvmQ-v1UGrnoaEjGYbDEY7w",
+      "id": "VVU1X3lfSV80WDVzLTExU014UEExd1VnLmlBLVNpYzVHTEFJ",
+      "snippet": {
+        "publishedAt": "2020-09-10T17:51:38Z",
+        "channelId": "UC5_y_I_4X5s-11SMxPA1wUg",
+        "title": "LA HORA DE LOS CONTADORES DE CANCUN - Interpretación de la Información",
+        "description": "Sesiones en vivo en el Aula Virtual de Anafinet\nacceso en http://www.anafinet.org/online",
+        "thumbnails": {
+          "default": {
+            "url": "https://i.ytimg.com/vi/iA-Sic5GLAI/default.jpg",
+            "width": 120,
+            "height": 90
+          },
+          "medium": {
+            "url": "https://i.ytimg.com/vi/iA-Sic5GLAI/mqdefault.jpg",
+            "width": 320,
+            "height": 180
+          },
+          "high": {
+            "url": "https://i.ytimg.com/vi/iA-Sic5GLAI/hqdefault.jpg",
+            "width": 480,
+            "height": 360
+          }
+        },
+        "channelTitle": "Anafinet",
+        "playlistId": "UU5_y_I_4X5s-11SMxPA1wUg",
+        "position": 148,
+        "resourceId": {
+          "kind": "youtube#video",
+          "videoId": "iA-Sic5GLAI"
+        },
+        "videoOwnerChannelTitle": "Anafinet",
+        "videoOwnerChannelId": "UC5_y_I_4X5s-11SMxPA1wUg"
+      },
+      "contentDetails": {
+        "videoId": "iA-Sic5GLAI",
+        "videoPublishedAt": "2020-09-10T17:51:38Z"
+      }
+    },
+    {
+      "kind": "youtube#playlistItem",
+      "etag": "GcIZrnaCpJSm57IXrqRZFjTEMWQ",
+      "id": "VVU1X3lfSV80WDVzLTExU014UEExd1VnLk1Oa3N6NTZGdDJV",
+      "snippet": {
+        "publishedAt": "2020-09-09T16:31:11Z",
+        "channelId": "UC5_y_I_4X5s-11SMxPA1wUg",
+        "title": "REINVENTA TU EMPRESA - ¿Y Solamente con las Redes Sociales voy a Vender?",
+        "description": "Sesiones en vivo en el Aula Virtual de Anafinet\nacceso en http://www.anafinet.org/online",
+        "thumbnails": {
+          "default": {
+            "url": "https://i.ytimg.com/vi/MNksz56Ft2U/default.jpg",
+            "width": 120,
+            "height": 90
+          },
+          "medium": {
+            "url": "https://i.ytimg.com/vi/MNksz56Ft2U/mqdefault.jpg",
+            "width": 320,
+            "height": 180
+          },
+          "high": {
+            "url": "https://i.ytimg.com/vi/MNksz56Ft2U/hqdefault.jpg",
+            "width": 480,
+            "height": 360
+          }
+        },
+        "channelTitle": "Anafinet",
+        "playlistId": "UU5_y_I_4X5s-11SMxPA1wUg",
+        "position": 149,
+        "resourceId": {
+          "kind": "youtube#video",
+          "videoId": "MNksz56Ft2U"
+        },
+        "videoOwnerChannelTitle": "Anafinet",
+        "videoOwnerChannelId": "UC5_y_I_4X5s-11SMxPA1wUg"
+      },
+      "contentDetails": {
+        "videoId": "MNksz56Ft2U",
+        "videoPublishedAt": "2020-09-09T16:31:11Z"
+      }
+    }
+  ],
+  "pageInfo": {
+    "totalResults": 1418,
+    "resultsPerPage": 50
+  }
+}
