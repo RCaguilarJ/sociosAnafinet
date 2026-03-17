@@ -341,8 +341,8 @@ $ubicacion = trim($ciudad . ($ciudad !== '' && $estado !== '' ? ', ' : '') . $es
                             </div>
                         </div>
                         <div class="flex flex-wrap items-center gap-3">
-                            <button class="bg-green-600 text-white px-4 py-2 rounded-lg text-xs font-bold flex items-center" type="submit" form="perfilForm">
-                                <i class="fa-regular fa-floppy-disk mr-2"></i> Guardar
+                            <button id="editSaveBtn" data-state="view" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-xs font-bold flex items-center transition" type="button" form="perfilForm">
+                                <i class="fa-regular fa-pen-to-square mr-2"></i><span>Editar</span>
                             </button>
                             <a href="<?php echo BASE_URL; ?>/perfil.php?tab=informacion" class="text-gray-500 hover:text-gray-700 text-xs font-semibold">Cancelar</a>
                         </div>
@@ -370,45 +370,45 @@ $ubicacion = trim($ciudad . ($ciudad !== '' && $estado !== '' ? ', ' : '') . $es
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
                             <label class="text-xs font-bold text-gray-400 uppercase mb-1 block">Nombre Completo</label>
-                            <input type="text" name="nombre" required value="<?php echo htmlspecialchars($nombre, ENT_QUOTES); ?>" class="w-full p-2 border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-blue-500">
+                            <input type="text" name="nombre" required disabled value="<?php echo htmlspecialchars($nombre, ENT_QUOTES); ?>" class="w-full p-2 border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-blue-500">
                         </div>
                         <div>
                             <label class="text-xs font-bold text-gray-400 uppercase mb-1 block">Email</label>
-                            <input type="email" name="email" required value="<?php echo htmlspecialchars($email, ENT_QUOTES); ?>" class="w-full p-2 border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-blue-500">
+                            <input type="email" name="email" required disabled value="<?php echo htmlspecialchars($email, ENT_QUOTES); ?>" class="w-full p-2 border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-blue-500">
                         </div>
                         <div>
                             <label class="text-xs font-bold text-gray-400 uppercase mb-1 block">Tel&eacute;fono</label>
-                            <input type="text" name="telefono" value="<?php echo htmlspecialchars($telefono, ENT_QUOTES); ?>" class="w-full p-2 border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-blue-500">
+                            <input type="text" name="telefono" disabled value="<?php echo htmlspecialchars($telefono, ENT_QUOTES); ?>" class="w-full p-2 border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-blue-500">
                         </div>
                         <div>
                             <label class="text-xs font-bold text-gray-400 uppercase mb-1 block">C&eacute;dula Profesional</label>
-                            <input type="text" name="cedula_profesional" value="<?php echo htmlspecialchars($cedula, ENT_QUOTES); ?>" class="w-full p-2 border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-blue-500">
+                            <input type="text" name="cedula_profesional" disabled value="<?php echo htmlspecialchars($cedula, ENT_QUOTES); ?>" class="w-full p-2 border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-blue-500">
                         </div>
                         <div>
                             <label class="text-xs font-bold text-gray-400 uppercase mb-1 block">Despacho/Empresa</label>
-                            <input type="text" name="empresa" value="<?php echo htmlspecialchars($empresa, ENT_QUOTES); ?>" class="w-full p-2 border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-blue-500">
+                            <input type="text" name="empresa" disabled value="<?php echo htmlspecialchars($empresa, ENT_QUOTES); ?>" class="w-full p-2 border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-blue-500">
                         </div>
                         <div>
                             <label class="text-xs font-bold text-gray-400 uppercase mb-1 block">Puesto</label>
-                            <input type="text" name="puesto" value="<?php echo htmlspecialchars($puesto, ENT_QUOTES); ?>" class="w-full p-2 border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-blue-500">
+                            <input type="text" name="puesto" disabled value="<?php echo htmlspecialchars($puesto, ENT_QUOTES); ?>" class="w-full p-2 border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-blue-500">
                         </div>
                         <div>
                             <label class="text-xs font-bold text-gray-400 uppercase mb-1 block">Ciudad</label>
-                            <input type="text" name="ciudad" value="<?php echo htmlspecialchars($ciudad, ENT_QUOTES); ?>" class="w-full p-2 border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-blue-500">
+                            <input type="text" name="ciudad" disabled value="<?php echo htmlspecialchars($ciudad, ENT_QUOTES); ?>" class="w-full p-2 border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-blue-500">
                         </div>
                         <div>
                             <label class="text-xs font-bold text-gray-400 uppercase mb-1 block">Estado</label>
-                            <input type="text" name="estado" value="<?php echo htmlspecialchars($estado, ENT_QUOTES); ?>" class="w-full p-2 border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-blue-500">
+                            <input type="text" name="estado" disabled value="<?php echo htmlspecialchars($estado, ENT_QUOTES); ?>" class="w-full p-2 border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-blue-500">
                         </div>
                         <div>
                             <label class="text-xs font-bold text-gray-400 uppercase mb-1 block">Especialidad</label>
-                            <input type="text" name="especialidad" value="<?php echo htmlspecialchars($especialidad, ENT_QUOTES); ?>" class="w-full p-2 border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-blue-500">
+                            <input type="text" name="especialidad" disabled value="<?php echo htmlspecialchars($especialidad, ENT_QUOTES); ?>" class="w-full p-2 border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-blue-500">
                         </div>
                     </div>
 
                     <div class="mt-6">
                         <label class="text-xs font-bold text-gray-400 uppercase mb-1 block">Biograf&iacute;a</label>
-                        <textarea name="biografia" rows="4" maxlength="1000" class="w-full p-3 border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-blue-500"><?php echo htmlspecialchars($biografia, ENT_QUOTES); ?></textarea>
+                        <textarea name="biografia" rows="4" maxlength="1000" disabled class="w-full p-3 border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-blue-500"><?php echo htmlspecialchars($biografia, ENT_QUOTES); ?></textarea>
                         <p class="text-[10px] text-gray-400 mt-1">M&aacute;ximo 1000 caracteres.</p>
                     </div>
                 </form>
@@ -425,6 +425,49 @@ $ubicacion = trim($ciudad . ($ciudad !== '' && $estado !== '' ? ', ' : '') . $es
                         <i class="fa-solid fa-download mr-2"></i> Descargar Certificado
                     </a>
                 </div>
+                <script>
+                (function () {
+                    const perfilForm = document.getElementById('perfilForm');
+                    const editSaveBtn = document.getElementById('editSaveBtn');
+                    if (!perfilForm || !editSaveBtn) return;
+
+                    const editableFields = perfilForm.querySelectorAll('input, textarea, select');
+                    const icon = editSaveBtn.querySelector('i');
+                    const label = editSaveBtn.querySelector('span');
+
+                    const setEditing = (isEditing) => {
+                        editableFields.forEach((el) => {
+                            if (el.type === 'hidden') return;
+                            el.disabled = !isEditing;
+                        });
+
+                        if (isEditing) {
+                            editSaveBtn.dataset.state = 'edit';
+                            editSaveBtn.classList.remove('bg-blue-600', 'hover:bg-blue-700');
+                            editSaveBtn.classList.add('bg-green-600', 'hover:bg-green-700');
+                            if (icon) icon.className = 'fa-regular fa-floppy-disk mr-2';
+                            if (label) label.textContent = 'Guardar';
+                        } else {
+                            editSaveBtn.dataset.state = 'view';
+                            editSaveBtn.classList.remove('bg-green-600', 'hover:bg-green-700');
+                            editSaveBtn.classList.add('bg-blue-600', 'hover:bg-blue-700');
+                            if (icon) icon.className = 'fa-regular fa-pen-to-square mr-2';
+                            if (label) label.textContent = 'Editar';
+                        }
+                    };
+
+                    setEditing(false);
+
+                    editSaveBtn.addEventListener('click', () => {
+                        const isEditing = editSaveBtn.dataset.state === 'edit';
+                        if (!isEditing) {
+                            setEditing(true);
+                            return;
+                        }
+                        perfilForm.requestSubmit();
+                    });
+                })();
+                </script>
 
             <?php elseif ($tab == 'estadisticas'): ?>
                 <?php
@@ -552,6 +595,5 @@ $ubicacion = trim($ciudad . ($ciudad !== '' && $estado !== '' ? ', ' : '') . $es
     </main>
 </body>
 </html>
-
 
 

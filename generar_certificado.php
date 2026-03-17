@@ -39,7 +39,13 @@ if (file_exists($logoPath)) {
     }
 }
 
-$nombre = strtoupper(htmlspecialchars((string)($user['nombre'] ?? '')));
+$nombreRaw = (string)($user['nombre'] ?? '');
+if (function_exists('mb_strtoupper')) {
+    $nombreRaw = mb_strtoupper($nombreRaw, 'UTF-8');
+} else {
+    $nombreRaw = strtoupper($nombreRaw);
+}
+$nombre = htmlspecialchars($nombreRaw, ENT_QUOTES, 'UTF-8');
 $userId = htmlspecialchars((string)($user['id'] ?? ''));
 $fecha = date("d/m/Y");
 
