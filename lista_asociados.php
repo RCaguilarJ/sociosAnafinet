@@ -33,53 +33,51 @@ $total_filtrados = 0;
 $total_pages = 1;
 $offset = 0;
 
-if ($isAdmin) {
-    $stmtEstados = $pdo->query("SELECT DISTINCT estado FROM usuarios WHERE estado IS NOT NULL AND estado <> '' ORDER BY estado ASC");
-    $estados = $stmtEstados->fetchAll(PDO::FETCH_COLUMN);
+$stmtEstados = $pdo->query("SELECT DISTINCT estado FROM usuarios WHERE estado IS NOT NULL AND estado <> '' ORDER BY estado ASC");
+$estados = $stmtEstados->fetchAll(PDO::FETCH_COLUMN);
 
-    $where = " WHERE rol = 'Asociado'";
-    $params = [];
+$where = " WHERE (rol = 'Asociado' OR rol = 'Admin' OR rol = 'Administrador')";
+$params = [];
 
-    if ($search !== '') {
-        $where .= " AND (nombre LIKE ? OR empresa LIKE ? OR ciudad LIKE ? OR especialidad LIKE ? OR email LIKE ?)";
-        $params[] = "%{$search}%";
-        $params[] = "%{$search}%";
-        $params[] = "%{$search}%";
-        $params[] = "%{$search}%";
-        $params[] = "%{$search}%";
-    }
-
-    if ($estado_filtro !== '') {
-        $where .= " AND estado = ?";
-        $params[] = $estado_filtro;
-    }
-
-    $countQuery = "SELECT COUNT(*) FROM usuarios" . $where;
-    $stmtCount = $pdo->prepare($countQuery);
-    $stmtCount->execute($params);
-    $total_filtrados = (int)$stmtCount->fetchColumn();
-    $total_pages = max(1, (int)ceil($total_filtrados / $perPage));
-    if ($page > $total_pages) {
-        $page = $total_pages;
-    }
-    $offset = ($page - 1) * $perPage;
-
-    $query = "SELECT * FROM usuarios" . $where . " ORDER BY creado_at DESC LIMIT ? OFFSET ?";
-    $stmt = $pdo->prepare($query);
-    $bindIndex = 1;
-    foreach ($params as $param) {
-        $stmt->bindValue($bindIndex, $param);
-        $bindIndex++;
-    }
-    $stmt->bindValue($bindIndex, $perPage, PDO::PARAM_INT);
-    $stmt->bindValue($bindIndex + 1, $offset, PDO::PARAM_INT);
-    $stmt->execute();
-    $asociados = $stmt->fetchAll();
-
-    $total_asoc = $pdo->query("SELECT COUNT(*) FROM usuarios WHERE rol = 'Asociado'")->fetchColumn();
-    $total_estados = $pdo->query("SELECT COUNT(DISTINCT estado) FROM usuarios")->fetchColumn();
-    $total_despachos = $pdo->query("SELECT COUNT(DISTINCT empresa) FROM usuarios")->fetchColumn();
+if ($search !== '') {
+    $where .= " AND (nombre LIKE ? OR empresa LIKE ? OR ciudad LIKE ? OR especialidad LIKE ? OR email LIKE ?)";
+    $params[] = "%{$search}%";
+    $params[] = "%{$search}%";
+    $params[] = "%{$search}%";
+    $params[] = "%{$search}%";
+    $params[] = "%{$search}%";
 }
+
+if ($estado_filtro !== '') {
+    $where .= " AND estado = ?";
+    $params[] = $estado_filtro;
+}
+
+$countQuery = "SELECT COUNT(*) FROM usuarios" . $where;
+$stmtCount = $pdo->prepare($countQuery);
+$stmtCount->execute($params);
+$total_filtrados = (int)$stmtCount->fetchColumn();
+$total_pages = max(1, (int)ceil($total_filtrados / $perPage));
+if ($page > $total_pages) {
+    $page = $total_pages;
+}
+$offset = ($page - 1) * $perPage;
+
+$query = "SELECT * FROM usuarios" . $where . " ORDER BY creado_at DESC LIMIT ? OFFSET ?";
+$stmt = $pdo->prepare($query);
+$bindIndex = 1;
+foreach ($params as $param) {
+    $stmt->bindValue($bindIndex, $param);
+    $bindIndex++;
+}
+$stmt->bindValue($bindIndex, $perPage, PDO::PARAM_INT);
+$stmt->bindValue($bindIndex + 1, $offset, PDO::PARAM_INT);
+$stmt->execute();
+$asociados = $stmt->fetchAll();
+
+$total_asoc = $pdo->query("SELECT COUNT(*) FROM usuarios WHERE (rol = 'Asociado' OR rol = 'Admin' OR rol = 'Administrador')")->fetchColumn();
+$total_estados = $pdo->query("SELECT COUNT(DISTINCT estado) FROM usuarios WHERE (rol = 'Asociado' OR rol = 'Admin' OR rol = 'Administrador')")->fetchColumn();
+$total_despachos = $pdo->query("SELECT COUNT(DISTINCT empresa) FROM usuarios WHERE (rol = 'Asociado' OR rol = 'Admin' OR rol = 'Administrador')")->fetchColumn();
 ?>
 
 <!DOCTYPE html>
@@ -103,34 +101,29 @@ if ($isAdmin) {
             <p class="text-sm text-gray-500">Directorio de profesionales fiscales miembros de ANAFINET</p>
         </header>
 
-        <?php if (!$isAdmin): ?>
-            <div class="bg-white rounded-2xl border border-gray-100 p-6 text-sm text-red-600">
-                Acceso restringido: solo administradores.
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+            <div class="bg-[#5282B2] p-4 rounded-xl text-white flex justify-between items-center">
+                <div>
+                    <p class="text-[10px] opacity-80 uppercase">Total Asociados</p>
+                    <h2 class="text-2xl font-bold"><?php echo number_format((int)$total_asoc); ?></h2>
+                </div>
+                <i class="fa-solid fa-users text-2xl opacity-30"></i>
             </div>
-        <?php else: ?>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-                <div class="bg-[#5282B2] p-4 rounded-xl text-white flex justify-between items-center">
-                    <div>
-                        <p class="text-[10px] opacity-80 uppercase">Total Asociados</p>
-                        <h2 class="text-2xl font-bold"><?php echo number_format((int)$total_asoc); ?></h2>
-                    </div>
-                    <i class="fa-solid fa-users text-2xl opacity-30"></i>
+            <div class="bg-[#E67E22] p-4 rounded-xl text-white flex justify-between items-center">
+                <div>
+                    <p class="text-[10px] opacity-80 uppercase">Estados Representados</p>
+                    <h2 class="text-2xl font-bold"><?php echo (int)$total_estados; ?></h2>
                 </div>
-                <div class="bg-[#E67E22] p-4 rounded-xl text-white flex justify-between items-center">
-                    <div>
-                        <p class="text-[10px] opacity-80 uppercase">Estados Representados</p>
-                        <h2 class="text-2xl font-bold"><?php echo (int)$total_estados; ?></h2>
-                    </div>
-                    <i class="fa-solid fa-location-dot text-2xl opacity-30"></i>
-                </div>
-                <div class="bg-[#9B59B6] p-4 rounded-xl text-white flex justify-between items-center">
-                    <div>
-                        <p class="text-[10px] opacity-80 uppercase">Despachos Afiliados</p>
-                        <h2 class="text-2xl font-bold"><?php echo (int)$total_despachos; ?></h2>
-                    </div>
-                    <i class="fa-solid fa-building text-2xl opacity-30"></i>
-                </div>
+                <i class="fa-solid fa-location-dot text-2xl opacity-30"></i>
             </div>
+            <div class="bg-[#9B59B6] p-4 rounded-xl text-white flex justify-between items-center">
+                <div>
+                    <p class="text-[10px] opacity-80 uppercase">Despachos Afiliados</p>
+                    <h2 class="text-2xl font-bold"><?php echo (int)$total_despachos; ?></h2>
+                </div>
+                <i class="fa-solid fa-building text-2xl opacity-30"></i>
+            </div>
+        </div>
 
             <form method="GET" class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 flex flex-wrap gap-4 mb-6">
                 <div class="flex-1 min-w-[200px] relative">
@@ -240,7 +233,6 @@ if ($isAdmin) {
                     P&aacute;gina <?php echo $page; ?> de <?php echo $total_pages; ?>
                 </div>
             <?php endif; ?>
-        <?php endif; ?>
     </main>
 </body>
 </html>

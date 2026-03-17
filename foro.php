@@ -64,7 +64,7 @@ $stmtCount = $pdo->prepare("SELECT COUNT(*)" . $baseSql);
 $stmtCount->execute($params);
 $totalFiltrados = (int)$stmtCount->fetchColumn();
 
-$stmt = $pdo->prepare("SELECT t.*, u.nombre as autor" . $baseSql . $orderSql);
+$stmt = $pdo->prepare("SELECT t.*, u.nombre as autor, u.foto_perfil" . $baseSql . $orderSql);
 $stmt->execute($params);
 $temas = $stmt->fetchAll();
 ?>
@@ -179,13 +179,26 @@ $temas = $stmt->fetchAll();
         <p class="text-xs text-gray-400 mb-4">Mostrando <?php echo $totalFiltrados; ?> temas</p>
 
         <div class="space-y-4">
-            <?php foreach ($temas as $t): ?>
+            <?php foreach ($temas as $t):
+                $foto = trim((string)($t['foto_perfil'] ?? ''));
+                $autor = (string)($t['autor'] ?? '');
+                if ($autor !== '') {
+                    $initial = function_exists('mb_substr') ? mb_substr($autor, 0, 1, 'UTF-8') : substr($autor, 0, 1);
+                    $initial = strtoupper($initial);
+                } else {
+                    $initial = '?';
+                }
+            ?>
             <a href="tema_detalle.php?id=<?php echo $t['id']; ?>" class="block bg-white p-6 rounded-3xl border border-gray-100 shadow-sm hover:shadow-md transition group">
                 <div class="flex justify-between items-start">
                     <div class="flex items-start space-x-4">
-                        <div class="w-10 h-10 bg-slate-100 rounded-full flex items-center justify-center text-slate-500 font-bold">
-                            <?php echo strtoupper(substr($t['autor'], 0, 1)); ?>
-                        </div>
+                        <?php if ($foto !== ''): ?>
+                            <img src="uploads/perfiles/<?php echo htmlspecialchars($foto); ?>" class="w-10 h-10 rounded-full object-cover bg-slate-100" alt="Foto de perfil">
+                        <?php else: ?>
+                            <div class="w-10 h-10 bg-slate-100 rounded-full flex items-center justify-center text-slate-500 font-bold">
+                                <?php echo htmlspecialchars($initial); ?>
+                            </div>
+                        <?php endif; ?>
                         <div>
                             <span class="text-[10px] font-bold uppercase text-blue-500 bg-blue-50 px-2 py-1 rounded">
                                 <?php echo $t['categoria']; ?>

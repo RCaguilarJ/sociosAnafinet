@@ -35,7 +35,7 @@ if ($respPage > $respPages) {
 }
 $respOffset = ($respPage - 1) * $respPerPage;
 
-$stmtResp = $pdo->prepare("SELECT r.*, u.nombre as autor FROM foro_respuestas r JOIN usuarios u ON r.usuario_id = u.id WHERE r.tema_id = ? ORDER BY r.creado_at ASC LIMIT ? OFFSET ?");
+$stmtResp = $pdo->prepare("SELECT r.*, u.nombre as autor, u.foto_perfil FROM foro_respuestas r JOIN usuarios u ON r.usuario_id = u.id WHERE r.tema_id = ? ORDER BY r.creado_at ASC LIMIT ? OFFSET ?");
 $stmtResp->bindValue(1, $temaId, PDO::PARAM_INT);
 $stmtResp->bindValue(2, $respPerPage, PDO::PARAM_INT);
 $stmtResp->bindValue(3, $respOffset, PDO::PARAM_INT);
@@ -128,9 +128,12 @@ $error = $_GET['error'] ?? '';
                 </div>
             <?php else: ?>
                 <div class="space-y-4">
-                    <?php foreach ($respuestas as $resp): ?>
+                    <?php foreach ($respuestas as $resp):
+                        $foto = !empty($resp['foto_perfil']) ? $resp['foto_perfil'] : 'default.png';
+                    ?>
                         <div class="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm ml-4 md:ml-10">
                             <div class="flex items-center gap-3 text-xs text-gray-400 mb-2">
+                                <img src="uploads/perfiles/<?php echo htmlspecialchars($foto); ?>" class="w-8 h-8 rounded-full object-cover" alt="Foto de perfil">
                                 <span class="font-semibold text-gray-600"><?php echo htmlspecialchars((string)$resp['autor']); ?></span>
                                 <span>&bull;</span>
                                 <span><?php echo date("d M, Y H:i", strtotime((string)$resp['creado_at'])); ?></span>
