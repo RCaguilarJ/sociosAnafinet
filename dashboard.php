@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 require_once __DIR__ . '/bootstrap.php';
 // Evitar que el navegador guarde en cach� informaci�n sensible
 header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
@@ -37,7 +37,7 @@ if ($pdo instanceof PDO) {
     <title>Dashboard - Anafinet</title>
 </head>
 <body class="bg-slate-50 min-h-screen">
-    <?php
+<?php
     $activePage = 'dashboard';
     require 'menu.php';
     ?>
@@ -224,4 +224,3 @@ if ($pdo instanceof PDO) {
 </script>
 </body>
 </html>
-
