@@ -5,6 +5,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $email = $_POST['email'] ?? '';
     $password = $_POST['password'] ?? '';
 
+    $demoEmail = env_value('DEMO_EMAIL', 'asociado@anafinet.mx');
+    $demoPassword = env_value('DEMO_PASSWORD', 'anafinet2024');
+    $allowDemoLogin = app_demo_mode_enabled();
+
+    if (!($pdo instanceof PDO) && $allowDemoLogin) {
+        if (hash_equals($demoEmail, $email) && hash_equals($demoPassword, $password)) {
+            session_regenerate_id(true);
+            $_SESSION['user_id'] = 1;
+            $_SESSION['user_name'] = 'Asociado Demo';
+            $_SESSION['user_rol'] = 'Asociado';
+            $_SESSION['demo_mode'] = true;
+
+            header("Location: dashboard.php");
+            exit();
+        }
+
+        header("Location: index.php?error=1");
+        exit();
+    }
+
     // 1. Buscamos al usuario por su email
     $stmt = $pdo->prepare("SELECT * FROM usuarios WHERE email = ?");
     $stmt->execute([$email]);

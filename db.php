@@ -37,10 +37,14 @@ $options = [
 try {
     $pdo = new PDO($dsn, $user, $pass, $options);
 } catch (PDOException $e) {
-    throw new PDOException(
-        'No se pudo conectar a la base de datos. Revisa DATABASE_URL o las variables DB_HOST, DB_PORT, DB_NAME, DB_USER y DB_PASSWORD.',
-        (int)$e->getCode(),
-        $e
-    );
+    $pdo = null;
+    $dbConnectionError = 'No se pudo conectar a la base de datos. Revisa DATABASE_URL o las variables DB_HOST, DB_PORT, DB_NAME, DB_USER y DB_PASSWORD.';
+    if (!app_demo_mode_enabled()) {
+        throw new PDOException(
+            $dbConnectionError,
+            (int)$e->getCode(),
+            $e
+        );
+    }
 }
 ?>

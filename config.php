@@ -18,6 +18,13 @@ if (!function_exists('is_vercel_environment')) {
     }
 }
 
+if (!function_exists('app_demo_mode_enabled')) {
+    function app_demo_mode_enabled(): bool
+    {
+        return env_value('ALLOW_DEMO_LOGIN', '0') === '1';
+    }
+}
+
 if (!function_exists('detect_base_url')) {
     function detect_base_url(): string
     {

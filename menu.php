@@ -28,6 +28,12 @@ $menuItems = [
     ['key' => 'foro_nuevo', 'label' => 'Nuevo Tema', 'href' => $basePrefix . 'foro.php?nuevo=1', 'icon' => 'fa-plus'],
 ];
 
+if (!isset($pdo) || !($pdo instanceof PDO)) {
+    $menuItems = [
+        ['key' => 'dashboard', 'label' => 'Dashboard', 'href' => $basePrefix . 'dashboard.php', 'icon' => 'fa-house'],
+    ];
+}
+
 if (is_admin_role($userRole)) {
     $menuItems[] = ['key' => 'subir_documentos', 'label' => 'Subir Documentos', 'href' => $basePrefix . 'subir_archivo.php', 'icon' => 'fa-cloud-arrow-up'];
     $menuItems[] = ['key' => 'links_admin', 'label' => 'Administrar Links', 'href' => $basePrefix . 'links_interes_admin.php', 'icon' => 'fa-pen-to-square'];

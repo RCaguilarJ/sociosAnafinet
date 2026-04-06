@@ -12,10 +12,18 @@ if (!isset($_SESSION['user_id'])) {
 }
 
 // Consultas din�micas para los contadores (replicando Figma)
-$videos_count = $pdo->query("SELECT COUNT(*) FROM contenidos WHERE tipo = 'video'")->fetchColumn();
-$docs_count = $pdo->query("SELECT COUNT(*) FROM contenidos WHERE tipo = 'documento'")->fetchColumn();
-$asociados_count = $pdo->query("SELECT COUNT(*) FROM usuarios WHERE rol = 'Asociado'")->fetchColumn();
-$foro_count = $pdo->query("SELECT COUNT(*) FROM contenidos WHERE tipo = 'foro'")->fetchColumn();
+$videos_count = 0;
+$docs_count = 0;
+$asociados_count = 0;
+$foro_count = 0;
+$demoMode = !($pdo instanceof PDO) && app_demo_mode_enabled();
+
+if ($pdo instanceof PDO) {
+    $videos_count = $pdo->query("SELECT COUNT(*) FROM contenidos WHERE tipo = 'video'")->fetchColumn();
+    $docs_count = $pdo->query("SELECT COUNT(*) FROM contenidos WHERE tipo = 'documento'")->fetchColumn();
+    $asociados_count = $pdo->query("SELECT COUNT(*) FROM usuarios WHERE rol = 'Asociado'")->fetchColumn();
+    $foro_count = $pdo->query("SELECT COUNT(*) FROM contenidos WHERE tipo = 'foro'")->fetchColumn();
+}
 
 ?>
 
@@ -35,6 +43,11 @@ $foro_count = $pdo->query("SELECT COUNT(*) FROM contenidos WHERE tipo = 'foro'")
     ?>
 
     <main class="md:ml-64 p-8">
+        <?php if ($demoMode): ?>
+            <div class="mb-6 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+                Modo demo activo: la base de datos no est&aacute; conectada en Vercel. Solo se habilit&oacute; el acceso temporal con credenciales demo.
+            </div>
+        <?php endif; ?>
         <header class="mb-8">
             <h1 class="text-2xl font-bold text-gray-800">Bienvenido, <?php echo $_SESSION['user_name']; ?></h1>
             <p class="text-gray-500">Accede a todos los recursos y contenido exclusivo.</p>
@@ -211,5 +224,4 @@ $foro_count = $pdo->query("SELECT COUNT(*) FROM contenidos WHERE tipo = 'foro'")
 </script>
 </body>
 </html>
-
 

@@ -90,7 +90,7 @@ if (!function_exists('ensure_session_table')) {
 }
 
 if (!function_exists('app_start_session')) {
-    function app_start_session(PDO $pdo): void
+    function app_start_session(?PDO $pdo): void
     {
         if (session_status() === PHP_SESSION_ACTIVE) {
             return;
@@ -98,8 +98,6 @@ if (!function_exists('app_start_session')) {
 
         $ttl = max(3600, (int)env_value('SESSION_TTL', '86400'));
 
-        ensure_session_table($pdo);
-        session_set_save_handler(new DatabaseSessionHandler($pdo, $ttl), true);
         session_name((string)env_value('SESSION_NAME', 'anafinet_session'));
         session_set_cookie_params([
             'lifetime' => 0,
@@ -110,6 +108,12 @@ if (!function_exists('app_start_session')) {
             'samesite' => 'Lax',
         ]);
         ini_set('session.gc_maxlifetime', (string)$ttl);
+
+        if ($pdo instanceof PDO) {
+            ensure_session_table($pdo);
+            session_set_save_handler(new DatabaseSessionHandler($pdo, $ttl), true);
+        }
+
         session_start();
     }
 }
