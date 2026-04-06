@@ -1,6 +1,5 @@
 <?php
-session_start();
-require 'db.php';
+require_once __DIR__ . '/bootstrap.php';
 require_once 'role_helpers.php';
 
 if (!isset($_SESSION['user_id'])) {
@@ -160,7 +159,9 @@ $total_despachos = $pdo->query("SELECT COUNT(DISTINCT empresa) FROM usuarios WHE
             <?php else: ?>
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     <?php foreach ($asociados as $asoc):
-                        $foto = !empty($asoc['foto_perfil']) ? $asoc['foto_perfil'] : 'default.png';
+                        $foto = trim((string)($asoc['foto_perfil'] ?? ''));
+                        $fotoUrl = $foto !== '' ? uploaded_file_url('perfiles', $foto) : '';
+                        $hasFoto = $foto !== '' && app_resolve_storage_path('perfiles', $foto) !== null;
                         $empresa = (string)($asoc['empresa'] ?? '');
                         $especialidad = (string)($asoc['especialidad'] ?? '');
                         $ciudad = (string)($asoc['ciudad'] ?? '');
@@ -169,12 +170,20 @@ $total_despachos = $pdo->query("SELECT COUNT(DISTINCT empresa) FROM usuarios WHE
                         $email = (string)($asoc['email'] ?? '');
                         $telefono = (string)($asoc['telefono'] ?? '');
                         $creado = !empty($asoc['creado_at']) ? date("Y", strtotime((string)$asoc['creado_at'])) : '';
+                        $nombre = (string)($asoc['nombre'] ?? '');
+                        $initial = $nombre !== '' ? strtoupper(substr($nombre, 0, 1)) : '?';
                     ?>
                     <div class="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 hover:shadow-md transition relative overflow-hidden group">
                         <div class="flex items-start space-x-4">
-                            <img src="uploads/perfiles/<?php echo htmlspecialchars($foto); ?>" class="w-16 h-16 rounded-full object-cover" alt="Foto de perfil">
+                            <?php if ($hasFoto): ?>
+                                <img src="<?php echo htmlspecialchars($fotoUrl); ?>" class="w-16 h-16 rounded-full object-cover" alt="Foto de perfil">
+                            <?php else: ?>
+                                <div class="w-16 h-16 rounded-full bg-slate-100 text-slate-500 flex items-center justify-center font-bold text-lg">
+                                    <?php echo htmlspecialchars($initial); ?>
+                                </div>
+                            <?php endif; ?>
                             <div class="flex-1">
-                                <h3 class="font-bold text-gray-800 text-lg"><?php echo htmlspecialchars((string)($asoc['nombre'] ?? '')); ?></h3>
+                                <h3 class="font-bold text-gray-800 text-lg"><?php echo htmlspecialchars($nombre); ?></h3>
                                 <p class="text-xs text-gray-400 flex items-center mb-2">
                                     <i class="fa-solid fa-building mr-1"></i> <?php echo htmlspecialchars($empresa); ?>
                                 </p>

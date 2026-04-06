@@ -1,6 +1,5 @@
 <?php
-session_start();
-require 'db.php';
+require_once __DIR__ . '/bootstrap.php';
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_SESSION['user_id'])) {
     $current_pass = $_POST['current'];

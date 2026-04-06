@@ -1,6 +1,5 @@
 <?php
-session_start();
-require 'db.php';
+require_once __DIR__ . '/bootstrap.php';
 require_once 'role_helpers.php';
 
 if (!isset($_SESSION['user_id'])) {
@@ -58,7 +57,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $isAdmin) {
         $archivo = $_FILES['archivo'] ?? null;
 
         $permitidos = ['pdf', 'doc', 'docx', 'xls', 'xlsx'];
-        $max_size = 5 * 1024 * 1024;
+        $max_size = 4 * 1024 * 1024;
         $allowedMimes = [
             'application/pdf',
             'application/msword',
@@ -114,10 +113,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $isAdmin) {
                     $mensaje = 'Error: El tipo de archivo no es valido.';
                     $mensajeTipo = 'error';
                 } else {
-                    $uploadsDir = __DIR__ . '/uploads/documentos';
-                    if (!is_dir($uploadsDir)) {
-                        mkdir($uploadsDir, 0775, true);
-                    }
+                    $uploadsDir = app_ensure_storage_directory('documentos');
                     if (!is_writable($uploadsDir)) {
                         $mensaje = 'Error: La carpeta de documentos no tiene permisos de escritura.';
                         $mensajeTipo = 'error';
@@ -217,7 +213,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $isAdmin) {
                     <div class="pointer-events-none">
                         <i class="fa-solid fa-cloud-arrow-up text-3xl text-gray-300 mb-2"></i>
                         <p class="text-sm text-gray-400">Haz clic o arrastra tu archivo aqui</p>
-                    <p class="text-[10px] text-gray-300 uppercase mt-1">PDF, DOCX, XLSX hasta 5MB</p>
+                    <p class="text-[10px] text-gray-300 uppercase mt-1">PDF, DOCX, XLSX hasta 4MB</p>
                     <p class="text-[10px] text-gray-300 mt-1">Limite servidor: <?php echo ini_get('upload_max_filesize'); ?> (post_max_size <?php echo ini_get('post_max_size'); ?>)</p>
                         <p id="archivoNombre" class="mt-3 text-xs text-gray-500">Ningun archivo seleccionado</p>
                     </div>

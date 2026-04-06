@@ -1,17 +1,16 @@
 <?php
-session_start();
-require_once '../db.php'; // Conexión a la base de datos
+require_once dirname(__DIR__) . '/bootstrap.php';
 
-// Detectar en qué paso estamos
+// Detectar en quÃ© paso estamos
 $paso = isset($_GET['paso']) ? (int)$_GET['paso'] : 1;
 
-// Títulos dinámicos según el flujo de tus imágenes
+// TÃ­tulos dinÃ¡micos segÃºn el flujo de tus imÃ¡genes
 $titulos = [
-    1 => "Selección de Perfil",
-    2 => "Información Personal",
-    3 => "Dirección de Contacto",
+    1 => "SelecciÃ³n de Perfil",
+    2 => "InformaciÃ³n Personal",
+    3 => "DirecciÃ³n de Contacto",
     4 => "Perfil Profesional",
-    5 => "Método de Pago"
+    5 => "MÃ©todo de Pago"
 ];
 ?>
 
@@ -22,7 +21,7 @@ $titulos = [
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <title>Afiliación Anafinet - <?php echo $titulos[$paso] ?? 'Solicitud'; ?></title>
+    <title>AfiliaciÃ³n Anafinet - <?php echo $titulos[$paso] ?? 'Solicitud'; ?></title>
 </head>
 <body class="bg-slate-100 min-h-screen">
 
@@ -43,8 +42,8 @@ $titulos = [
         </div>
 
         <div class="bg-white rounded-[2rem] shadow-xl p-8 md:p-12 border border-gray-100">
-            <?php 
-                // Carga dinámica del contenido del paso
+            <?php
+                // Carga dinÃ¡mica del contenido del paso
                 switch($paso) {
                     case 1: include 'paso0_perfil.php'; break;
                     case 2: include 'paso1_personal.php'; break;
@@ -55,12 +54,9 @@ $titulos = [
                 }
             ?>
         </div>
-        
-        <p class="text-center text-gray-400 text-xs mt-8">© 2026 Anafinet A.C. - Todos los derechos reservados.</p>
+
+        <p class="text-center text-gray-400 text-xs mt-8">Â© 2026 Anafinet A.C. - Todos los derechos reservados.</p>
     </div>
 
 </body>
 </html>
-
-
-

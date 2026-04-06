@@ -1,5 +1,5 @@
 ﻿<?php
-require 'db.php';
+require_once __DIR__ . '/bootstrap.php';
 
 $autoload = __DIR__ . '/vendor/autoload.php';
 if (file_exists($autoload)) {
@@ -11,7 +11,6 @@ if (file_exists($autoload)) {
 use Dompdf\Dompdf;
 use Dompdf\Options;
 
-session_start();
 if (!isset($_SESSION['user_id'])) {
     exit;
 }

@@ -1,6 +1,10 @@
 <?php
 // Si ya existen datos en la sesión para este paso, los precargamos
 $datos = $_SESSION['afiliacion']['paso2'] ?? [];
+$mensajeError = $_SESSION['afiliacion_error'] ?? '';
+if ($mensajeError !== '') {
+    unset($_SESSION['afiliacion_error']);
+}
 ?>
 
 <div class="animate-fadeIn">

@@ -1,0 +1,23 @@
+{
+  "functions": {
+    "*.php": {
+      "runtime": "vercel-php@0.7.4"
+    },
+    "afiliacion/*.php": {
+      "runtime": "vercel-php@0.7.4"
+    }
+  },
+  "routes": [
+    {
+      "src": "/$",
+      "dest": "/index.php"
+    },
+    {
+      "src": "/afiliacion/?$",
+      "dest": "/afiliacion/index.php"
+    },
+    {
+      "handle": "filesystem"
+    }
+  ]
+}

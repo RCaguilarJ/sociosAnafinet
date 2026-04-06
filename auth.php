@@ -1,6 +1,5 @@
 <?php
-session_start();
-require 'db.php';
+require_once __DIR__ . '/bootstrap.php';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $email = $_POST['email'] ?? '';
@@ -12,7 +11,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $user = $stmt->fetch();
 
     // 2. Verificación (Para este caso específico con tus credenciales)
-    if ($user && $password === $user['password']) {
+    $isValidPassword = false;
+    if ($user) {
+        $storedPassword = (string)($user['password'] ?? '');
+        $passwordInfo = password_get_info($storedPassword);
+        if (!empty($passwordInfo['algo'])) {
+            $isValidPassword = password_verify($password, $storedPassword);
+        } else {
+            $isValidPassword = hash_equals($storedPassword, $password);
+        }
+    }
+
+    if ($user && $isValidPassword) {
+        session_regenerate_id(true);
         // Creamos la sesión con los datos del diseño de Figma
         $_SESSION['user_id'] = $user['id'];
         $_SESSION['user_name'] = $user['nombre'];

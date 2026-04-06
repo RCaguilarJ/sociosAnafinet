@@ -1,11 +1,9 @@
 ﻿<?php
-session_start();
+require_once __DIR__ . '/bootstrap.php';
 // Evitar que el navegador guarde en cach� informaci�n sensible
 header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
 header("Cache-Control: post-check=0, pre-check=0", false);
 header("Pragma: no-cache");
-
-require 'db.php';
 
 // Verificaci�n de seguridad: Si no hay sesi�n, regresa al login
 if (!isset($_SESSION['user_id'])) {
@@ -213,6 +211,5 @@ $foro_count = $pdo->query("SELECT COUNT(*) FROM contenidos WHERE tipo = 'foro'")
 </script>
 </body>
 </html>
-
 
 

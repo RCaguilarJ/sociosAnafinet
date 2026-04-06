@@ -1,6 +1,5 @@
 <?php
-session_start();
-require_once '../db.php';
+require_once dirname(__DIR__) . '/bootstrap.php';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_SESSION['afiliacion'])) {
     $p0 = $_SESSION['afiliacion']['paso1'];

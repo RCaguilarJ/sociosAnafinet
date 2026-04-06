@@ -1,6 +1,5 @@
 <?php
-session_start();
-require 'db.php';
+require_once __DIR__ . '/bootstrap.php';
 
 if (!isset($_SESSION['user_id'])) {
     http_response_code(204);

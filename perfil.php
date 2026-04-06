@@ -1,6 +1,5 @@
 ﻿<?php
-session_start();
-require 'db.php';
+require_once __DIR__ . '/bootstrap.php';
 
 if (!isset($_SESSION['user_id'])) {
     header("Location: index.php");
@@ -105,17 +104,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                             imagecopyresampled($dstImg, $srcImg, 0, 0, $srcX, $srcY, $targetSize, $targetSize, $size, $size);
 
-                            $uploadsDir = __DIR__ . '/uploads/perfiles';
-                            if (!is_dir($uploadsDir)) {
-                                mkdir($uploadsDir, 0775, true);
-                            }
+                            $uploadsDir = app_ensure_storage_directory('perfiles');
                             if (!is_writable($uploadsDir)) {
                                 $uploadMsg = 'La carpeta de perfiles no tiene permisos de escritura.';
                                 $uploadType = 'error';
                             } else {
                                 $token = bin2hex(random_bytes(4));
                                 $newName = 'perfil_' . $_SESSION['user_id'] . '_' . time() . '_' . $token . '.' . $outExt;
-                                $destino = $uploadsDir . DIRECTORY_SEPARATOR . $newName;
+                                $destino = app_storage_path('perfiles', $newName);
                                 $saved = $saveFn($dstImg, $destino);
 
                                 if ($saved) {
@@ -123,7 +119,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                     $stmtUpdate = $pdo->prepare("UPDATE usuarios SET foto_perfil = ? WHERE id = ?");
                                     $stmtUpdate->execute([$newName, $_SESSION['user_id']]);
                                     if ($oldFoto && $oldFoto !== $newName) {
-                                        $oldPath = $uploadsDir . DIRECTORY_SEPARATOR . $oldFoto;
+                                        $oldPath = app_storage_path('perfiles', $oldFoto);
                                         if (is_file($oldPath)) {
                                             @unlink($oldPath);
                                         }
@@ -239,9 +235,8 @@ function initial_from_name(string $name): string
 }
 
 $fotoPerfil = $user['foto_perfil'] ?? '';
-$fotoRel = $fotoPerfil !== '' ? 'uploads/perfiles/' . $fotoPerfil : 'uploads/perfiles/default.png';
-$fotoPath = __DIR__ . '/' . $fotoRel;
-$hasFoto = $fotoPerfil !== '' && file_exists($fotoPath);
+$fotoUrl = $fotoPerfil !== '' ? uploaded_file_url('perfiles', $fotoPerfil) : '';
+$hasFoto = $fotoPerfil !== '' && app_resolve_storage_path('perfiles', $fotoPerfil) !== null;
 
 $nombre = (string)($user['nombre'] ?? '');
 $rol = (string)($user['rol'] ?? '');
@@ -311,7 +306,7 @@ $ubicacion = trim($ciudad . ($ciudad !== '' && $estado !== '' ? ', ' : '') . $es
                                 <input id="fotoInput" type="file" name="foto_perfil" accept="image/jpeg,image/png,image/webp" class="hidden" onchange="this.form.submit()">
                                 <div class="w-24 h-24 rounded-full overflow-hidden border-4 border-white shadow-sm bg-gray-100 flex items-center justify-center">
                                     <?php if ($hasFoto): ?>
-                                        <img src="<?php echo htmlspecialchars($fotoRel); ?>" class="w-full h-full object-cover" alt="Foto de perfil">
+                                        <img src="<?php echo htmlspecialchars($fotoUrl); ?>" class="w-full h-full object-cover" alt="Foto de perfil">
                                     <?php else: ?>
                                         <span class="text-2xl font-semibold text-gray-500"><?php echo htmlspecialchars(initial_from_name($nombre)); ?></span>
                                     <?php endif; ?>
@@ -595,5 +590,3 @@ $ubicacion = trim($ciudad . ($ciudad !== '' && $estado !== '' ? ', ' : '') . $es
     </main>
 </body>
 </html>
-
-

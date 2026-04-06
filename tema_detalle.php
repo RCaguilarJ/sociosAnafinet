@@ -1,6 +1,5 @@
 <?php
-session_start();
-require 'db.php';
+require_once __DIR__ . '/bootstrap.php';
 
 if (!isset($_SESSION['user_id'])) {
     header("Location: index.php");
@@ -129,12 +128,22 @@ $error = $_GET['error'] ?? '';
             <?php else: ?>
                 <div class="space-y-4">
                     <?php foreach ($respuestas as $resp):
-                        $foto = !empty($resp['foto_perfil']) ? $resp['foto_perfil'] : 'default.png';
+                        $foto = trim((string)($resp['foto_perfil'] ?? ''));
+                        $fotoUrl = $foto !== '' ? uploaded_file_url('perfiles', $foto) : '';
+                        $hasFoto = $foto !== '' && app_resolve_storage_path('perfiles', $foto) !== null;
+                        $autor = (string)($resp['autor'] ?? '');
+                        $initial = $autor !== '' ? strtoupper(substr($autor, 0, 1)) : '?';
                     ?>
                         <div class="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm ml-4 md:ml-10">
                             <div class="flex items-center gap-3 text-xs text-gray-400 mb-2">
-                                <img src="uploads/perfiles/<?php echo htmlspecialchars($foto); ?>" class="w-8 h-8 rounded-full object-cover" alt="Foto de perfil">
-                                <span class="font-semibold text-gray-600"><?php echo htmlspecialchars((string)$resp['autor']); ?></span>
+                                <?php if ($hasFoto): ?>
+                                    <img src="<?php echo htmlspecialchars($fotoUrl); ?>" class="w-8 h-8 rounded-full object-cover" alt="Foto de perfil">
+                                <?php else: ?>
+                                    <div class="w-8 h-8 rounded-full bg-slate-100 text-slate-500 flex items-center justify-center font-bold">
+                                        <?php echo htmlspecialchars($initial); ?>
+                                    </div>
+                                <?php endif; ?>
+                                <span class="font-semibold text-gray-600"><?php echo htmlspecialchars($autor); ?></span>
                                 <span>&bull;</span>
                                 <span><?php echo date("d M, Y H:i", strtotime((string)$resp['creado_at'])); ?></span>
                             </div>

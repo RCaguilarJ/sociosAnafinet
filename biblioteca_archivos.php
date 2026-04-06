@@ -1,9 +1,8 @@
 <?php
-session_start();
-require 'db.php';
+require_once __DIR__ . '/bootstrap.php';
 require_once 'role_helpers.php';
 
-$docsDir = __DIR__ . '/uploads/documentos';
+$docsDir = app_storage_path('documentos');
 $files = [];
 $allowedExts = ['pdf', 'doc', 'docx', 'xls', 'xlsx'];
 
@@ -42,11 +41,11 @@ foreach ($documentos as $doc) {
     if (!in_array($ext, $allowedExts, true)) {
         continue;
     }
-    $path = $docsDir . DIRECTORY_SEPARATOR . $fileName;
+    $path = app_resolve_storage_path('documentos', $fileName);
     $title = trim((string)($doc['titulo'] ?? ''));
     $title = $title !== '' ? $title : $fileName;
     $timestamp = 0;
-    if (is_file($path)) {
+    if ($path !== null && is_file($path)) {
         $timestamp = filemtime($path);
     } elseif (!empty($doc['fecha_publicacion'])) {
         $timestamp = strtotime((string)$doc['fecha_publicacion']) ?: 0;
@@ -57,36 +56,52 @@ foreach ($documentos as $doc) {
         'name' => $fileName,
         'title' => $title,
         'tema' => $doc['tema'] ?? '',
-        'url' => 'uploads/documentos/' . rawurlencode($fileName),
-        'size' => is_file($path) ? filesize($path) : null,
+        'url' => uploaded_file_url('documentos', $fileName, true),
+        'size' => $path !== null ? filesize($path) : null,
         'mtime' => $timestamp,
         'ext' => $ext,
     ];
 }
 
-if (empty($files) && is_dir($docsDir)) {
-    $entries = scandir($docsDir);
-    foreach ($entries as $entry) {
-        if ($entry === '.' || $entry === '..') {
+if (empty($files)) {
+    $scanDirs = array_unique([
+        $docsDir,
+        app_bundled_uploads_root() . DIRECTORY_SEPARATOR . 'documentos',
+    ]);
+    $seenEntries = [];
+
+    foreach ($scanDirs as $scanDir) {
+        if (!is_dir($scanDir)) {
             continue;
         }
-        $path = $docsDir . DIRECTORY_SEPARATOR . $entry;
-        if (!is_file($path)) {
-            continue;
+
+        $entries = scandir($scanDir);
+        foreach ($entries as $entry) {
+            if ($entry === '.' || $entry === '..') {
+                continue;
+            }
+            if (isset($seenEntries[$entry])) {
+                continue;
+            }
+            $path = app_resolve_storage_path('documentos', $entry);
+            if ($path === null) {
+                continue;
+            }
+            $ext = strtolower(pathinfo($entry, PATHINFO_EXTENSION));
+            if (!in_array($ext, $allowedExts, true)) {
+                continue;
+            }
+            $files[] = [
+                'name' => $entry,
+                'title' => $entry,
+                'tema' => '',
+                'url' => uploaded_file_url('documentos', $entry, true),
+                'size' => filesize($path),
+                'mtime' => filemtime($path),
+                'ext' => $ext,
+            ];
+            $seenEntries[$entry] = true;
         }
-        $ext = strtolower(pathinfo($entry, PATHINFO_EXTENSION));
-        if (!in_array($ext, $allowedExts, true)) {
-            continue;
-        }
-        $files[] = [
-            'name' => $entry,
-            'title' => $entry,
-            'tema' => '',
-            'url' => 'uploads/documentos/' . rawurlencode($entry),
-            'size' => filesize($path),
-            'mtime' => filemtime($path),
-            'ext' => $ext,
-        ];
     }
 }
 
@@ -207,6 +222,8 @@ foreach ($topicOptions as $key => $label) {
         $topics[] = ['key' => $key, 'label' => $label];
     }
 }
+
+$hasDocsDirectory = is_dir($docsDir) || is_dir(app_bundled_uploads_root() . DIRECTORY_SEPARATOR . 'documentos');
 ?>
 
 <!DOCTYPE html>
@@ -258,7 +275,7 @@ foreach ($topicOptions as $key => $label) {
             </div>
         </section>
 
-        <?php if (!is_dir($docsDir)): ?>
+        <?php if (!$hasDocsDirectory): ?>
             <p class="text-gray-400">No se encontr&oacute; la carpeta de documentos.</p>
         <?php elseif (empty($files)): ?>
             <p class="text-gray-400">No hay documentos disponibles en este momento.</p>
