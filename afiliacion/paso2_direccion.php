@@ -9,7 +9,7 @@ $datos = $_SESSION['afiliacion']['paso2'] ?? [];
         Todos los campos de esta sección son opcionales. Si no cuentas con esta información ahora, puedes continuar.
     </div>
 
-    <form action="procesar_paso.php?paso=2" method="POST" class="space-y-5">
+    <form action="<?php echo BASE_URL; ?>/afiliacion/procesar_paso.php?paso=2" method="POST" class="space-y-5">
         <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
             <div class="md:col-span-2">
                 <label class="block text-xs font-bold text-gray-400 uppercase mb-2 ml-1">Calle <span class="font-medium normal-case text-gray-400">(opcional)</span></label>
@@ -69,7 +69,7 @@ $datos = $_SESSION['afiliacion']['paso2'] ?? [];
         </div>
 
         <div class="flex flex-col md:flex-row gap-4 pt-5">
-            <a href="index.php?paso=1"
+            <a href="<?php echo BASE_URL; ?>/afiliacion/index.php?paso=1"
                class="flex-1 text-center py-4 text-gray-500 font-bold hover:text-gray-700 transition-all">
                 Anterior
             </a>

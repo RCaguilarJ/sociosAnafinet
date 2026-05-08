@@ -2,7 +2,13 @@
 require_once dirname(__DIR__) . '/bootstrap.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST' || !isset($_SESSION['afiliacion']['paso1'], $_SESSION['afiliacion']['paso2'])) {
-    header('Location: index.php?paso=1');
+    header('Location: ' . BASE_URL . '/afiliacion/index.php?paso=1');
+    exit();
+}
+
+if (!($pdo instanceof PDO)) {
+    $_SESSION['afiliacion_error_general'] = 'El registro no está disponible temporalmente porque no hay conexión con la base de datos. Intenta nuevamente más tarde.';
+    header('Location: ' . BASE_URL . '/afiliacion/index.php?paso=3');
     exit();
 }
 
@@ -21,7 +27,7 @@ try {
     $stmtExisting->execute([$email]);
     if ($stmtExisting->fetch()) {
         $_SESSION['afiliacion_error'] = 'El correo capturado ya está registrado. Inicia sesión o utiliza otro correo para continuar.';
-        header('Location: index.php?paso=1');
+        header('Location: ' . BASE_URL . '/afiliacion/index.php?paso=1');
         exit();
     }
 
@@ -58,7 +64,7 @@ try {
 
     $newUserId = (int) $pdo->lastInsertId();
 
-    unset($_SESSION['afiliacion'], $_SESSION['afiliacion_error']);
+    unset($_SESSION['afiliacion'], $_SESSION['afiliacion_error'], $_SESSION['afiliacion_error_general']);
 
     session_regenerate_id(true);
     $_SESSION['user_id'] = $newUserId;
@@ -66,14 +72,16 @@ try {
     $_SESSION['user_rol'] = 'Asociado';
     $_SESSION['user_estatus'] = $estatus;
 
-    header('Location: ../confirmar_pago.php?registro=1');
+    header('Location: ' . BASE_URL . '/confirmar_pago.php?registro=1');
     exit();
 } catch (PDOException $e) {
     if ((string) $e->getCode() === '23000') {
         $_SESSION['afiliacion_error'] = 'El correo capturado ya está registrado. Inicia sesión o utiliza otro correo para continuar.';
-        header('Location: index.php?paso=1');
+        header('Location: ' . BASE_URL . '/afiliacion/index.php?paso=1');
         exit();
     }
 
-    die('Error al registrar: ' . $e->getMessage());
+    $_SESSION['afiliacion_error_general'] = 'No fue posible completar el registro en este momento. Intenta nuevamente más tarde.';
+    header('Location: ' . BASE_URL . '/afiliacion/index.php?paso=3');
+    exit();
 }

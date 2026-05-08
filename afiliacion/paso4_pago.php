@@ -8,11 +8,22 @@ if (!isset($_SESSION['afiliacion']['paso2'])) {
     header('Location: index.php?paso=2');
     exit();
 }
+
+$mensajeGeneral = $_SESSION['afiliacion_error_general'] ?? '';
+if ($mensajeGeneral !== '') {
+    unset($_SESSION['afiliacion_error_general']);
+}
 ?>
 
 <div class="animate-fadeIn">
     <h2 class="text-2xl font-bold text-gray-800 mb-2">Método de Pago</h2>
     <p class="text-gray-500 text-sm mb-8">Paso 3 de 3: Finaliza tu solicitud. Al completar el registro podrás entrar al portal y confirmar tu pago.</p>
+
+    <?php if ($mensajeGeneral !== ''): ?>
+        <div class="mb-6 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+            <?php echo htmlspecialchars($mensajeGeneral, ENT_QUOTES, 'UTF-8'); ?>
+        </div>
+    <?php endif; ?>
 
     <div class="bg-blue-50 p-6 rounded-3xl border border-blue-100 mb-8">
         <div class="flex items-center space-x-4 mb-4">
@@ -45,7 +56,7 @@ if (!isset($_SESSION['afiliacion']['paso2'])) {
         </div>
     </div>
 
-    <form action="finalizar_registro.php" method="POST" class="space-y-6">
+    <form action="<?php echo BASE_URL; ?>/afiliacion/finalizar_registro.php" method="POST" class="space-y-6">
         <div class="flex items-start space-x-3 p-2">
             <input type="checkbox" required class="mt-1 rounded border-gray-300 text-blue-600 focus:ring-blue-500">
             <label class="text-xs text-gray-500 leading-relaxed">
@@ -54,7 +65,7 @@ if (!isset($_SESSION['afiliacion']['paso2'])) {
         </div>
 
         <div class="flex flex-col md:flex-row gap-4 pt-5">
-            <a href="index.php?paso=2" class="flex-1 text-center py-4 text-gray-500 font-bold hover:text-gray-700 transition-all">
+            <a href="<?php echo BASE_URL; ?>/afiliacion/index.php?paso=2" class="flex-1 text-center py-4 text-gray-500 font-bold hover:text-gray-700 transition-all">
                 Anterior
             </a>
             <button type="submit" class="flex-[2] bg-green-600 text-white py-4 rounded-2xl font-bold shadow-lg shadow-green-100 hover:bg-green-700 hover:-translate-y-0.5 transition-all">

@@ -16,7 +16,7 @@ if ($mensajeError !== '') {
         </div>
     <?php endif; ?>
 
-    <form action="procesar_paso.php?paso=1" method="POST" class="space-y-5">
+    <form action="<?php echo BASE_URL; ?>/afiliacion/procesar_paso.php?paso=1" method="POST" class="space-y-5">
         <div>
             <label class="block text-xs font-bold text-gray-400 uppercase mb-2 ml-1">Nombre Completo</label>
             <input type="text" name="nombre" required
@@ -68,7 +68,7 @@ if ($mensajeError !== '') {
                 <i class="fa-solid fa-arrow-right text-sm"></i>
             </button>
 
-            <a href="../index.php" class="block text-center mt-4 text-sm text-gray-400 hover:text-gray-600 transition">
+            <a href="<?php echo BASE_URL; ?>/index.php" class="block text-center mt-4 text-sm text-gray-400 hover:text-gray-600 transition">
                 Ya tengo cuenta, quiero iniciar sesión
             </a>
         </div>

@@ -2,13 +2,13 @@
 require_once dirname(__DIR__) . '/bootstrap.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    header('Location: index.php?paso=1');
+    header('Location: ' . BASE_URL . '/afiliacion/index.php?paso=1');
     exit();
 }
 
 $paso = isset($_GET['paso']) ? (int) $_GET['paso'] : 1;
 if (!in_array($paso, [1, 2], true)) {
-    header('Location: index.php?paso=1');
+    header('Location: ' . BASE_URL . '/afiliacion/index.php?paso=1');
     exit();
 }
 
@@ -32,12 +32,12 @@ if ($paso === 1) {
     $email = $_POST['email'] ?? '';
     if (!$email_com_valido($email)) {
         $_SESSION['afiliacion_error'] = 'El correo debe ser válido y terminar en .com.';
-        header('Location: index.php?paso=1');
+        header('Location: ' . BASE_URL . '/afiliacion/index.php?paso=1');
         exit();
     }
     unset($_SESSION['afiliacion_error']);
 }
 
 $siguiente = $paso + 1;
-header("Location: index.php?paso=$siguiente");
+header('Location: ' . BASE_URL . '/afiliacion/index.php?paso=' . $siguiente);
 exit();

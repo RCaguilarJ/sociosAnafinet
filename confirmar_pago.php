@@ -162,8 +162,8 @@ $comprobanteUrl = $paymentData['comprobante_pago'] !== '' ? uploaded_file_url('c
             <?php if ($registroNuevo): ?>
                 <div class="rounded-3xl border border-blue-200 bg-blue-50 px-6 py-5 text-blue-900">
                     <p class="text-sm font-bold uppercase tracking-wide">Registro completado</p>
-                    <h1 class="mt-2 text-2xl font-bold">Tu cuenta ya fue creada y todas las funciones están desbloqueadas.</h1>
-                    <p class="mt-2 text-sm text-blue-800">Como siguiente paso, confirma tu pago con tu comprobante para cerrar el proceso administrativo.</p>
+                    <h1 class="mt-2 text-2xl font-bold">Su solicitud como afiliado está siendo en proceso.</h1>
+                    <p class="mt-2 text-sm text-blue-800">Como siguiente paso, confirma tu pago con tu comprobante para cerrar el proceso administrativo y así desbloquee todas las funciones que tenemos por ofrecerte.</p>
                 </div>
             <?php endif; ?>
 
