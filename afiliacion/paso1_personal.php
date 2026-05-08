@@ -1,6 +1,5 @@
 <?php
-// Si ya existen datos en la sesión para este paso, los precargamos
-$datos = $_SESSION['afiliacion']['paso2'] ?? [];
+$datos = $_SESSION['afiliacion']['paso1'] ?? [];
 $mensajeError = $_SESSION['afiliacion_error'] ?? '';
 if ($mensajeError !== '') {
     unset($_SESSION['afiliacion_error']);
@@ -9,13 +8,18 @@ if ($mensajeError !== '') {
 
 <div class="animate-fadeIn">
     <h2 class="text-2xl font-bold text-gray-800 mb-2">Información Personal</h2>
-    <p class="text-gray-500 text-sm mb-8">Paso 2 de 5: Comencemos con tus datos básicos para el registro de afiliación.</p>
+    <p class="text-gray-500 text-sm mb-8">Paso 1 de 3: Comencemos con tus datos básicos para el registro de afiliación.</p>
 
-    <form action="procesar_paso.php?paso=2" method="POST" class="space-y-5">
-        
+    <?php if ($mensajeError !== ''): ?>
+        <div class="mb-6 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+            <?php echo htmlspecialchars($mensajeError, ENT_QUOTES, 'UTF-8'); ?>
+        </div>
+    <?php endif; ?>
+
+    <form action="procesar_paso.php?paso=1" method="POST" class="space-y-5">
         <div>
             <label class="block text-xs font-bold text-gray-400 uppercase mb-2 ml-1">Nombre Completo</label>
-            <input type="text" name="nombre" required 
+            <input type="text" name="nombre" required
                    value="<?php echo $datos['nombre'] ?? ''; ?>"
                    class="w-full p-4 bg-slate-50 border border-transparent rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all"
                    placeholder="Ej. Juan Pérez García">
@@ -42,7 +46,7 @@ if ($mensajeError !== '') {
         <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
             <div>
                 <label class="block text-xs font-bold text-gray-400 uppercase mb-2 ml-1">Correo Electrónico</label>
-                <input type="email" name="email" required 
+                <input type="email" name="email" required
                        value="<?php echo $datos['email'] ?? ''; ?>"
                        class="w-full p-4 bg-slate-50 border border-transparent rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all"
                        placeholder="correo@ejemplo.com">
@@ -50,7 +54,7 @@ if ($mensajeError !== '') {
 
             <div>
                 <label class="block text-xs font-bold text-gray-400 uppercase mb-2 ml-1">Teléfono</label>
-                <input type="tel" name="telefono" required 
+                <input type="tel" name="telefono" required
                        value="<?php echo $datos['telefono'] ?? ''; ?>"
                        class="w-full p-4 bg-slate-50 border border-transparent rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all"
                        placeholder="10 dígitos">
@@ -58,16 +62,15 @@ if ($mensajeError !== '') {
         </div>
 
         <div class="pt-5">
-            <button type="submit" 
+            <button type="submit"
                     class="w-full bg-[#5282B2] text-white py-4 rounded-2xl font-bold shadow-lg shadow-blue-200 hover:bg-blue-700 hover:-translate-y-0.5 transition-all flex items-center justify-center space-x-2">
                 <span>Siguiente: Dirección</span>
                 <i class="fa-solid fa-arrow-right text-sm"></i>
             </button>
-            
+
             <a href="../index.php" class="block text-center mt-4 text-sm text-gray-400 hover:text-gray-600 transition">
                 Ya tengo cuenta, quiero iniciar sesión
             </a>
         </div>
     </form>
 </div>
-

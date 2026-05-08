@@ -47,7 +47,7 @@ if (isset($_GET['registro']) && $_GET['registro'] === 'exito') {
                 <label class="block text-sm font-medium text-gray-700">Email</label>
                 <input type="email" name="email" required class="w-full mt-1 p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none">
             </div>
-            
+
             <div>
                 <label class="block text-sm font-medium text-gray-700">Contraseña</label>
                 <input type="password" name="password" required class="w-full mt-1 p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none">
@@ -59,14 +59,10 @@ if (isset($_GET['registro']) && $_GET['registro'] === 'exito') {
         </form>
 
         <div class="mt-6 text-center text-sm">
-             <p class="text-gray-400">¿No eres asociado aún?</p>
-             <a href="afiliacion/index.php" class="text-orange-500 font-bold hover:underline">Solicita tu Afiliación</a>
+            <p class="text-gray-400">¿No eres asociado aún?</p>
+            <a href="afiliacion/index.php" class="text-orange-500 font-bold hover:underline">Solicita tu Afiliación</a>
         </div>
     </div>
 
 </body>
 </html>
-
-
-
-
