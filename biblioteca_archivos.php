@@ -2,6 +2,8 @@
 require_once __DIR__ . '/bootstrap.php';
 require_once 'role_helpers.php';
 
+require_full_portal_access($pdo ?? null, 'archivos', 'Biblioteca de Archivos');
+
 $docsDir = app_storage_path('documentos');
 $files = [];
 $allowedExts = ['pdf', 'doc', 'docx', 'xls', 'xlsx'];

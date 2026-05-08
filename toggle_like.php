@@ -6,6 +6,8 @@ if (!isset($_SESSION['user_id'])) {
     exit();
 }
 
+require_full_portal_access($pdo ?? null, 'foro', 'Reacción del Foro');
+
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     header("Location: foro.php");
     exit();

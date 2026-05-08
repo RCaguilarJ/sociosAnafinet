@@ -15,6 +15,8 @@ if (!isset($_SESSION['user_id'])) {
     exit;
 }
 
+require_full_portal_access($pdo ?? null, 'perfil', 'Certificado');
+
 $options = new Options();
 $options->set('isRemoteEnabled', true);
 $options->set('defaultFont', 'Helvetica');

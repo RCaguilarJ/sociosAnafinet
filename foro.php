@@ -3,6 +3,8 @@ require_once __DIR__ . '/bootstrap.php';
 
 if (!isset($_SESSION['user_id'])) { header("Location: index.php"); exit(); }
 
+require_full_portal_access($pdo ?? null, 'foro', 'Foro Fiscal');
+
 $search = trim($_GET['search'] ?? '');
 $categoriaFiltro = trim($_GET['categoria'] ?? '');
 $sort = $_GET['sort'] ?? 'recientes';

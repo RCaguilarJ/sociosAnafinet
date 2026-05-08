@@ -1,6 +1,8 @@
 <?php
 require_once __DIR__ . '/bootstrap.php';
 require_once 'role_helpers.php';
+
+require_full_portal_access($pdo ?? null, 'videos', 'Biblioteca de Videos');
 $channelId = 'UC5_y_I_4X5s-11SMxPA1wUg';
 $uploadsPlaylistId = 'UU' . substr($channelId, 2);
 $channelUrl = 'https://www.youtube.com/channel/' . $channelId;
@@ -289,4 +291,3 @@ $recentVideos = $perPage > 0 ? array_slice($recentVideosAll, $offset, $perPage) 
     </script>
 </body>
 </html>
-

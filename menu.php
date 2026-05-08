@@ -34,15 +34,7 @@ $menuItems = [
     ['key' => 'foro_nuevo', 'label' => 'Nuevo Tema', 'href' => $basePrefix . 'foro.php?nuevo=1', 'icon' => 'fa-plus'],
 ];
 
-if (!is_admin_role($userRole) && ($userStatus === 'Pendiente de pago' || $userStatus === 'Pago reportado')) {
-    $menuItems[] = ['key' => 'confirmar_pago', 'label' => 'Confirmar Pago', 'href' => $basePrefix . 'confirmar_pago.php', 'icon' => 'fa-credit-card'];
-}
-
-if (!isset($pdo) || !($pdo instanceof PDO)) {
-    $menuItems = [
-        ['key' => 'dashboard', 'label' => 'Dashboard', 'href' => $basePrefix . 'dashboard.php', 'icon' => 'fa-house'],
-    ];
-}
+$menuItems[] = ['key' => 'confirmar_pago', 'label' => 'Confirmar Pago', 'href' => $basePrefix . 'confirmar_pago.php', 'icon' => 'fa-credit-card'];
 
 if (is_admin_role($userRole)) {
     $menuItems[] = ['key' => 'revisar_pagos', 'label' => 'Revisar Pagos', 'href' => $basePrefix . 'revisar_pagos.php', 'icon' => 'fa-receipt'];

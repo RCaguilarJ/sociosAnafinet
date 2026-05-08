@@ -6,6 +6,9 @@ if (!isset($_SESSION['user_id'])) {
     exit();
 }
 
+$restrictedProfileOnly = user_has_profile_only_access($pdo ?? null, (int)($_SESSION['user_id'] ?? 0), (string)($_SESSION['user_rol'] ?? ''), (string)($_SESSION['user_estatus'] ?? ''));
+$showRestrictedBanner = $restrictedProfileOnly || (isset($_GET['bloqueado']) && $_GET['bloqueado'] === '1');
+
 $stmt = $pdo->prepare("SELECT * FROM usuarios WHERE id = ?");
 $stmt->execute([$_SESSION['user_id']]);
 $user = $stmt->fetch();
@@ -273,6 +276,19 @@ $ubicacion = trim($ciudad . ($ciudad !== '' && $estado !== '' ? ', ' : '') . $es
             <h1 class="text-2xl font-bold text-gray-800">Mi Perfil</h1>
             <p class="text-gray-500">Administra tu informaci&oacute;n personal y configuraci&oacute;n de cuenta</p>
         </header>
+
+        <?php if ($showRestrictedBanner): ?>
+            <div class="mb-6 rounded-3xl border border-amber-200 bg-amber-50 px-6 py-5 text-amber-900">
+                <p class="text-sm font-bold uppercase tracking-wide">Acceso limitado</p>
+                <h2 class="mt-2 text-xl font-bold">Mientras no confirmes tu pago, solo puedes acceder a tu perfil.</h2>
+                <p class="mt-2 text-sm text-amber-800">Cuando reportes tu pago con tu comprobante, se liberarán las demás secciones del portal.</p>
+                <div class="mt-4">
+                    <a href="<?php echo BASE_URL; ?>/confirmar_pago.php" class="inline-flex items-center justify-center rounded-2xl bg-[#5282B2] px-5 py-3 font-bold text-white hover:bg-blue-700 transition">
+                        Confirmar pago
+                    </a>
+                </div>
+            </div>
+        <?php endif; ?>
 
         <div class="flex flex-wrap gap-2 mb-8 bg-gray-200/50 p-1 rounded-xl w-fit">
             <?php

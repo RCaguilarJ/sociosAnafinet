@@ -12,6 +12,8 @@ if (!isset($_SESSION['user_id'])) {
     exit();
 }
 
+require_full_portal_access($pdo ?? null, 'dashboard', 'Dashboard');
+
 // Consultas din�micas para los contadores (replicando Figma)
 $videos_count = 0;
 $docs_count = 0;

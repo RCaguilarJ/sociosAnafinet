@@ -7,6 +7,8 @@ if (!isset($_SESSION['user_id'])) {
     exit();
 }
 
+require_full_portal_access($pdo ?? null, 'asociados', 'Lista de Asociados');
+
 $userRole = $_SESSION['user_rol'] ?? '';
 $userId = isset($_SESSION['user_id']) ? (int)$_SESSION['user_id'] : null;
 if (isset($pdo)) {

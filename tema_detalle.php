@@ -6,6 +6,8 @@ if (!isset($_SESSION['user_id'])) {
     exit();
 }
 
+require_full_portal_access($pdo ?? null, 'foro', 'Detalle del Tema');
+
 $temaId = isset($_GET['id']) ? (int)$_GET['id'] : 0;
 if ($temaId <= 0) {
     header("Location: foro.php");
