@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/bootstrap.php';
+require_once 'role_helpers.php';
 // Evitar que el navegador guarde en cach� informaci�n sensible
 header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
 header("Cache-Control: post-check=0, pre-check=0", false);
@@ -17,8 +18,14 @@ $docs_count = 0;
 $asociados_count = 0;
 $foro_count = 0;
 $demoMode = !($pdo instanceof PDO) && app_demo_mode_enabled();
+$userStatus = $_SESSION['user_estatus'] ?? '';
 
 if ($pdo instanceof PDO) {
+    $dbStatus = fetch_user_status($pdo, (int)($_SESSION['user_id'] ?? 0));
+    if ($dbStatus !== null) {
+        $userStatus = $dbStatus;
+        $_SESSION['user_estatus'] = $dbStatus;
+    }
     $videos_count = $pdo->query("SELECT COUNT(*) FROM contenidos WHERE tipo = 'video'")->fetchColumn();
     $docs_count = $pdo->query("SELECT COUNT(*) FROM contenidos WHERE tipo = 'documento'")->fetchColumn();
     $asociados_count = $pdo->query("SELECT COUNT(*) FROM usuarios WHERE rol = 'Asociado'")->fetchColumn();
@@ -46,6 +53,23 @@ if ($pdo instanceof PDO) {
         <?php if ($demoMode): ?>
             <div class="mb-6 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
                 Modo demo activo: la base de datos no est&aacute; conectada en Vercel. Solo se habilit&oacute; el acceso temporal con credenciales demo.
+            </div>
+        <?php endif; ?>
+        <?php if ($userStatus === 'Pendiente de pago'): ?>
+            <div class="mb-6 rounded-2xl border border-blue-200 bg-blue-50 px-5 py-4 text-sm text-blue-900">
+                <div class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                    <div>
+                        <p class="font-bold">Tu cuenta ya tiene acceso al portal.</p>
+                        <p class="mt-1 text-blue-800">Solo falta confirmar tu pago para completar el proceso administrativo.</p>
+                    </div>
+                    <a href="<?php echo BASE_URL; ?>/confirmar_pago.php" class="inline-flex items-center justify-center rounded-xl bg-[#5282B2] px-5 py-3 font-bold text-white hover:bg-blue-700 transition">
+                        Confirmar pago
+                    </a>
+                </div>
+            </div>
+        <?php elseif ($userStatus === 'Pago reportado'): ?>
+            <div class="mb-6 rounded-2xl border border-emerald-200 bg-emerald-50 px-5 py-4 text-sm text-emerald-900">
+                Tu pago ya fue reportado. Mientras se valida, puedes seguir usando todas las funciones del portal.
             </div>
         <?php endif; ?>
         <header class="mb-8">

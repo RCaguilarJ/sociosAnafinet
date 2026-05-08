@@ -1,7 +1,7 @@
 <?php
 require_once __DIR__ . '/config.php';
 
-$allowedBuckets = ['documentos', 'perfiles'];
+$allowedBuckets = ['documentos', 'perfiles', 'comprobantes_pago'];
 $bucket = trim((string)($_GET['type'] ?? ''), "\\/");
 $filename = basename((string)($_GET['file'] ?? ''));
 $download = ($_GET['download'] ?? '0') === '1';

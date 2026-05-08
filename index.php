@@ -1,10 +1,4 @@
 <?php require_once 'config.php'; ?>
-<?php
-$mensaje_exito = false;
-if (isset($_GET['registro']) && $_GET['registro'] === 'exito') {
-    $mensaje_exito = true;
-}
-?>
 
 <!DOCTYPE html>
 <html lang="es">
@@ -22,20 +16,6 @@ if (isset($_GET['registro']) && $_GET['registro'] === 'exito') {
             <h2 class="text-xl font-bold text-gray-800">Área de Asociados</h2>
             <p class="text-sm text-gray-500">Ingresa tus credenciales para acceder</p>
         </div>
-
-        <?php if ($mensaje_exito): ?>
-            <div class="mb-6 bg-green-50 border border-green-200 rounded-2xl p-5 flex items-start space-x-4 animate-fadeIn">
-                <div class="bg-green-500 text-white rounded-full p-2 flex items-center justify-center shrink-0 mt-0.5">
-                    <i class="fa-solid fa-check text-sm"></i>
-                </div>
-                <div>
-                    <h3 class="text-green-800 font-bold text-sm mb-1">¡Solicitud enviada con éxito!</h3>
-                    <p class="text-green-600 text-xs leading-relaxed">
-                        Hemos recibido tus datos y comprobante. Tu cuenta está actualmente en estado <strong>"Pendiente"</strong>. Te notificaremos por correo en cuanto un administrador verifique la información y active tu acceso.
-                    </p>
-                </div>
-            </div>
-        <?php endif; ?>
 
         <div class="bg-blue-50 border border-blue-200 p-3 rounded-lg mb-6 text-xs text-blue-700">
             <strong>Credenciales de prueba:</strong><br>

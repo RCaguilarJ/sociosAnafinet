@@ -12,7 +12,7 @@ if (!isset($_SESSION['afiliacion']['paso2'])) {
 
 <div class="animate-fadeIn">
     <h2 class="text-2xl font-bold text-gray-800 mb-2">Método de Pago</h2>
-    <p class="text-gray-500 text-sm mb-8">Paso 3 de 3: Finaliza tu solicitud realizando el pago de tu membresía.</p>
+    <p class="text-gray-500 text-sm mb-8">Paso 3 de 3: Finaliza tu solicitud. Al completar el registro podrás entrar al portal y confirmar tu pago.</p>
 
     <div class="bg-blue-50 p-6 rounded-3xl border border-blue-100 mb-8">
         <div class="flex items-center space-x-4 mb-4">
@@ -21,7 +21,7 @@ if (!isset($_SESSION['afiliacion']['paso2'])) {
             </div>
             <div>
                 <h4 class="font-bold text-blue-900">Transferencia Electrónica (SPEI)</h4>
-                <p class="text-xs text-blue-700">Realiza tu pago para activar tu cuenta.</p>
+                <p class="text-xs text-blue-700">Podrás confirmar tu pago dentro del portal al terminar el registro.</p>
             </div>
         </div>
 
@@ -49,7 +49,7 @@ if (!isset($_SESSION['afiliacion']['paso2'])) {
         <div class="flex items-start space-x-3 p-2">
             <input type="checkbox" required class="mt-1 rounded border-gray-300 text-blue-600 focus:ring-blue-500">
             <label class="text-xs text-gray-500 leading-relaxed">
-                Acepto que mi registro quedará en estado "Pendiente" hasta que el administrador verifique el comprobante de pago que enviaré por correo electrónico.
+                Acepto completar mi registro y confirmar mi pago posteriormente dentro del portal.
             </label>
         </div>
 
@@ -58,7 +58,7 @@ if (!isset($_SESSION['afiliacion']['paso2'])) {
                 Anterior
             </a>
             <button type="submit" class="flex-[2] bg-green-600 text-white py-4 rounded-2xl font-bold shadow-lg shadow-green-100 hover:bg-green-700 hover:-translate-y-0.5 transition-all">
-                Enviar Solicitud de Afiliación
+                Crear cuenta y continuar
             </button>
         </div>
     </form>

@@ -164,6 +164,7 @@ $total_despachos = $pdo->query("SELECT COUNT(DISTINCT empresa) FROM usuarios WHE
                         $hasFoto = $foto !== '' && app_resolve_storage_path('perfiles', $foto) !== null;
                         $empresa = (string)($asoc['empresa'] ?? '');
                         $especialidad = (string)($asoc['especialidad'] ?? '');
+                        $estatus = (string)($asoc['estatus'] ?? '');
                         $ciudad = (string)($asoc['ciudad'] ?? '');
                         $estado = (string)($asoc['estado'] ?? '');
                         $ubicacion = trim($ciudad . ($ciudad !== '' && $estado !== '' ? ', ' : '') . $estado);
@@ -172,6 +173,14 @@ $total_despachos = $pdo->query("SELECT COUNT(DISTINCT empresa) FROM usuarios WHE
                         $creado = !empty($asoc['creado_at']) ? date("Y", strtotime((string)$asoc['creado_at'])) : '';
                         $nombre = (string)($asoc['nombre'] ?? '');
                         $initial = $nombre !== '' ? strtoupper(substr($nombre, 0, 1)) : '?';
+                        $statusBadge = 'bg-slate-100 text-slate-700';
+                        if ($estatus === 'Activo') {
+                            $statusBadge = 'bg-emerald-100 text-emerald-800';
+                        } elseif ($estatus === 'Pago reportado') {
+                            $statusBadge = 'bg-amber-100 text-amber-800';
+                        } elseif ($estatus === 'Pendiente de pago') {
+                            $statusBadge = 'bg-blue-100 text-blue-800';
+                        }
                     ?>
                     <div class="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 hover:shadow-md transition relative overflow-hidden group">
                         <div class="flex items-start space-x-4">
@@ -187,6 +196,11 @@ $total_despachos = $pdo->query("SELECT COUNT(DISTINCT empresa) FROM usuarios WHE
                                 <p class="text-xs text-gray-400 flex items-center mb-2">
                                     <i class="fa-solid fa-building mr-1"></i> <?php echo htmlspecialchars($empresa); ?>
                                 </p>
+                                <?php if ($estatus !== ''): ?>
+                                    <span class="inline-flex rounded-full px-2 py-1 text-[10px] font-bold uppercase <?php echo $statusBadge; ?>">
+                                        <?php echo htmlspecialchars($estatus); ?>
+                                    </span>
+                                <?php endif; ?>
                                 <?php if ($especialidad !== ''): ?>
                                     <span class="bg-blue-50 text-blue-500 text-[10px] font-bold px-2 py-1 rounded uppercase">
                                         <?php echo htmlspecialchars($especialidad); ?>
@@ -211,9 +225,19 @@ $total_despachos = $pdo->query("SELECT COUNT(DISTINCT empresa) FROM usuarios WHE
                                     </a>
                                 <?php endif; ?>
                             </div>
-                            <?php if ($creado !== ''): ?>
-                                <span class="text-gray-300 italic">Asociado desde <?php echo htmlspecialchars($creado); ?></span>
-                            <?php endif; ?>
+                            <div class="flex flex-wrap items-center gap-3">
+                                <?php if ($isAdmin): ?>
+                                    <a href="<?php echo BASE_URL; ?>/editar_asociado.php?id=<?php echo (int)($asoc['id'] ?? 0); ?>" class="text-gray-500 hover:text-blue-600 font-semibold">
+                                        Editar
+                                    </a>
+                                    <a href="<?php echo BASE_URL; ?>/revisar_pagos.php" class="text-gray-500 hover:text-blue-600 font-semibold">
+                                        Revisar pago
+                                    </a>
+                                <?php endif; ?>
+                                <?php if ($creado !== ''): ?>
+                                    <span class="text-gray-300 italic">Asociado desde <?php echo htmlspecialchars($creado); ?></span>
+                                <?php endif; ?>
+                            </div>
                         </div>
                     </div>
                     <?php endforeach; ?>

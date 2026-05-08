@@ -13,22 +13,32 @@ $empresa = '';
 $puesto = '';
 $especialidad = '';
 $cedula = '';
+$estatus = 'Pendiente de pago';
+$email = trim((string) ($p1['email'] ?? ''));
 
 try {
+    $stmtExisting = $pdo->prepare("SELECT id FROM usuarios WHERE email = ? LIMIT 1");
+    $stmtExisting->execute([$email]);
+    if ($stmtExisting->fetch()) {
+        $_SESSION['afiliacion_error'] = 'El correo capturado ya está registrado. Inicia sesión o utiliza otro correo para continuar.';
+        header('Location: index.php?paso=1');
+        exit();
+    }
+
     $sql = "INSERT INTO usuarios (
         nombre, email, password, rfc, curp, telefono,
         calle, numero, colonia, cp, ciudad, estado,
         empresa, puesto, especialidad, cedula_profesional,
         rol, rol_solicitado, estatus
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Asociado', ?, 'Pendiente')";
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Asociado', ?, ?)";
 
     $stmt = $pdo->prepare($sql);
-    $password_temp = password_hash($p1['rfc'], PASSWORD_BCRYPT);
+    $passwordTemp = password_hash($p1['rfc'], PASSWORD_BCRYPT);
 
     $stmt->execute([
         $p1['nombre'],
-        $p1['email'],
-        $password_temp,
+        $email,
+        $passwordTemp,
         $p1['rfc'],
         $p1['curp'],
         $p1['telefono'],
@@ -43,11 +53,27 @@ try {
         $especialidad,
         $cedula,
         $rolSolicitado,
+        $estatus,
     ]);
 
+    $newUserId = (int) $pdo->lastInsertId();
+
     unset($_SESSION['afiliacion'], $_SESSION['afiliacion_error']);
-    header('Location: ../index.php?registro=exito');
+
+    session_regenerate_id(true);
+    $_SESSION['user_id'] = $newUserId;
+    $_SESSION['user_name'] = $p1['nombre'];
+    $_SESSION['user_rol'] = 'Asociado';
+    $_SESSION['user_estatus'] = $estatus;
+
+    header('Location: ../confirmar_pago.php?registro=1');
     exit();
 } catch (PDOException $e) {
+    if ((string) $e->getCode() === '23000') {
+        $_SESSION['afiliacion_error'] = 'El correo capturado ya está registrado. Inicia sesión o utiliza otro correo para continuar.';
+        header('Location: index.php?paso=1');
+        exit();
+    }
+
     die('Error al registrar: ' . $e->getMessage());
 }

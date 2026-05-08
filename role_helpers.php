@@ -44,3 +44,47 @@ function fetch_user_role(?PDO $pdo, ?int $userId): ?string
 
     return null;
 }
+
+function fetch_user_status(?PDO $pdo, ?int $userId): ?string
+{
+    if (!$pdo || !$userId) {
+        return null;
+    }
+    try {
+        $stmt = $pdo->prepare("SELECT estatus FROM usuarios WHERE id = ? LIMIT 1");
+        $stmt->execute([$userId]);
+        $row = $stmt->fetch();
+        if (is_array($row) && isset($row['estatus'])) {
+            return (string)$row['estatus'];
+        }
+    } catch (Throwable $e) {
+        return null;
+    }
+
+    return null;
+}
+
+function ensure_user_payment_columns(PDO $pdo): void
+{
+    static $initialized = false;
+    if ($initialized) {
+        return;
+    }
+
+    $requiredColumns = [
+        'comprobante_pago' => "ALTER TABLE usuarios ADD COLUMN comprobante_pago VARCHAR(255) NULL",
+        'referencia_pago' => "ALTER TABLE usuarios ADD COLUMN referencia_pago VARCHAR(120) NULL",
+        'pago_reportado_at' => "ALTER TABLE usuarios ADD COLUMN pago_reportado_at DATETIME NULL",
+    ];
+
+    foreach ($requiredColumns as $column => $alterSql) {
+        $stmt = $pdo->prepare("SHOW COLUMNS FROM usuarios LIKE ?");
+        $stmt->execute([$column]);
+        $exists = (bool) $stmt->fetch();
+        if (!$exists) {
+            $pdo->exec($alterSql);
+        }
+    }
+
+    $initialized = true;
+}

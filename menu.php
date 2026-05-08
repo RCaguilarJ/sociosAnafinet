@@ -8,12 +8,18 @@ $basePrefix = $baseUrl !== '' ? $baseUrl . '/' : '';
 $activePage = $activePage ?? '';
 $userName = $_SESSION['user_name'] ?? 'Usuario';
 $userRole = $_SESSION['user_rol'] ?? '';
+$userStatus = $_SESSION['user_estatus'] ?? '';
 $userId = isset($_SESSION['user_id']) ? (int)$_SESSION['user_id'] : null;
 
 if (isset($pdo)) {
     $dbRole = fetch_user_role($pdo, $userId);
     if ($dbRole !== null) {
         $userRole = $dbRole;
+    }
+    $dbStatus = fetch_user_status($pdo, $userId);
+    if ($dbStatus !== null) {
+        $userStatus = $dbStatus;
+        $_SESSION['user_estatus'] = $dbStatus;
     }
 }
 
@@ -28,6 +34,10 @@ $menuItems = [
     ['key' => 'foro_nuevo', 'label' => 'Nuevo Tema', 'href' => $basePrefix . 'foro.php?nuevo=1', 'icon' => 'fa-plus'],
 ];
 
+if (!is_admin_role($userRole) && ($userStatus === 'Pendiente de pago' || $userStatus === 'Pago reportado')) {
+    $menuItems[] = ['key' => 'confirmar_pago', 'label' => 'Confirmar Pago', 'href' => $basePrefix . 'confirmar_pago.php', 'icon' => 'fa-credit-card'];
+}
+
 if (!isset($pdo) || !($pdo instanceof PDO)) {
     $menuItems = [
         ['key' => 'dashboard', 'label' => 'Dashboard', 'href' => $basePrefix . 'dashboard.php', 'icon' => 'fa-house'],
@@ -35,6 +45,7 @@ if (!isset($pdo) || !($pdo instanceof PDO)) {
 }
 
 if (is_admin_role($userRole)) {
+    $menuItems[] = ['key' => 'revisar_pagos', 'label' => 'Revisar Pagos', 'href' => $basePrefix . 'revisar_pagos.php', 'icon' => 'fa-receipt'];
     $menuItems[] = ['key' => 'subir_documentos', 'label' => 'Subir Documentos', 'href' => $basePrefix . 'subir_archivo.php', 'icon' => 'fa-cloud-arrow-up'];
     $menuItems[] = ['key' => 'links_admin', 'label' => 'Administrar Links', 'href' => $basePrefix . 'links_interes_admin.php', 'icon' => 'fa-pen-to-square'];
 }
