@@ -1,4 +1,9 @@
-<?php require_once 'config.php'; ?>
+<?php
+require_once 'config.php';
+
+$demoLoginAvailable = app_demo_login_available();
+$demoCredentials = app_demo_credentials();
+?>
 
 <!DOCTYPE html>
 <html lang="es">
@@ -13,14 +18,17 @@
     <div class="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md border border-gray-100">
         <div class="text-center mb-8">
             <img src="<?php echo BASE_URL; ?>/logo.avif" alt="Logo Anafinet" class="mx-auto w-40 mb-4">
-            <h2 class="text-xl font-bold text-gray-800">Área de Asociados</h2>
+            <h2 class="text-xl font-bold text-gray-800">Area de Asociados</h2>
             <p class="text-sm text-gray-500">Ingresa tus credenciales para acceder</p>
         </div>
 
-        <div class="bg-blue-50 border border-blue-200 p-3 rounded-lg mb-6 text-xs text-blue-700">
-            <strong>Credenciales de prueba:</strong><br>
-            Email: asociado@anafinet.mx | Contraseña: anafinet2024
-        </div>
+        <?php if ($demoLoginAvailable): ?>
+            <div class="bg-blue-50 border border-blue-200 p-3 rounded-lg mb-6 text-xs text-blue-700">
+                <strong>Credenciales de prueba:</strong><br>
+                Email: <?php echo htmlspecialchars((string)$demoCredentials['email'], ENT_QUOTES, 'UTF-8'); ?>
+                | Contraseña: <?php echo htmlspecialchars((string)$demoCredentials['password'], ENT_QUOTES, 'UTF-8'); ?>
+            </div>
+        <?php endif; ?>
 
         <form action="<?php echo BASE_URL; ?>/auth.php" method="POST" class="space-y-4">
             <div>
@@ -34,13 +42,13 @@
             </div>
 
             <button type="submit" class="w-full bg-[#5282B2] text-white py-2 rounded-lg font-semibold hover:bg-blue-700 transition shadow-md">
-                Iniciar Sesión
+                Iniciar Sesion
             </button>
         </form>
 
         <div class="mt-6 text-center text-sm">
-            <p class="text-gray-400">¿No eres asociado aún?</p>
-            <a href="afiliacion/index.php" class="text-orange-500 font-bold hover:underline">Solicita tu Afiliación</a>
+            <p class="text-gray-400">¿No eres asociado aun?</p>
+            <a href="afiliacion/index.php" class="text-orange-500 font-bold hover:underline">Solicita tu Afiliacion</a>
         </div>
     </div>
 

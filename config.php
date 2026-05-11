@@ -1,4 +1,55 @@
 <?php
+if (!function_exists('load_env_file')) {
+    function load_env_file(string $path): void
+    {
+        static $loaded = [];
+
+        if (isset($loaded[$path]) || !is_file($path) || !is_readable($path)) {
+            return;
+        }
+
+        $lines = file($path, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+        if ($lines === false) {
+            return;
+        }
+
+        foreach ($lines as $line) {
+            $trimmed = trim($line);
+            if ($trimmed === '' || str_starts_with($trimmed, '#')) {
+                continue;
+            }
+
+            $parts = explode('=', $trimmed, 2);
+            if (count($parts) !== 2) {
+                continue;
+            }
+
+            $name = trim($parts[0]);
+            $value = trim($parts[1]);
+            if ($name === '') {
+                continue;
+            }
+
+            if (
+                (str_starts_with($value, '"') && str_ends_with($value, '"'))
+                || (str_starts_with($value, "'") && str_ends_with($value, "'"))
+            ) {
+                $value = substr($value, 1, -1);
+            }
+
+            if (getenv($name) === false) {
+                putenv($name . '=' . $value);
+                $_ENV[$name] = $value;
+                $_SERVER[$name] = $value;
+            }
+        }
+
+        $loaded[$path] = true;
+    }
+}
+
+load_env_file(__DIR__ . DIRECTORY_SEPARATOR . '.env');
+
 if (!function_exists('env_value')) {
     function env_value(string $key, ?string $default = null): ?string
     {
@@ -22,6 +73,27 @@ if (!function_exists('app_demo_mode_enabled')) {
     function app_demo_mode_enabled(): bool
     {
         return env_value('ALLOW_DEMO_LOGIN', '0') === '1';
+    }
+}
+
+if (!function_exists('app_demo_credentials')) {
+    function app_demo_credentials(): array
+    {
+        return [
+            'email' => env_value('DEMO_EMAIL', ''),
+            'password' => env_value('DEMO_PASSWORD', ''),
+        ];
+    }
+}
+
+if (!function_exists('app_demo_login_available')) {
+    function app_demo_login_available(): bool
+    {
+        $credentials = app_demo_credentials();
+
+        return app_demo_mode_enabled()
+            && $credentials['email'] !== ''
+            && $credentials['password'] !== '';
     }
 }
 

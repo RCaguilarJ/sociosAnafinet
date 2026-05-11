@@ -1,0 +1,12 @@
+/database/*.sql
+/database/*.sql.gz
+/database/*.zip
+/uploads/documentos/*
+/uploads/perfiles/*
+/uploads/comprobantes_pago/*
+!/uploads/.htaccess
+/vendor/
+/node_modules/
+.env
+.env.*
+*.log

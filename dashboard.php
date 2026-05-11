@@ -1,20 +1,15 @@
 <?php
 require_once __DIR__ . '/bootstrap.php';
 require_once 'role_helpers.php';
-// Evitar que el navegador guarde en cach� informaci�n sensible
 header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
 header("Cache-Control: post-check=0, pre-check=0", false);
 header("Pragma: no-cache");
 
-// Verificaci�n de seguridad: Si no hay sesi�n, regresa al login
 if (!isset($_SESSION['user_id'])) {
     header("Location: index.php");
     exit();
 }
 
-require_full_portal_access($pdo ?? null, 'dashboard', 'Dashboard');
-
-// Consultas din�micas para los contadores (replicando Figma)
 $videos_count = 0;
 $docs_count = 0;
 $asociados_count = 0;
@@ -33,7 +28,6 @@ if ($pdo instanceof PDO) {
     $asociados_count = $pdo->query("SELECT COUNT(*) FROM usuarios WHERE rol = 'Asociado'")->fetchColumn();
     $foro_count = $pdo->query("SELECT COUNT(*) FROM contenidos WHERE tipo = 'foro'")->fetchColumn();
 }
-
 ?>
 
 <!DOCTYPE html>
@@ -49,20 +43,21 @@ if ($pdo instanceof PDO) {
 <?php
     $activePage = 'dashboard';
     require 'menu.php';
-    ?>
+?>
 
     <main class="md:ml-64 p-8">
         <?php if ($demoMode): ?>
             <div class="mb-6 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
-                Modo demo activo: la base de datos no est&aacute; conectada en Vercel. Solo se habilit&oacute; el acceso temporal con credenciales demo.
+                Modo demo activo: la base de datos no esta conectada en Vercel. Solo se habilito el acceso temporal con credenciales demo.
             </div>
         <?php endif; ?>
+
         <?php if ($userStatus === 'Pendiente de pago'): ?>
             <div class="mb-6 rounded-2xl border border-blue-200 bg-blue-50 px-5 py-4 text-sm text-blue-900">
                 <div class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                     <div>
-                        <p class="font-bold">Tu cuenta ya tiene acceso al portal.</p>
-                        <p class="mt-1 text-blue-800">Solo falta confirmar tu pago para completar el proceso administrativo.</p>
+                        <p class="font-bold">Tu acceso es parcial hasta confirmar el pago.</p>
+                        <p class="mt-1 text-blue-800">Puedes continuar en tu perfil y en confirmar pago. Las demas secciones mostraran acceso restringido hasta que tu membresia quede registrada.</p>
                     </div>
                     <a href="<?php echo BASE_URL; ?>/confirmar_pago.php" class="inline-flex items-center justify-center rounded-xl bg-[#5282B2] px-5 py-3 font-bold text-white hover:bg-blue-700 transition">
                         Confirmar pago
@@ -71,9 +66,10 @@ if ($pdo instanceof PDO) {
             </div>
         <?php elseif ($userStatus === 'Pago reportado'): ?>
             <div class="mb-6 rounded-2xl border border-emerald-200 bg-emerald-50 px-5 py-4 text-sm text-emerald-900">
-                Tu pago ya fue reportado. Mientras se valida, puedes seguir usando todas las funciones del portal.
+                Tu pago ya fue reportado. Mientras se valida, algunas secciones seguiran restringidas hasta que la membresia quede activa.
             </div>
         <?php endif; ?>
+
         <header class="mb-8">
             <h1 class="text-2xl font-bold text-gray-800">Bienvenido, <?php echo $_SESSION['user_name']; ?></h1>
             <p class="text-gray-500">Accede a todos los recursos y contenido exclusivo.</p>
@@ -105,7 +101,7 @@ if ($pdo instanceof PDO) {
 
         <section class="space-y-8">
             <div>
-                <h3 class="text-lg font-bold text-gray-800 mb-4">Acceso Rápido</h3>
+                <h3 class="text-lg font-bold text-gray-800 mb-4">Acceso Rapido</h3>
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                     <a href="<?php echo BASE_URL; ?>/biblioteca_videos.php" class="bg-white p-4 rounded-xl border border-gray-100 shadow-sm flex items-center gap-4 hover:shadow-md transition">
                         <span class="w-11 h-11 rounded-xl bg-blue-500 flex items-center justify-center text-white">
@@ -120,133 +116,32 @@ if ($pdo instanceof PDO) {
                         <span class="font-semibold text-gray-800">Biblioteca de Archivos</span>
                     </a>
                     <a href="<?php echo BASE_URL; ?>/lista_asociados.php" class="bg-white p-4 rounded-xl border border-gray-100 shadow-sm flex items-center gap-4 hover:shadow-md transition">
-                        <span class="w-11 h-11 rounded-xl bg-orange-500 flex items-center justify-center text-white">
+                        <span class="w-11 h-11 rounded-xl bg-purple-500 flex items-center justify-center text-white">
                             <i class="fa-solid fa-users"></i>
                         </span>
                         <span class="font-semibold text-gray-800">Lista de Asociados</span>
                     </a>
                     <a href="<?php echo BASE_URL; ?>/links_interes.php" class="bg-white p-4 rounded-xl border border-gray-100 shadow-sm flex items-center gap-4 hover:shadow-md transition">
-                        <span class="w-11 h-11 rounded-xl bg-cyan-500 flex items-center justify-center text-white">
+                        <span class="w-11 h-11 rounded-xl bg-orange-500 flex items-center justify-center text-white">
                             <i class="fa-solid fa-link"></i>
                         </span>
-                        <span class="font-semibold text-gray-800">Links de Interés</span>
+                        <span class="font-semibold text-gray-800">Links de Interes</span>
                     </a>
                     <a href="<?php echo BASE_URL; ?>/foro.php" class="bg-white p-4 rounded-xl border border-gray-100 shadow-sm flex items-center gap-4 hover:shadow-md transition">
-                        <span class="w-11 h-11 rounded-xl bg-pink-500 flex items-center justify-center text-white">
+                        <span class="w-11 h-11 rounded-xl bg-emerald-500 flex items-center justify-center text-white">
                             <i class="fa-regular fa-comments"></i>
                         </span>
                         <span class="font-semibold text-gray-800">Foro Fiscal</span>
                     </a>
-                </div>
-            </div>
-
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                <?php
-                // 1. Consultar las �ltimas 3 actualizaciones
-                $stmt_updates = $pdo->query("SELECT * FROM contenidos ORDER BY creado_at DESC LIMIT 3");
-                $actualizaciones = $stmt_updates->fetchAll();
-                ?>
-
-                <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-                    <div class="flex items-center space-x-2 mb-6">
-                        <i class="fa-regular fa-bell text-blue-500"></i>
-                        <h3 class="font-bold text-gray-700 uppercase text-xs tracking-wider">Actualizaciones Recientes</h3>
-                    </div>
-
-                    <div class="space-y-6">
-                        <?php foreach ($actualizaciones as $item):
-                            // L+ogica para asignar icono y color seg�n el tipo
-                            $icon = "fa-file-lines";
-                            $color = "text-blue-500";
-                            $bg = "bg-blue-50";
-
-                            if ($item['tipo'] == 'video') {
-                                $icon = "fa-video"; $color = "text-orange-500"; $bg = "bg-orange-50";
-                            } elseif ($item['tipo'] == 'revista') {
-                                $icon = "fa-book-open"; $color = "text-purple-500"; $bg = "bg-purple-50";
-                            }
-                        ?>
-                        <div class="flex items-start space-x-4 group cursor-pointer">
-                            <div class="<?php echo $bg; ?> p-3 rounded-xl transition group-hover:scale-110">
-                                <i class="fa-solid <?php echo $icon . ' ' . $color; ?> text-xl"></i>
-                            </div>
-                            <div>
-                                <h4 class="font-bold text-gray-800 group-hover:text-blue-600 transition">
-                                    <?php echo htmlspecialchars($item['titulo']); ?>
-                                </h4>
-                                <p class="text-xs text-gray-400">
-                                    <?php echo date("d M, Y", strtotime($item['fecha_publicacion'])); ?> ?
-                                    <span class="capitalize"><?php echo $item['tipo']; ?></span>
-                                </p>
-                            </div>
-                        </div>
-                        <?php endforeach; ?>
-                    </div>
-                </div>
-
-                <?php
-                // Consultar los pr?ximos 3 eventos
-                $stmt_eventos = $pdo->query("SELECT * FROM eventos WHERE fecha_evento >= CURDATE() ORDER BY fecha_evento ASC LIMIT 3");
-                $eventos = $stmt_eventos->fetchAll();
-                ?>
-
-                <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-                    <div class="flex items-center space-x-2 mb-6">
-                        <i class="fa-regular fa-calendar text-orange-500"></i>
-                        <h3 class="font-bold text-gray-700 uppercase text-xs tracking-wider">Próximos Eventos</h3>
-                    </div>
-
-                    <div class="space-y-4">
-                        <?php if (empty($eventos)): ?>
-                            <p class="text-gray-400 text-sm italic">No hay eventos programados próximamente.</p>
-                        <?php else: ?>
-                            <?php foreach ($eventos as $ev): ?>
-                            <div class="p-4 border border-gray-100 rounded-xl hover:bg-gray-50 transition cursor-default">
-                                <h4 class="font-bold text-gray-800 mb-2">
-                                    <?php echo htmlspecialchars($ev['titulo']); ?>
-                                </h4>
-                                <div class="flex flex-col space-y-1">
-                                    <div class="flex items-center text-xs text-gray-500">
-                                        <i class="fa-regular fa-calendar-days w-5"></i>
-                                        <span><?php echo date("d \\d\\e F, Y", strtotime($ev['fecha_evento'])); ?></span>
-                                    </div>
-                                    <div class="flex items-center text-xs text-gray-500">
-                                        <i class="fa-solid fa-location-dot w-5"></i>
-                                        <span><?php echo htmlspecialchars($ev['ubicacion']); ?></span>
-                                    </div>
-                                </div>
-                            </div>
-                            <?php endforeach; ?>
-                        <?php endif; ?>
-                    </div>
+                    <a href="<?php echo BASE_URL; ?>/confirmar_pago.php" class="bg-white p-4 rounded-xl border border-gray-100 shadow-sm flex items-center gap-4 hover:shadow-md transition">
+                        <span class="w-11 h-11 rounded-xl bg-slate-500 flex items-center justify-center text-white">
+                            <i class="fa-solid fa-credit-card"></i>
+                        </span>
+                        <span class="font-semibold text-gray-800">Confirmar Pago</span>
+                    </a>
                 </div>
             </div>
         </section>
     </main>
-
-<script>
-    document.addEventListener("DOMContentLoaded", () => {
-        const counters = document.querySelectorAll('.counter');
-        const speed = 200; // Cuanto m?s alto, m?s lenta la animaci?n
-
-        counters.forEach(counter => {
-            const target = Number(counter.getAttribute('data-target')) || 0;
-            let current = 0;
-            const inc = target / speed;
-
-            const updateCount = () => {
-                if (current < target) {
-                    current = Math.ceil(current + inc);
-                    if (current > target) current = target;
-                    counter.innerText = current.toLocaleString();
-                    setTimeout(updateCount, 15);
-                } else {
-                    counter.innerText = target.toLocaleString();
-                }
-            };
-            updateCount();
-        });
-    });
-</script>
 </body>
 </html>

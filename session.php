@@ -98,6 +98,9 @@ if (!function_exists('app_start_session')) {
 
         $ttl = max(3600, (int)env_value('SESSION_TTL', '86400'));
 
+        ini_set('session.use_strict_mode', '1');
+        ini_set('session.use_only_cookies', '1');
+        ini_set('session.cookie_httponly', '1');
         session_name((string)env_value('SESSION_NAME', 'anafinet_session'));
         session_set_cookie_params([
             'lifetime' => 0,

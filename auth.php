@@ -5,9 +5,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $email = $_POST['email'] ?? '';
     $password = $_POST['password'] ?? '';
 
-    $demoEmail = env_value('DEMO_EMAIL', 'asociado@anafinet.mx');
-    $demoPassword = env_value('DEMO_PASSWORD', 'anafinet2024');
-    $allowDemoLogin = app_demo_mode_enabled();
+    $demoCredentials = app_demo_credentials();
+    $demoEmail = (string)$demoCredentials['email'];
+    $demoPassword = (string)$demoCredentials['password'];
+    $allowDemoLogin = app_demo_login_available();
 
     if (!($pdo instanceof PDO) && $allowDemoLogin) {
         if (hash_equals($demoEmail, $email) && hash_equals($demoPassword, $password)) {
@@ -34,15 +35,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $isValidPassword = false;
     if ($user) {
         $storedPassword = (string)($user['password'] ?? '');
-        $passwordInfo = password_get_info($storedPassword);
-        if (!empty($passwordInfo['algo'])) {
-            $isValidPassword = password_verify($password, $storedPassword);
-        } else {
-            $isValidPassword = hash_equals($storedPassword, $password);
-        }
+        $isValidPassword = app_verify_password($password, $storedPassword);
     }
 
     if ($user && $isValidPassword) {
+        if (app_password_needs_upgrade($storedPassword)) {
+            try {
+                $rehashStmt = $pdo->prepare("UPDATE usuarios SET password = ? WHERE id = ?");
+                $rehashStmt->execute([app_hash_password($password), $user['id']]);
+            } catch (Throwable $e) {
+                // Si el rehash falla no bloqueamos el acceso del usuario.
+            }
+        }
+
         session_regenerate_id(true);
         // Creamos la sesión con los datos del diseño de Figma
         $_SESSION['user_id'] = $user['id'];

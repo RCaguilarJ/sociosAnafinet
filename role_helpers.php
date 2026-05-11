@@ -76,6 +76,10 @@ function user_has_profile_only_access(?PDO $pdo, ?int $userId, ?string $role = n
         return false;
     }
 
+    if (!empty($_SESSION['demo_mode'])) {
+        return false;
+    }
+
     if ($status === null || $status === '') {
         $status = (string)($_SESSION['user_estatus'] ?? '');
         $dbStatus = fetch_user_status($pdo, $userId);
@@ -83,6 +87,10 @@ function user_has_profile_only_access(?PDO $pdo, ?int $userId, ?string $role = n
             $status = $dbStatus;
             $_SESSION['user_estatus'] = $dbStatus;
         }
+    }
+
+    if (function_exists('app_is_membership_restricted_status')) {
+        return app_is_membership_restricted_status($status);
     }
 
     return is_pending_payment_status($status);
@@ -165,10 +173,18 @@ function ensure_user_payment_columns(PDO $pdo): void
         'pago_reportado_at' => "ALTER TABLE usuarios ADD COLUMN pago_reportado_at DATETIME NULL",
     ];
 
+    $columnExistsStmt = $pdo->prepare(
+        "SELECT 1
+         FROM information_schema.COLUMNS
+         WHERE TABLE_SCHEMA = DATABASE()
+           AND TABLE_NAME = 'usuarios'
+           AND COLUMN_NAME = ?
+         LIMIT 1"
+    );
+
     foreach ($requiredColumns as $column => $alterSql) {
-        $stmt = $pdo->prepare("SHOW COLUMNS FROM usuarios LIKE ?");
-        $stmt->execute([$column]);
-        $exists = (bool) $stmt->fetch();
+        $columnExistsStmt->execute([$column]);
+        $exists = (bool) $columnExistsStmt->fetchColumn();
         if (!$exists) {
             $pdo->exec($alterSql);
         }
