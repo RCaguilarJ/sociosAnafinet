@@ -97,6 +97,45 @@ if (!function_exists('app_demo_login_available')) {
     }
 }
 
+if (!function_exists('app_master_emails')) {
+    function app_master_emails(): array
+    {
+        $raw = env_value('MASTER_EMAILS');
+        if ($raw === null) {
+            $single = env_value('MASTER_EMAIL', '');
+            $raw = $single !== '' ? $single : '';
+        }
+
+        if ($raw === '') {
+            return [];
+        }
+
+        $parts = preg_split('/[\s,;]+/', $raw) ?: [];
+        $emails = [];
+
+        foreach ($parts as $part) {
+            $email = strtolower(trim((string)$part));
+            if ($email !== '') {
+                $emails[$email] = true;
+            }
+        }
+
+        return array_keys($emails);
+    }
+}
+
+if (!function_exists('app_email_is_master')) {
+    function app_email_is_master(string $email): bool
+    {
+        $email = strtolower(trim($email));
+        if ($email === '') {
+            return false;
+        }
+
+        return in_array($email, app_master_emails(), true);
+    }
+}
+
 if (!function_exists('detect_base_url')) {
     function detect_base_url(): string
     {

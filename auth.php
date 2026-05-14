@@ -66,7 +66,9 @@ try {
     $_SESSION['user_id'] = $user['id'];
     $_SESSION['user_name'] = $user['nombre'];
     $_SESSION['user_rol'] = $user['rol'];
+    $_SESSION['user_email'] = $user['email'] ?? '';
     $_SESSION['user_estatus'] = $user['estatus'] ?? '';
+    $_SESSION['master_access'] = app_email_is_master((string)($_SESSION['user_email'] ?? ''));
 
     header('Location: dashboard.php');
     exit();

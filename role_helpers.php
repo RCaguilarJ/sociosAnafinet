@@ -64,6 +64,45 @@ function fetch_user_status(?PDO $pdo, ?int $userId): ?string
     return null;
 }
 
+function fetch_user_email(?PDO $pdo, ?int $userId): ?string
+{
+    if (!$pdo || !$userId) {
+        return null;
+    }
+    try {
+        $stmt = $pdo->prepare("SELECT email FROM usuarios WHERE id = ? LIMIT 1");
+        $stmt->execute([$userId]);
+        $row = $stmt->fetch();
+        if (is_array($row) && isset($row['email'])) {
+            return (string)$row['email'];
+        }
+    } catch (Throwable $e) {
+        return null;
+    }
+
+    return null;
+}
+
+function current_user_has_master_access(?PDO $pdo, ?int $userId = null): bool
+{
+    $email = (string)($_SESSION['user_email'] ?? '');
+    if ($email === '') {
+        $resolvedUserId = $userId ?? (int)($_SESSION['user_id'] ?? 0);
+        $dbEmail = fetch_user_email($pdo, $resolvedUserId);
+        if ($dbEmail !== null) {
+            $email = $dbEmail;
+            $_SESSION['user_email'] = $dbEmail;
+        }
+    }
+
+    $hasAccess = app_email_is_master($email);
+    if ($hasAccess) {
+        $_SESSION['master_access'] = true;
+    }
+
+    return $hasAccess;
+}
+
 function is_pending_payment_status(string $status): bool
 {
     return normalize_text_value($status) === 'pendientedepago';
@@ -77,6 +116,10 @@ function user_has_profile_only_access(?PDO $pdo, ?int $userId, ?string $role = n
     }
 
     if (!empty($_SESSION['demo_mode'])) {
+        return false;
+    }
+
+    if (current_user_has_master_access($pdo, $userId)) {
         return false;
     }
 

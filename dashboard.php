@@ -16,6 +16,7 @@ $asociados_count = 0;
 $foro_count = 0;
 $demoMode = !($pdo instanceof PDO) && app_demo_mode_enabled();
 $userStatus = $_SESSION['user_estatus'] ?? '';
+$masterAccess = current_user_has_master_access($pdo ?? null, (int)($_SESSION['user_id'] ?? 0));
 
 if ($pdo instanceof PDO) {
     $dbStatus = fetch_user_status($pdo, (int)($_SESSION['user_id'] ?? 0));
@@ -52,7 +53,7 @@ if ($pdo instanceof PDO) {
             </div>
         <?php endif; ?>
 
-        <?php if ($userStatus === 'Pendiente de pago'): ?>
+        <?php if (!$masterAccess && $userStatus === 'Pendiente de pago'): ?>
             <div class="mb-6 rounded-2xl border border-blue-200 bg-blue-50 px-5 py-4 text-sm text-blue-900">
                 <div class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                     <div>
@@ -64,7 +65,7 @@ if ($pdo instanceof PDO) {
                     </a>
                 </div>
             </div>
-        <?php elseif ($userStatus === 'Pago reportado'): ?>
+        <?php elseif (!$masterAccess && $userStatus === 'Pago reportado'): ?>
             <div class="mb-6 rounded-2xl border border-emerald-200 bg-emerald-50 px-5 py-4 text-sm text-emerald-900">
                 Tu pago ya fue reportado. Mientras se valida, algunas secciones seguiran restringidas hasta que la membresia quede activa.
             </div>
