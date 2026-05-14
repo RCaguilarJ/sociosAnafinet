@@ -3,6 +3,7 @@ require_once 'config.php';
 
 $demoLoginAvailable = app_demo_login_available();
 $demoCredentials = app_demo_credentials();
+$loginError = $_GET['error'] ?? '';
 ?>
 
 <!DOCTYPE html>
@@ -21,6 +22,16 @@ $demoCredentials = app_demo_credentials();
             <h2 class="text-xl font-bold text-gray-800">Area de Asociados</h2>
             <p class="text-sm text-gray-500">Ingresa tus credenciales para acceder</p>
         </div>
+
+        <?php if ($loginError === '1'): ?>
+            <div class="mb-6 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+                Credenciales incorrectas. Verifica tu email y contrasena.
+            </div>
+        <?php elseif ($loginError === 'db'): ?>
+            <div class="mb-6 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
+                No fue posible iniciar sesion por un problema de conexion o configuracion del servidor.
+            </div>
+        <?php endif; ?>
 
         <?php if ($demoLoginAvailable): ?>
             <div class="bg-blue-50 border border-blue-200 p-3 rounded-lg mb-6 text-xs text-blue-700">

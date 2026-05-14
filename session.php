@@ -113,8 +113,12 @@ if (!function_exists('app_start_session')) {
         ini_set('session.gc_maxlifetime', (string)$ttl);
 
         if ($pdo instanceof PDO) {
-            ensure_session_table($pdo);
-            session_set_save_handler(new DatabaseSessionHandler($pdo, $ttl), true);
+            try {
+                ensure_session_table($pdo);
+                session_set_save_handler(new DatabaseSessionHandler($pdo, $ttl), true);
+            } catch (Throwable $e) {
+                $GLOBALS['appSessionError'] = $e->getMessage();
+            }
         }
 
         session_start();
