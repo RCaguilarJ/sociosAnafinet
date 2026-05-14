@@ -10,14 +10,14 @@ $demoCredentials = app_demo_credentials();
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="<?php echo BASE_URL; ?>/assets/tailwind.build.css">
+    <link rel="stylesheet" href="<?php echo htmlspecialchars(base_url('assets/tailwind.build.css'), ENT_QUOTES, 'UTF-8'); ?>">
     <title>Anafinet - Login</title>
 </head>
 <body class="bg-slate-100 flex items-center justify-center min-h-screen p-4">
 
     <div class="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md border border-gray-100">
         <div class="text-center mb-8">
-            <img src="<?php echo BASE_URL; ?>/logo.avif" alt="Logo Anafinet" class="mx-auto w-40 mb-4">
+            <img src="<?php echo htmlspecialchars(base_url('logo.avif'), ENT_QUOTES, 'UTF-8'); ?>" alt="Logo Anafinet" class="mx-auto w-40 mb-4">
             <h2 class="text-xl font-bold text-gray-800">Area de Asociados</h2>
             <p class="text-sm text-gray-500">Ingresa tus credenciales para acceder</p>
         </div>
@@ -30,7 +30,7 @@ $demoCredentials = app_demo_credentials();
             </div>
         <?php endif; ?>
 
-        <form action="<?php echo BASE_URL; ?>/auth.php" method="POST" class="space-y-4">
+        <form action="<?php echo htmlspecialchars(base_url('auth.php'), ENT_QUOTES, 'UTF-8'); ?>" method="POST" class="space-y-4">
             <div>
                 <label class="block text-sm font-medium text-gray-700">Email</label>
                 <input type="email" name="email" required class="w-full mt-1 p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none">
@@ -48,7 +48,7 @@ $demoCredentials = app_demo_credentials();
 
         <div class="mt-6 text-center text-sm">
             <p class="text-gray-400">¿No eres asociado aun?</p>
-            <a href="afiliacion/index.php" class="text-orange-500 font-bold hover:underline">Solicita tu Afiliacion</a>
+            <a href="<?php echo htmlspecialchars(base_url('afiliacion/index.php'), ENT_QUOTES, 'UTF-8'); ?>" class="text-orange-500 font-bold hover:underline">Solicita tu Afiliacion</a>
         </div>
     </div>
 

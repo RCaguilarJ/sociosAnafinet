@@ -105,7 +105,40 @@ if (!function_exists('detect_base_url')) {
             return rtrim($baseUrl, '/');
         }
 
-        return is_vercel_environment() ? '' : '/asociadosAnafinet';
+        if (PHP_SAPI !== 'cli') {
+            $documentRoot = realpath((string)($_SERVER['DOCUMENT_ROOT'] ?? ''));
+            $applicationRoot = realpath(__DIR__);
+
+            if ($documentRoot !== false && $applicationRoot !== false) {
+                $documentRootPath = rtrim(str_replace('\\', '/', $documentRoot), '/');
+                $applicationRootPath = rtrim(str_replace('\\', '/', $applicationRoot), '/');
+
+                $documentRootComparison = DIRECTORY_SEPARATOR === '\\'
+                    ? strtolower($documentRootPath)
+                    : $documentRootPath;
+                $applicationRootComparison = DIRECTORY_SEPARATOR === '\\'
+                    ? strtolower($applicationRootPath)
+                    : $applicationRootPath;
+
+                if ($applicationRootComparison === $documentRootComparison) {
+                    return '';
+                }
+
+                $documentRootPrefix = $documentRootComparison . '/';
+                if (str_starts_with($applicationRootComparison, $documentRootPrefix)) {
+                    $relativePath = substr($applicationRootPath, strlen($documentRootPath));
+                    return $relativePath === '' ? '' : rtrim($relativePath, '/');
+                }
+            }
+
+            $host = strtolower((string)($_SERVER['HTTP_HOST'] ?? ''));
+            $host = preg_replace('/:\d+$/', '', $host);
+            if (in_array($host, ['localhost', '127.0.0.1', '::1'], true)) {
+                return '/asociadosAnafinet';
+            }
+        }
+
+        return '';
     }
 }
 

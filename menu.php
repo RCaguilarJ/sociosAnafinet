@@ -2,9 +2,6 @@
 require_once 'config.php';
 require_once 'role_helpers.php';
 
-$baseUrl = defined('BASE_URL') ? BASE_URL : '';
-$basePrefix = $baseUrl !== '' ? $baseUrl . '/' : '';
-
 $activePage = $activePage ?? '';
 $userName = $_SESSION['user_name'] ?? 'Usuario';
 $userRole = $_SESSION['user_rol'] ?? '';
@@ -24,22 +21,22 @@ if (isset($pdo)) {
 }
 
 $menuItems = [
-    ['key' => 'dashboard', 'label' => 'Dashboard', 'href' => $basePrefix . 'dashboard.php', 'icon' => 'fa-house'],
-    ['key' => 'perfil', 'label' => 'Mi Perfil', 'href' => $basePrefix . 'perfil.php', 'icon' => 'fa-user', 'iconStyle' => 'regular'],
-    ['key' => 'videos', 'label' => 'Biblioteca de Videos', 'href' => $basePrefix . 'biblioteca_videos.php', 'icon' => 'fa-video'],
-    ['key' => 'archivos', 'label' => 'Biblioteca de Archivos', 'href' => $basePrefix . 'biblioteca_archivos.php', 'icon' => 'fa-file-lines', 'iconStyle' => 'regular'],
-    ['key' => 'asociados', 'label' => 'Lista de Asociados', 'href' => $basePrefix . 'lista_asociados.php', 'icon' => 'fa-users'],
-    ['key' => 'links', 'label' => 'Links de Inter&eacute;s', 'href' => $basePrefix . 'links_interes.php', 'icon' => 'fa-link'],
-    ['key' => 'foro', 'label' => 'Foro Fiscal', 'href' => $basePrefix . 'foro.php', 'icon' => 'fa-comments', 'iconStyle' => 'regular'],
-    ['key' => 'foro_nuevo', 'label' => 'Nuevo Tema', 'href' => $basePrefix . 'foro.php?nuevo=1', 'icon' => 'fa-plus'],
+    ['key' => 'dashboard', 'label' => 'Dashboard', 'href' => base_url('dashboard.php'), 'icon' => 'fa-house'],
+    ['key' => 'perfil', 'label' => 'Mi Perfil', 'href' => base_url('perfil.php'), 'icon' => 'fa-user', 'iconStyle' => 'regular'],
+    ['key' => 'videos', 'label' => 'Biblioteca de Videos', 'href' => base_url('biblioteca_videos.php'), 'icon' => 'fa-video'],
+    ['key' => 'archivos', 'label' => 'Biblioteca de Archivos', 'href' => base_url('biblioteca_archivos.php'), 'icon' => 'fa-file-lines', 'iconStyle' => 'regular'],
+    ['key' => 'asociados', 'label' => 'Lista de Asociados', 'href' => base_url('lista_asociados.php'), 'icon' => 'fa-users'],
+    ['key' => 'links', 'label' => 'Links de Inter&eacute;s', 'href' => base_url('links_interes.php'), 'icon' => 'fa-link'],
+    ['key' => 'foro', 'label' => 'Foro Fiscal', 'href' => base_url('foro.php'), 'icon' => 'fa-comments', 'iconStyle' => 'regular'],
+    ['key' => 'foro_nuevo', 'label' => 'Nuevo Tema', 'href' => base_url('foro.php?nuevo=1'), 'icon' => 'fa-plus'],
 ];
 
-$menuItems[] = ['key' => 'confirmar_pago', 'label' => 'Confirmar Pago', 'href' => $basePrefix . 'confirmar_pago.php', 'icon' => 'fa-credit-card'];
+$menuItems[] = ['key' => 'confirmar_pago', 'label' => 'Confirmar Pago', 'href' => base_url('confirmar_pago.php'), 'icon' => 'fa-credit-card'];
 
 if (is_admin_role($userRole)) {
-    $menuItems[] = ['key' => 'revisar_pagos', 'label' => 'Revisar Pagos', 'href' => $basePrefix . 'revisar_pagos.php', 'icon' => 'fa-receipt'];
-    $menuItems[] = ['key' => 'subir_documentos', 'label' => 'Subir Documentos', 'href' => $basePrefix . 'subir_archivo.php', 'icon' => 'fa-cloud-arrow-up'];
-    $menuItems[] = ['key' => 'links_admin', 'label' => 'Administrar Links', 'href' => $basePrefix . 'links_interes_admin.php', 'icon' => 'fa-pen-to-square'];
+    $menuItems[] = ['key' => 'revisar_pagos', 'label' => 'Revisar Pagos', 'href' => base_url('revisar_pagos.php'), 'icon' => 'fa-receipt'];
+    $menuItems[] = ['key' => 'subir_documentos', 'label' => 'Subir Documentos', 'href' => base_url('subir_archivo.php'), 'icon' => 'fa-cloud-arrow-up'];
+    $menuItems[] = ['key' => 'links_admin', 'label' => 'Administrar Links', 'href' => base_url('links_interes_admin.php'), 'icon' => 'fa-pen-to-square'];
 }
 
 function menu_link_classes(string $key, string $activePage): string
@@ -57,7 +54,7 @@ function menu_link_classes(string $key, string $activePage): string
         <i class="fa-solid fa-bars"></i>
     </button>
     <div class="flex items-center gap-2">
-        <img src="<?php echo $basePrefix; ?>logo.avif" alt="Logo Anafinet" class="h-8 w-auto">
+        <img src="<?php echo htmlspecialchars(base_url('logo.avif'), ENT_QUOTES, 'UTF-8'); ?>" alt="Logo Anafinet" class="h-8 w-auto">
         <span class="font-semibold text-gray-800">Anafinet</span>
     </div>
     <div class="w-10 h-10"></div>
@@ -68,7 +65,7 @@ function menu_link_classes(string $key, string $activePage): string
 <aside id="sideMenu" class="fixed top-0 left-0 h-screen w-72 max-w-[85vw] md:w-64 bg-white border-r border-gray-200 p-6 space-y-8 z-50 transform -translate-x-full md:translate-x-0 transition overflow-y-auto">
     <div class="flex items-start justify-between">
         <div class="text-center w-full">
-            <img src="<?php echo $basePrefix; ?>logo.avif" alt="Logo Anafinet" class="w-28 mx-auto mb-4">
+            <img src="<?php echo htmlspecialchars(base_url('logo.avif'), ENT_QUOTES, 'UTF-8'); ?>" alt="Logo Anafinet" class="w-28 mx-auto mb-4">
             <h3 class="font-bold text-gray-800"><?php echo htmlspecialchars($userName); ?></h3>
             <p class="text-xs text-gray-400"><?php echo htmlspecialchars($userRole); ?></p>
         </div>
@@ -87,10 +84,10 @@ function menu_link_classes(string $key, string $activePage): string
             </a>
         <?php endforeach; ?>
         <hr class="my-4">
-        <a href="<?php echo $basePrefix; ?>logout.php" class="flex items-center gap-3 px-4 py-3 text-red-500 hover:bg-red-50 rounded-xl transition">
+        <a href="<?php echo htmlspecialchars(base_url('logout.php'), ENT_QUOTES, 'UTF-8'); ?>" class="flex items-center gap-3 px-4 py-3 text-red-500 hover:bg-red-50 rounded-xl transition">
             <i class="fa-solid fa-right-from-bracket"></i> <span>Cerrar Sesi&oacute;n</span>
         </a>
-        <a href="<?php echo $basePrefix; ?>index.php" class="flex items-center gap-2 px-4 py-2 text-xs text-gray-400 hover:text-gray-600 transition">
+        <a href="<?php echo htmlspecialchars(base_url('index.php'), ENT_QUOTES, 'UTF-8'); ?>" class="flex items-center gap-2 px-4 py-2 text-xs text-gray-400 hover:text-gray-600 transition">
             <i class="fa-solid fa-arrow-left"></i> <span>Volver al sitio</span>
         </a>
     </nav>

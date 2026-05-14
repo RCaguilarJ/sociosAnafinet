@@ -1,10 +1,16 @@
 Options -Indexes
-AddType image/avif .avif
+<IfModule mod_mime.c>
+    AddType image/avif .avif
+    AddType image/avif-sequence .avifs
+</IfModule>
 
 <IfModule mod_rewrite.c>
 RewriteEngine On
 RewriteRule (^|/)\.(?!well-known/) - [F,L,NC]
 RewriteRule ^(?:database|scripts|vendor)/ - [F,L,NC]
+RewriteCond %{REQUEST_FILENAME} -f [OR]
+RewriteCond %{REQUEST_FILENAME} -d
+RewriteRule ^ - [L]
 </IfModule>
 
 <FilesMatch "(^\.|composer\.(json|lock)$|package(-lock)?\.json$|.*\.(sql|bak|log|ini|ps1|sh|dist|yml|yaml|env))$">
