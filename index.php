@@ -37,19 +37,19 @@ $loginError = $_GET['error'] ?? '';
             <div class="bg-blue-50 border border-blue-200 p-3 rounded-lg mb-6 text-xs text-blue-700">
                 <strong>Credenciales de prueba:</strong><br>
                 Email: <?php echo htmlspecialchars((string)$demoCredentials['email'], ENT_QUOTES, 'UTF-8'); ?>
-                | Contraseña: <?php echo htmlspecialchars((string)$demoCredentials['password'], ENT_QUOTES, 'UTF-8'); ?>
+                | Contrase&ntilde;a: <?php echo htmlspecialchars((string)$demoCredentials['password'], ENT_QUOTES, 'UTF-8'); ?>
             </div>
         <?php endif; ?>
 
         <form action="<?php echo htmlspecialchars(base_url('auth.php'), ENT_QUOTES, 'UTF-8'); ?>" method="POST" class="space-y-4">
             <div>
-                <label class="block text-sm font-medium text-gray-700">Email</label>
-                <input type="email" name="email" required class="w-full mt-1 p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none">
+                <label for="email" class="block text-sm font-medium text-gray-700">Email</label>
+                <input id="email" type="email" name="email" autocomplete="email" required class="w-full mt-1 p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none">
             </div>
 
             <div>
-                <label class="block text-sm font-medium text-gray-700">Contraseña</label>
-                <input type="password" name="password" required class="w-full mt-1 p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none">
+                <label for="password" class="block text-sm font-medium text-gray-700">Contrase&ntilde;a</label>
+                <input id="password" type="password" name="password" autocomplete="current-password" required class="w-full mt-1 p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none">
             </div>
 
             <button type="submit" class="w-full bg-[#5282B2] text-white py-2 rounded-lg font-semibold hover:bg-blue-700 transition shadow-md">
@@ -58,7 +58,7 @@ $loginError = $_GET['error'] ?? '';
         </form>
 
         <div class="mt-6 text-center text-sm">
-            <p class="text-gray-400">¿No eres asociado aun?</p>
+            <p class="text-gray-400">&iquest;No eres asociado aun?</p>
             <a href="<?php echo htmlspecialchars(base_url('afiliacion/index.php'), ENT_QUOTES, 'UTF-8'); ?>" class="text-orange-500 font-bold hover:underline">Solicita tu Afiliacion</a>
         </div>
     </div>

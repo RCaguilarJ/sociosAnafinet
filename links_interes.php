@@ -49,12 +49,7 @@ function normalize_category(string $categoria): string
     if ($key === '') {
         return 'otros';
     }
-    if (function_exists('iconv')) {
-        $trans = iconv('UTF-8', 'ASCII//TRANSLIT', $key);
-        if ($trans !== false) {
-            $key = $trans;
-        }
-    }
+    $key = app_ascii_transliterate($key);
     $key = preg_replace('/[^a-z0-9 ]/', '', $key);
     $key = trim(preg_replace('/\s+/', ' ', $key));
     return $key === '' ? 'otros' : $key;

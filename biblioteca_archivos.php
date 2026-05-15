@@ -130,18 +130,12 @@ function normalize_topic_key(string $value, array $topicOptions): string
         return '';
     }
     $lower = function_exists('mb_strtolower') ? mb_strtolower($raw, 'UTF-8') : strtolower($raw);
-    $normalized = iconv('UTF-8', 'ASCII//TRANSLIT', $lower);
-    if ($normalized === false) {
-        $normalized = $lower;
-    }
+    $normalized = app_ascii_transliterate($lower);
     $normalized = preg_replace('/[^a-z0-9]+/', '', $normalized);
 
     foreach ($topicOptions as $key => $label) {
         $keyNorm = preg_replace('/[^a-z0-9]+/', '', strtolower($key));
-        $labelNorm = iconv('UTF-8', 'ASCII//TRANSLIT', $label);
-        if ($labelNorm === false) {
-            $labelNorm = $label;
-        }
+        $labelNorm = app_ascii_transliterate($label);
         $labelNorm = preg_replace('/[^a-z0-9]+/', '', strtolower($labelNorm));
 
         if ($normalized === $keyNorm || $normalized === $labelNorm) {
@@ -155,10 +149,7 @@ function normalize_topic_key(string $value, array $topicOptions): string
 function infer_category_key(string $name): string
 {
     $lower = function_exists('mb_strtolower') ? mb_strtolower($name, 'UTF-8') : strtolower($name);
-    $normalized = iconv('UTF-8', 'ASCII//TRANSLIT', $lower);
-    if ($normalized === false) {
-        $normalized = $lower;
-    }
+    $normalized = app_ascii_transliterate($lower);
 
     if (str_contains($normalized, 'ley') || str_contains($normalized, 'reglamento')) {
         return 'leyes';

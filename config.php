@@ -62,6 +62,37 @@ if (!function_exists('env_value')) {
     }
 }
 
+if (!function_exists('app_ascii_transliterate')) {
+    function app_ascii_transliterate(string $value): string
+    {
+        if ($value === '') {
+            return '';
+        }
+
+        if (function_exists('iconv')) {
+            $transliterated = iconv('UTF-8', 'ASCII//TRANSLIT', $value);
+            if ($transliterated !== false) {
+                return $transliterated;
+            }
+        }
+
+        return strtr($value, [
+            'Á' => 'A', 'À' => 'A', 'Â' => 'A', 'Ä' => 'A', 'Ã' => 'A', 'Å' => 'A',
+            'á' => 'a', 'à' => 'a', 'â' => 'a', 'ä' => 'a', 'ã' => 'a', 'å' => 'a',
+            'É' => 'E', 'È' => 'E', 'Ê' => 'E', 'Ë' => 'E',
+            'é' => 'e', 'è' => 'e', 'ê' => 'e', 'ë' => 'e',
+            'Í' => 'I', 'Ì' => 'I', 'Î' => 'I', 'Ï' => 'I',
+            'í' => 'i', 'ì' => 'i', 'î' => 'i', 'ï' => 'i',
+            'Ó' => 'O', 'Ò' => 'O', 'Ô' => 'O', 'Ö' => 'O', 'Õ' => 'O',
+            'ó' => 'o', 'ò' => 'o', 'ô' => 'o', 'ö' => 'o', 'õ' => 'o',
+            'Ú' => 'U', 'Ù' => 'U', 'Û' => 'U', 'Ü' => 'U',
+            'ú' => 'u', 'ù' => 'u', 'û' => 'u', 'ü' => 'u',
+            'Ñ' => 'N', 'ñ' => 'n',
+            'Ç' => 'C', 'ç' => 'c',
+        ]);
+    }
+}
+
 if (!function_exists('is_vercel_environment')) {
     function is_vercel_environment(): bool
     {

@@ -6,10 +6,7 @@ function normalize_text_value(string $value): string
         return '';
     }
     $lower = function_exists('mb_strtolower') ? mb_strtolower($value, 'UTF-8') : strtolower($value);
-    $normalized = iconv('UTF-8', 'ASCII//TRANSLIT', $lower);
-    if ($normalized === false) {
-        $normalized = $lower;
-    }
+    $normalized = function_exists('app_ascii_transliterate') ? app_ascii_transliterate($lower) : $lower;
     $normalized = preg_replace('/[^a-z0-9]+/', '', $normalized);
     return $normalized ?? '';
 }
