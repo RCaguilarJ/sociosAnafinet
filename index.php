@@ -11,6 +11,7 @@ $loginError = $_GET['error'] ?? '';
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<?php app_render_favicon_tags(); ?>
     <link rel="stylesheet" href="<?php echo htmlspecialchars(base_url('assets/tailwind.build.css'), ENT_QUOTES, 'UTF-8'); ?>">
     <title>Anafinet - Login</title>
 </head>

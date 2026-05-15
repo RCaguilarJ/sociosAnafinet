@@ -19,6 +19,7 @@ if (!function_exists('render_dashboard_failure_page')) {
         <head>
             <meta charset="UTF-8">
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<?php app_render_favicon_tags(); ?>
             <title>Error del dashboard</title>
             <style>
                 body {
@@ -152,6 +153,7 @@ try {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<?php app_render_favicon_tags(); ?>
     <link rel="stylesheet" href="<?php echo BASE_URL; ?>/assets/tailwind.build.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <title>Dashboard - Anafinet</title>

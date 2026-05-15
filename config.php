@@ -228,6 +228,23 @@ if (!function_exists('base_url')) {
     }
 }
 
+if (!function_exists('app_favicon_url')) {
+    function app_favicon_url(): string
+    {
+        return base_url('logo_anafinet_favicon.png');
+    }
+}
+
+if (!function_exists('app_render_favicon_tags')) {
+    function app_render_favicon_tags(): void
+    {
+        $favicon = htmlspecialchars(app_favicon_url(), ENT_QUOTES, 'UTF-8');
+        echo '    <link rel="icon" type="image/png" href="' . $favicon . '">' . PHP_EOL;
+        echo '    <link rel="shortcut icon" href="' . $favicon . '">' . PHP_EOL;
+        echo '    <link rel="apple-touch-icon" href="' . $favicon . '">' . PHP_EOL;
+    }
+}
+
 if (!function_exists('app_is_secure_request')) {
     function app_is_secure_request(): bool
     {
