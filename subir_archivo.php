@@ -30,6 +30,8 @@ $temaColumnOk = null;
 $temaColumnMsg = '';
 
 if ($isAdmin) {
+    require_database_connection($pdo ?? null, 'subir_documentos', 'Subir Documentos');
+
     try {
         $stmt = $pdo->prepare("SHOW COLUMNS FROM contenidos LIKE ?");
         $stmt->execute(['tema']);

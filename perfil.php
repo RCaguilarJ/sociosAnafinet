@@ -1,10 +1,13 @@
 <?php
 require_once __DIR__ . '/bootstrap.php';
+require_once 'role_helpers.php';
 
 if (!isset($_SESSION['user_id'])) {
     header("Location: index.php");
     exit();
 }
+
+require_database_connection($pdo ?? null, 'perfil', 'Mi Perfil');
 
 $restrictedProfileOnly = user_has_profile_only_access($pdo ?? null, (int)($_SESSION['user_id'] ?? 0), (string)($_SESSION['user_rol'] ?? ''), (string)($_SESSION['user_estatus'] ?? ''));
 $showRestrictedBanner = $restrictedProfileOnly || (isset($_GET['bloqueado']) && $_GET['bloqueado'] === '1');

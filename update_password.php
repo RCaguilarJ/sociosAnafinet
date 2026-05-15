@@ -2,6 +2,11 @@
 require_once __DIR__ . '/bootstrap.php';
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_SESSION['user_id'])) {
+    if (!($pdo instanceof PDO)) {
+        header("Location: perfil.php?tab=seguridad&error=El servicio no esta disponible en este momento");
+        exit();
+    }
+
     $current_pass = $_POST['current'];
     $new_pass = $_POST['new'];
     $confirm_pass = $_POST['confirm'];

@@ -22,6 +22,8 @@ if (!$isAdmin) {
     exit();
 }
 
+require_database_connection($pdo ?? null, 'asociados', 'Editar Asociado');
+
 $editId = isset($_GET['id']) ? (int)$_GET['id'] : 0;
 $asociado = null;
 $mensaje = '';

@@ -195,12 +195,80 @@ function require_full_portal_access(?PDO $pdo, string $activePage = 'dashboard',
         exit();
     }
 
+    require_database_connection($pdo, $activePage, $pageTitle);
+
     $userId = (int)($_SESSION['user_id'] ?? 0);
     $role = (string)($_SESSION['user_rol'] ?? '');
 
     if (user_has_profile_only_access($pdo, $userId, $role)) {
         render_membership_required_page($activePage, $pageTitle);
     }
+}
+
+function render_database_unavailable_page(string $activePage = 'dashboard', string $pageTitle = 'Servicio no disponible'): void
+{
+    http_response_code(503);
+    $isAuthenticated = isset($_SESSION['user_id']);
+    $pdo = null;
+
+    ?>
+    <!DOCTYPE html>
+    <html lang="es">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link rel="stylesheet" href="<?php echo BASE_URL; ?>/assets/tailwind.build.css">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+        <title><?php echo htmlspecialchars($pageTitle, ENT_QUOTES, 'UTF-8'); ?> - Anafinet</title>
+    </head>
+    <body class="bg-slate-50 min-h-screen">
+        <?php if ($isAuthenticated): ?>
+            <?php require __DIR__ . '/menu.php'; ?>
+        <?php endif; ?>
+        <main class="<?php echo $isAuthenticated ? 'md:ml-64 p-6 md:p-8' : 'flex min-h-screen items-center justify-center p-4'; ?>">
+            <div class="mx-auto max-w-4xl">
+                <div class="rounded-[2rem] border border-red-200 bg-white p-8 shadow-sm">
+                    <div class="flex items-start gap-4">
+                        <div class="flex h-14 w-14 items-center justify-center rounded-2xl bg-red-50 text-red-600 shadow-sm">
+                            <i class="fa-solid fa-database text-xl"></i>
+                        </div>
+                        <div class="min-w-0">
+                            <p class="text-sm font-bold uppercase tracking-[0.18em] text-red-700">Servicio temporalmente no disponible</p>
+                            <h1 class="mt-2 text-3xl font-bold text-slate-900">No fue posible conectar con la base de datos</h1>
+                            <p class="mt-3 max-w-2xl text-sm leading-7 text-slate-700">
+                                Esta seccion necesita conexion con la base de datos para cargar contenido o guardar cambios.
+                                Cuando el servicio vuelva a estar disponible, la pagina funcionara normalmente.
+                            </p>
+                            <div class="mt-6 flex flex-col gap-3 sm:flex-row">
+                                <a href="<?php echo BASE_URL; ?>/dashboard.php" class="inline-flex items-center justify-center rounded-2xl bg-[#5282B2] px-6 py-4 font-bold text-white hover:bg-blue-700 transition">
+                                    Ir al dashboard
+                                </a>
+                                <a href="javascript:location.reload()" class="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-6 py-4 font-bold text-slate-700 hover:bg-slate-50 transition">
+                                    Reintentar
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </body>
+    </html>
+    <?php
+    exit();
+}
+
+function require_database_connection(?PDO $pdo, string $activePage = 'dashboard', string $pageTitle = 'Servicio no disponible'): void
+{
+    if ($pdo instanceof PDO) {
+        return;
+    }
+
+    if (!headers_sent()) {
+        header('Retry-After: 300');
+    }
+
+    render_database_unavailable_page($activePage, $pageTitle);
 }
 
 function ensure_user_payment_columns(PDO $pdo): void

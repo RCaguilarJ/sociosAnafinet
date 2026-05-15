@@ -15,6 +15,11 @@ if ($tipo === '') {
     exit();
 }
 
+if (!($pdo instanceof PDO)) {
+    http_response_code(204);
+    exit();
+}
+
 if (strlen($detalle) > 255) {
     $detalle = substr($detalle, 0, 255);
 }

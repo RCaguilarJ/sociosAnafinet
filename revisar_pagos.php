@@ -21,6 +21,8 @@ if (!is_admin_role($userRole)) {
     exit();
 }
 
+require_database_connection($pdo ?? null, 'revisar_pagos', 'Revisar Pagos');
+
 ensure_user_payment_columns($pdo);
 
 $mensaje = '';

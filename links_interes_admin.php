@@ -21,6 +21,8 @@ if (!$isAdmin) {
     exit();
 }
 
+require_database_connection($pdo ?? null, 'links_admin', 'Administrar Links');
+
 $adminMsg = '';
 $adminType = 'success';
 
