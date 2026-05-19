@@ -14,7 +14,11 @@ $mensajeTipo = 'info';
 $registroNuevo = isset($_GET['registro']) && $_GET['registro'] === '1';
 $schemaError = '';
 $mercadoPagoEnabled = app_mercadopago_enabled();
+$paypalEnabled = app_paypal_enabled();
+$paypalClientId = app_paypal_client_id();
 $latestMercadoPagoPayment = null;
+$latestPayPalPayment = null;
+$paypalExternalReference = trim((string) ($_SESSION['membership_paypal_external_reference'] ?? ''));
 
 if (isset($_SESSION['payment_flash_message'], $_SESSION['payment_flash_type'])) {
     $mensaje = (string) $_SESSION['payment_flash_message'];
@@ -50,6 +54,18 @@ if ($pdo instanceof PDO) {
         }
 
         $latestMercadoPagoPayment = app_get_latest_membership_payment_for_user($pdo, $userId, 'mercadopago');
+        $latestPayPalPayment = app_get_latest_membership_payment_for_user($pdo, $userId, 'paypal');
+
+        if ($paypalEnabled && !app_is_membership_active_status($userStatus)) {
+            if ($paypalExternalReference === '') {
+                $paypalExternalReference = app_membership_payment_reference($userId);
+                $_SESSION['membership_paypal_external_reference'] = $paypalExternalReference;
+            }
+
+            if (app_get_membership_payment_by_external_reference($pdo, $paypalExternalReference) === null) {
+                app_insert_membership_payment_attempt($pdo, $userId, 'paypal', $paypalExternalReference);
+            }
+        }
     } catch (Throwable $e) {
         $schemaError = 'No fue posible preparar el modulo de confirmacion de pago en este momento.';
     }
@@ -79,15 +95,56 @@ if (
         if ($paymentStatus === 'approved') {
             $mensaje = 'Tu pago en Mercado Pago fue aprobado y la membresia ya quedo activa.';
             $mensajeTipo = 'success';
+            $userStatus = (string) ($syncedPayment['user_status'] ?? 'Activo');
+            $_SESSION['user_estatus'] = $userStatus;
         } elseif ($paymentStatus === 'processing' || $returnState === 'pending') {
             $mensaje = 'Tu pago esta en proceso. Mientras Mercado Pago lo confirma, algunas secciones seguiran restringidas.';
             $mensajeTipo = 'info';
+            $userStatus = (string) ($syncedPayment['user_status'] ?? 'Pago en proceso');
+            $_SESSION['user_estatus'] = $userStatus;
         } elseif ($returnState === 'failure' || $paymentStatus === 'failed') {
             $mensaje = 'El pago no pudo confirmarse. Puedes intentarlo de nuevo o reportarlo manualmente con comprobante.';
             $mensajeTipo = 'error';
         }
     } catch (Throwable $e) {
         $mensaje = 'No fue posible sincronizar el estado de tu pago en linea. Intenta recargar en unos minutos.';
+        $mensajeTipo = 'error';
+    }
+}
+
+if (
+    $schemaError === ''
+    && $pdo instanceof PDO
+    && isset($_GET['provider'])
+    && $_GET['provider'] === 'paypal'
+) {
+    $paypalOrderId = trim((string) ($_GET['order_id'] ?? ''));
+    $externalReference = trim((string) ($_GET['external_reference'] ?? $paypalExternalReference));
+
+    try {
+        if ($paypalOrderId === '' || $externalReference === '' || !$paypalEnabled) {
+            throw new RuntimeException('paypal_invalid_return');
+        }
+
+        $syncedPayment = app_sync_paypal_order($pdo, $userId, $externalReference, $paypalOrderId);
+        $latestPayPalPayment = app_get_latest_membership_payment_for_user($pdo, $userId, 'paypal');
+        $userStatus = (string) ($syncedPayment['user_status'] ?? $userStatus);
+        $_SESSION['user_estatus'] = $userStatus;
+        unset($_SESSION['membership_paypal_external_reference']);
+        $paypalExternalReference = '';
+
+        if ($syncedPayment['payment_status'] === 'approved') {
+            $mensaje = 'Tu pago en PayPal fue aprobado y la membresia ya quedo activa.';
+            $mensajeTipo = 'success';
+        } elseif ($syncedPayment['payment_status'] === 'processing') {
+            $mensaje = 'Tu pago en PayPal esta en proceso. Algunas secciones seguiran restringidas mientras se confirma.';
+            $mensajeTipo = 'info';
+        } else {
+            $mensaje = 'El pago con PayPal no pudo confirmarse. Puedes intentarlo de nuevo o reportarlo manualmente.';
+            $mensajeTipo = 'error';
+        }
+    } catch (Throwable $e) {
+        $mensaje = 'No fue posible sincronizar el pago de PayPal en este momento. Intenta nuevamente en unos minutos.';
         $mensajeTipo = 'error';
     }
 }
@@ -200,8 +257,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $pdo instanceof PDO && $schemaError
 if ($pdo instanceof PDO && $schemaError === '') {
     try {
         $latestMercadoPagoPayment = app_get_latest_membership_payment_for_user($pdo, $userId, 'mercadopago');
+        $latestPayPalPayment = app_get_latest_membership_payment_for_user($pdo, $userId, 'paypal');
     } catch (Throwable $e) {
         $latestMercadoPagoPayment = null;
+        $latestPayPalPayment = null;
     }
 }
 
@@ -225,6 +284,18 @@ if ($mercadoPagoStatusNormalized === 'approved') {
 } elseif ($mercadoPagoStatusNormalized !== '') {
     $mercadoPagoStatusLabel = 'Pago no confirmado';
     $mercadoPagoStatusClasses = 'bg-red-100 text-red-600';
+}
+
+$payPalStatus = is_array($latestPayPalPayment) ? (string) ($latestPayPalPayment['status'] ?? '') : '';
+$payPalStatusNormalized = strtolower($payPalStatus);
+$payPalStatusLabel = 'Sin intento registrado';
+
+if ($payPalStatusNormalized === 'approved') {
+    $payPalStatusLabel = 'Pago aprobado';
+} elseif (in_array($payPalStatusNormalized, ['pending', 'processing'], true)) {
+    $payPalStatusLabel = 'Pago en revision';
+} elseif ($payPalStatusNormalized !== '') {
+    $payPalStatusLabel = 'Pago no confirmado';
 }
 
 $comprobanteStatusLabel = $paymentData['comprobante_pago'] !== ''
@@ -330,14 +401,14 @@ $comprobanteStatusLabel = $paymentData['comprobante_pago'] !== ''
                                             <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-blue-100 text-sm font-bold text-blue-600">1</span>
                                             <div>
                                                 <p class="text-sm font-semibold text-slate-900">Abres el checkout</p>
-                                                <p class="mt-1 text-sm text-slate-500">Te enviamos a Mercado Pago con el importe y la referencia ya configurados.</p>
+                                                <p class="mt-1 text-sm text-slate-500">Te llevamos a Mercado Pago o PayPal con el importe y la referencia ya configurados.</p>
                                             </div>
                                         </div>
                                         <div class="flex items-start gap-3">
                                             <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-blue-100 text-sm font-bold text-blue-600">2</span>
                                             <div>
                                                 <p class="text-sm font-semibold text-slate-900">Pagas con el metodo que prefieras</p>
-                                                <p class="mt-1 text-sm text-slate-500">Tarjeta, saldo o el medio disponible en tu cuenta y tu region.</p>
+                                                <p class="mt-1 text-sm text-slate-500">Tarjeta, saldo o el medio disponible segun la pasarela y tu region.</p>
                                             </div>
                                         </div>
                                         <div class="flex items-start gap-3">
@@ -379,7 +450,18 @@ $comprobanteStatusLabel = $paymentData['comprobante_pago'] !== ''
                                         <?php endif; ?>
                                     <?php else: ?>
                                         <div class="mt-5 rounded-2xl border border-amber-200 bg-amber-50 px-5 py-4 text-sm text-amber-900">
-                                            Mercado Pago aun no esta configurado en este ambiente. Define <code>PUBLIC_APP_URL</code>, <code>MERCADOPAGO_ACCESS_TOKEN</code> y <code>MERCADOPAGO_WEBHOOK_SECRET</code> para habilitarlo.
+                                            Mercado Pago aun no esta configurado en este ambiente. Define <code>PUBLIC_APP_URL</code>, <code>MERCADOPAGO_ACCESS_TOKEN</code>, <code>MERCADOPAGO_PUBLIC_KEY</code> y <code>MERCADOPAGO_WEBHOOK_SECRET</code> para habilitarlo.
+                                        </div>
+                                    <?php endif; ?>
+
+                                    <?php if ($paypalEnabled && $paypalClientId !== ''): ?>
+                                        <div class="mt-4 rounded-2xl border border-slate-200 bg-white px-4 py-4">
+                                            <p class="text-xs font-bold uppercase tracking-wide text-slate-400">PayPal</p>
+                                            <div id="paypal-member-button-container" class="mt-4"></div>
+                                        </div>
+                                    <?php else: ?>
+                                        <div class="mt-4 rounded-2xl border border-amber-200 bg-amber-50 px-5 py-4 text-sm text-amber-900">
+                                            PayPal aun no esta configurado en este ambiente. Define <code>PUBLIC_APP_URL</code>, <code>PAYPAL_CLIENT_ID</code> y <code>PAYPAL_CLIENT_SECRET</code> para habilitarlo.
                                         </div>
                                     <?php endif; ?>
                                 </div>
@@ -514,6 +596,14 @@ $comprobanteStatusLabel = $paymentData['comprobante_pago'] !== ''
                         </div>
                     <?php endif; ?>
 
+                    <?php if (is_array($latestPayPalPayment)): ?>
+                        <div class="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
+                            <p class="text-xs font-bold uppercase tracking-[0.18em] text-slate-400">PayPal</p>
+                            <p class="mt-3 text-lg font-semibold text-slate-900"><?php echo htmlspecialchars((string) ($latestPayPalPayment['status'] ?? 'Sin estatus'), ENT_QUOTES, 'UTF-8'); ?></p>
+                            <p class="mt-2 text-sm leading-7 text-slate-500">Referencia: <?php echo htmlspecialchars((string) ($latestPayPalPayment['external_reference'] ?? ''), ENT_QUOTES, 'UTF-8'); ?></p>
+                        </div>
+                    <?php endif; ?>
+
                     <a href="<?php echo BASE_URL; ?>/dashboard.php" class="inline-flex w-full items-center justify-center rounded-2xl border border-slate-200 bg-white px-6 py-4 font-bold text-slate-700 transition hover:bg-slate-50">
                         Ir al dashboard
                     </a>
@@ -521,23 +611,56 @@ $comprobanteStatusLabel = $paymentData['comprobante_pago'] !== ''
             </section>
         </div>
     </main>
+    <?php if ($paypalEnabled && $paypalClientId !== ''): ?>
+    <script src="https://www.paypal.com/sdk/js?client-id=<?php echo urlencode($paypalClientId); ?>&currency=<?php echo urlencode($membresiaMoneda); ?>"></script>
+    <?php endif; ?>
     <script>
         (function () {
             var input = document.getElementById('comprobante_pago');
             var fileNameNode = document.getElementById('comprobante_file_name');
+            var paypalContainer = document.getElementById('paypal-member-button-container');
 
-            if (!input || !fileNameNode) {
-                return;
+            if (input && fileNameNode) {
+                input.addEventListener('change', function () {
+                    if (input.files && input.files.length > 0) {
+                        fileNameNode.textContent = input.files[0].name;
+                        return;
+                    }
+
+                    fileNameNode.textContent = <?php echo json_encode($comprobanteStatusLabel, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES); ?>;
+                });
             }
 
-            input.addEventListener('change', function () {
-                if (input.files && input.files.length > 0) {
-                    fileNameNode.textContent = input.files[0].name;
-                    return;
-                }
+            if (paypalContainer && window.paypal && typeof window.paypal.Buttons === 'function') {
+                window.paypal.Buttons({
+                    style: {
+                        layout: 'vertical',
+                        shape: 'rect',
+                        label: 'paypal'
+                    },
+                    createOrder: function (data, actions) {
+                        return actions.order.create({
+                            purchase_units: [{
+                                description: <?php echo json_encode(app_membership_fee_label(), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES); ?>,
+                                custom_id: <?php echo json_encode($paypalExternalReference, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES); ?>,
+                                amount: {
+                                    currency_code: <?php echo json_encode($membresiaMoneda, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES); ?>,
+                                    value: <?php echo json_encode(number_format(app_membership_fee_amount(), 2, '.', ''), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES); ?>
+                                }
+                            }]
+                        });
+                    },
+                    onApprove: function (data) {
+                        var query = new URLSearchParams({
+                            provider: 'paypal',
+                            order_id: data.orderID,
+                            external_reference: <?php echo json_encode($paypalExternalReference, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES); ?>
+                        });
 
-                fileNameNode.textContent = <?php echo json_encode($comprobanteStatusLabel, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES); ?>;
-            });
+                        window.location.href = <?php echo json_encode(BASE_URL . '/confirmar_pago.php', JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES); ?> + '?' + query.toString();
+                    }
+                }).render('#paypal-member-button-container');
+            }
         })();
     </script>
 </body>

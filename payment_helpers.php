@@ -35,6 +35,38 @@ function app_membership_fee_label(): string
     return (string)env_value('MEMBERSHIP_FEE_LABEL', 'Membresia Anafinet');
 }
 
+function app_paypal_client_id(): string
+{
+    return (string)env_value('PAYPAL_CLIENT_ID', '');
+}
+
+function app_paypal_client_secret(): string
+{
+    return (string)env_value('PAYPAL_CLIENT_SECRET', '');
+}
+
+function app_paypal_use_sandbox(): bool
+{
+    return env_value('PAYPAL_USE_SANDBOX', '0') === '1';
+}
+
+function app_paypal_enabled(): bool
+{
+    return app_paypal_client_id() !== '' && app_paypal_client_secret() !== '' && app_public_base_url() !== '';
+}
+
+function app_paypal_api_base_url(): string
+{
+    return app_paypal_use_sandbox()
+        ? 'https://api-m.sandbox.paypal.com'
+        : 'https://api-m.paypal.com';
+}
+
+function app_mercadopago_public_key(): string
+{
+    return (string)env_value('MERCADOPAGO_PUBLIC_KEY', '');
+}
+
 function app_mercadopago_access_token(): string
 {
     return (string)env_value('MERCADOPAGO_ACCESS_TOKEN', '');
@@ -110,6 +142,11 @@ function app_membership_payment_reference(int $userId): string
     return 'membership_user_' . $userId . '_' . time() . '_' . bin2hex(random_bytes(4));
 }
 
+function app_membership_signup_reference(): string
+{
+    return 'membership_signup_' . time() . '_' . bin2hex(random_bytes(6));
+}
+
 function app_http_json_request(string $method, string $url, array $headers = [], ?array $body = null): array
 {
     if (!function_exists('curl_init')) {
@@ -162,7 +199,50 @@ function app_http_json_request(string $method, string $url, array $headers = [],
     ];
 }
 
-function app_create_mercadopago_preference(PDO $pdo, array $user, string $externalReference): array
+function app_http_form_request(string $method, string $url, array $headers = [], array $formData = []): array
+{
+    if (!function_exists('curl_init')) {
+        throw new RuntimeException('La extension cURL es requerida para integrar pasarelas de pago.');
+    }
+
+    $ch = curl_init($url);
+    if ($ch === false) {
+        throw new RuntimeException('No fue posible inicializar cURL.');
+    }
+
+    $normalizedHeaders = $headers;
+    $normalizedHeaders[] = 'Content-Type: application/x-www-form-urlencoded';
+    $payload = http_build_query($formData, '', '&');
+
+    curl_setopt_array($ch, [
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_CUSTOMREQUEST => strtoupper($method),
+        CURLOPT_HTTPHEADER => $normalizedHeaders,
+        CURLOPT_TIMEOUT => 30,
+        CURLOPT_CONNECTTIMEOUT => 10,
+        CURLOPT_FOLLOWLOCATION => false,
+        CURLOPT_POSTFIELDS => $payload,
+    ]);
+
+    $responseBody = curl_exec($ch);
+    $statusCode = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    $curlError = curl_error($ch);
+    curl_close($ch);
+
+    if ($responseBody === false) {
+        throw new RuntimeException('Error de red al consumir API externa: ' . $curlError);
+    }
+
+    $decoded = json_decode($responseBody, true);
+
+    return [
+        'status' => $statusCode,
+        'body' => $decoded,
+        'raw' => $responseBody,
+    ];
+}
+
+function app_create_mercadopago_preference(PDO $pdo, array $user, string $externalReference, array $options = []): array
 {
     app_ensure_membership_payment_schema($pdo);
 
@@ -170,6 +250,12 @@ function app_create_mercadopago_preference(PDO $pdo, array $user, string $extern
     if ($baseUrl === '') {
         throw new RuntimeException('Define PUBLIC_APP_URL para generar URLs publicas de pago.');
     }
+
+    $backUrls = $options['back_urls'] ?? [
+        'success' => $baseUrl . '/confirmar_pago.php?provider=mercadopago&mp_return=success&external_reference=' . rawurlencode($externalReference),
+        'failure' => $baseUrl . '/confirmar_pago.php?provider=mercadopago&mp_return=failure&external_reference=' . rawurlencode($externalReference),
+        'pending' => $baseUrl . '/confirmar_pago.php?provider=mercadopago&mp_return=pending&external_reference=' . rawurlencode($externalReference),
+    ];
 
     $payload = [
         'items' => [[
@@ -183,13 +269,9 @@ function app_create_mercadopago_preference(PDO $pdo, array $user, string $extern
             'email' => (string)($user['email'] ?? ''),
         ],
         'external_reference' => $externalReference,
-        'back_urls' => [
-            'success' => $baseUrl . '/confirmar_pago.php?provider=mercadopago&mp_return=success&external_reference=' . rawurlencode($externalReference),
-            'failure' => $baseUrl . '/confirmar_pago.php?provider=mercadopago&mp_return=failure&external_reference=' . rawurlencode($externalReference),
-            'pending' => $baseUrl . '/confirmar_pago.php?provider=mercadopago&mp_return=pending&external_reference=' . rawurlencode($externalReference),
-        ],
-        'auto_return' => 'approved',
-        'notification_url' => $baseUrl . '/webhooks/mercadopago.php',
+        'back_urls' => $backUrls,
+        'auto_return' => (string)($options['auto_return'] ?? 'approved'),
+        'notification_url' => (string)($options['notification_url'] ?? ($baseUrl . '/webhooks/mercadopago.php')),
         'statement_descriptor' => substr(preg_replace('/[^A-Za-z0-9 ]+/', '', app_membership_fee_label()) ?: 'Anafinet', 0, 13),
         'metadata' => [
             'user_id' => (int)($user['id'] ?? 0),
@@ -209,6 +291,142 @@ function app_create_mercadopago_preference(PDO $pdo, array $user, string $extern
     }
 
     return $response['body'];
+}
+
+function app_paypal_access_token(): string
+{
+    $clientId = app_paypal_client_id();
+    $clientSecret = app_paypal_client_secret();
+    if ($clientId === '' || $clientSecret === '') {
+        throw new RuntimeException('PayPal no esta configurado en este ambiente.');
+    }
+
+    $response = app_http_form_request(
+        'POST',
+        app_paypal_api_base_url() . '/v1/oauth2/token',
+        [
+            'Accept: application/json',
+            'Authorization: Basic ' . base64_encode($clientId . ':' . $clientSecret),
+        ],
+        ['grant_type' => 'client_credentials']
+    );
+
+    if ($response['status'] < 200 || $response['status'] >= 300 || !is_array($response['body'])) {
+        throw new RuntimeException('PayPal no devolvio un token valido.');
+    }
+
+    $token = (string)($response['body']['access_token'] ?? '');
+    if ($token === '') {
+        throw new RuntimeException('PayPal no devolvio access_token.');
+    }
+
+    return $token;
+}
+
+function app_capture_paypal_order(string $orderId): array
+{
+    $response = app_http_json_request(
+        'POST',
+        app_paypal_api_base_url() . '/v2/checkout/orders/' . rawurlencode($orderId) . '/capture',
+        [
+            'Authorization: Bearer ' . app_paypal_access_token(),
+            'PayPal-Request-Id: ' . $orderId . '-' . bin2hex(random_bytes(4)),
+        ],
+        []
+    );
+
+    if ($response['status'] < 200 || $response['status'] >= 300 || !is_array($response['body'])) {
+        throw new RuntimeException('PayPal no devolvio una captura valida para la orden.');
+    }
+
+    return $response['body'];
+}
+
+function app_map_paypal_status_to_membership(array $order): array
+{
+    $orderStatus = strtoupper((string)($order['status'] ?? ''));
+    $capture = $order['purchase_units'][0]['payments']['captures'][0] ?? null;
+    $captureStatus = strtoupper((string)($capture['status'] ?? ''));
+
+    if ($orderStatus === 'COMPLETED' || $captureStatus === 'COMPLETED') {
+        return [
+            'payment_status' => 'approved',
+            'user_status' => 'Activo',
+            'paid_at' => !empty($capture['create_time']) ? date('Y-m-d H:i:s', strtotime((string)$capture['create_time'])) : date('Y-m-d H:i:s'),
+            'status_detail' => $captureStatus !== '' ? $captureStatus : $orderStatus,
+        ];
+    }
+
+    if (in_array($orderStatus, ['APPROVED', 'PAYER_ACTION_REQUIRED'], true) || in_array($captureStatus, ['PENDING'], true)) {
+        return [
+            'payment_status' => 'processing',
+            'user_status' => 'Pago en proceso',
+            'paid_at' => null,
+            'status_detail' => $captureStatus !== '' ? $captureStatus : $orderStatus,
+        ];
+    }
+
+    return [
+        'payment_status' => 'failed',
+        'user_status' => 'Pendiente de pago',
+        'paid_at' => null,
+        'status_detail' => $captureStatus !== '' ? $captureStatus : ($orderStatus !== '' ? $orderStatus : 'UNKNOWN'),
+    ];
+}
+
+function app_sync_paypal_order(PDO $pdo, int $userId, string $externalReference, string $orderId): array
+{
+    app_ensure_membership_payment_schema($pdo);
+
+    $capturedOrder = app_capture_paypal_order($orderId);
+    $purchaseUnit = $capturedOrder['purchase_units'][0] ?? [];
+    $capture = $purchaseUnit['payments']['captures'][0] ?? [];
+    $mappedStatus = app_map_paypal_status_to_membership($capturedOrder);
+    $amountValue = $capture['amount']['value'] ?? $purchaseUnit['amount']['value'] ?? app_membership_fee_amount();
+    $currency = $capture['amount']['currency_code'] ?? $purchaseUnit['amount']['currency_code'] ?? app_membership_fee_currency();
+    $captureId = (string)($capture['id'] ?? '');
+
+    $stmt = $pdo->prepare(
+        'INSERT INTO pagos_membresia (
+            user_id, provider, external_reference, provider_order_id, provider_payment_id,
+            amount, currency, status, status_detail, raw_payload, paid_at
+         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+         ON DUPLICATE KEY UPDATE
+            provider_order_id = VALUES(provider_order_id),
+            provider_payment_id = VALUES(provider_payment_id),
+            amount = VALUES(amount),
+            currency = VALUES(currency),
+            status = VALUES(status),
+            status_detail = VALUES(status_detail),
+            raw_payload = VALUES(raw_payload),
+            paid_at = VALUES(paid_at)'
+    );
+
+    $stmt->execute([
+        $userId,
+        'paypal',
+        $externalReference,
+        $orderId,
+        $captureId !== '' ? $captureId : null,
+        (float)$amountValue,
+        (string)$currency,
+        $mappedStatus['payment_status'],
+        $mappedStatus['status_detail'],
+        json_encode($capturedOrder, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
+        $mappedStatus['paid_at'],
+    ]);
+
+    $userUpdate = $pdo->prepare('UPDATE usuarios SET estatus = ? WHERE id = ?');
+    $userUpdate->execute([$mappedStatus['user_status'], $userId]);
+
+    return [
+        'external_reference' => $externalReference,
+        'order_id' => $orderId,
+        'payment_id' => $captureId,
+        'payment_status' => $mappedStatus['payment_status'],
+        'user_status' => $mappedStatus['user_status'],
+        'raw' => $capturedOrder,
+    ];
 }
 
 function app_insert_membership_payment_attempt(PDO $pdo, int $userId, string $provider, string $externalReference): void

@@ -216,6 +216,64 @@ if (!defined('BASE_URL')) {
     define('BASE_URL', detect_base_url());
 }
 
+if (!function_exists('app_request_host')) {
+    function app_request_host(): string
+    {
+        if (PHP_SAPI === 'cli') {
+            return 'cli';
+        }
+
+        $host = strtolower((string)($_SERVER['HTTP_HOST'] ?? ''));
+        $host = preg_replace('/:\d+$/', '', $host);
+
+        return $host ?? '';
+    }
+}
+
+if (!function_exists('app_is_local_request')) {
+    function app_is_local_request(): bool
+    {
+        return in_array(app_request_host(), ['localhost', '127.0.0.1', '::1'], true);
+    }
+}
+
+if (!function_exists('app_environment_label')) {
+    function app_environment_label(): string
+    {
+        $explicit = env_value('APP_ENV_LABEL');
+        if ($explicit !== null && trim($explicit) !== '') {
+            return trim($explicit);
+        }
+
+        return app_is_local_request() ? 'Local' : 'Produccion';
+    }
+}
+
+if (!function_exists('app_current_database_name')) {
+    function app_current_database_name(?PDO $pdo = null): string
+    {
+        static $cached = null;
+
+        if ($cached !== null) {
+            return $cached;
+        }
+
+        if (!($pdo instanceof PDO)) {
+            $cached = (string)env_value('DB_NAME', '');
+            return $cached;
+        }
+
+        try {
+            $name = $pdo->query('SELECT DATABASE()')->fetchColumn();
+            $cached = is_string($name) ? $name : (string)env_value('DB_NAME', '');
+        } catch (Throwable $e) {
+            $cached = (string)env_value('DB_NAME', '');
+        }
+
+        return $cached;
+    }
+}
+
 if (!function_exists('base_url')) {
     function base_url(string $path = ''): string
     {

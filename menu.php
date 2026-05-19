@@ -121,4 +121,3 @@ document.addEventListener('DOMContentLoaded', () => {
     overlay?.addEventListener('click', closeMenu);
 });
 </script>
-
