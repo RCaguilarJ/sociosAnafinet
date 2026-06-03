@@ -7,6 +7,7 @@ $userName = $_SESSION['user_name'] ?? 'Usuario';
 $userRole = $_SESSION['user_rol'] ?? '';
 $userStatus = $_SESSION['user_estatus'] ?? '';
 $userId = isset($_SESSION['user_id']) ? (int)$_SESSION['user_id'] : null;
+$userState = '';
 
 if (isset($pdo)) {
     $dbRole = fetch_user_role($pdo, $userId);
@@ -18,7 +19,13 @@ if (isset($pdo)) {
         $userStatus = $dbStatus;
         $_SESSION['user_estatus'] = $dbStatus;
     }
+    $dbState = fetch_user_state($pdo, $userId);
+    if ($dbState !== null) {
+        $userState = $dbState;
+    }
 }
+
+$memberIdentifier = app_member_identifier($pdo ?? null, $userId, $userState);
 
 $menuItems = [
     ['key' => 'dashboard', 'label' => 'Dashboard', 'href' => base_url('dashboard.php'), 'icon' => 'fa-house'],
@@ -67,7 +74,12 @@ function menu_link_classes(string $key, string $activePage): string
         <div class="text-center w-full">
             <img src="<?php echo htmlspecialchars(base_url('logo.avif'), ENT_QUOTES, 'UTF-8'); ?>" alt="Logo Anafinet" class="w-28 mx-auto mb-4">
             <h3 class="font-bold text-gray-800"><?php echo htmlspecialchars($userName); ?></h3>
-            <p class="text-xs text-gray-400"><?php echo htmlspecialchars($userRole); ?></p>
+            <div class="mt-1 flex items-center justify-center gap-2 text-xs text-gray-400">
+                <span><?php echo htmlspecialchars($userRole); ?></span>
+                <?php if ($memberIdentifier !== ''): ?>
+                    <span class="rounded-full bg-slate-100 px-2 py-1 font-bold tracking-[0.12em] text-slate-600"><?php echo htmlspecialchars($memberIdentifier); ?></span>
+                <?php endif; ?>
+            </div>
         </div>
         <button id="menuClose" class="md:hidden ml-2 inline-flex items-center justify-center w-9 h-9 rounded-lg border border-gray-200 text-gray-700 hover:bg-gray-50" aria-label="Cerrar men&uacute;">
             <i class="fa-solid fa-xmark"></i>

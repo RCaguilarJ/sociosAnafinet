@@ -125,6 +125,9 @@ function app_ensure_membership_payment_schema(PDO $pdo): void
             raw_payload LONGTEXT NULL,
             paid_at DATETIME NULL,
             expires_at DATETIME NULL,
+            notification_context VARCHAR(32) NULL,
+            notification_admin_sent_at DATETIME NULL,
+            notification_user_sent_at DATETIME NULL,
             created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
             updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
             UNIQUE KEY uq_pagos_membresia_external_reference (external_reference),
@@ -134,7 +137,179 @@ function app_ensure_membership_payment_schema(PDO $pdo): void
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci"
     );
 
+    $requiredColumns = [
+        'notification_context' => "ALTER TABLE pagos_membresia ADD COLUMN notification_context VARCHAR(32) NULL AFTER expires_at",
+        'notification_admin_sent_at' => "ALTER TABLE pagos_membresia ADD COLUMN notification_admin_sent_at DATETIME NULL AFTER notification_context",
+        'notification_user_sent_at' => "ALTER TABLE pagos_membresia ADD COLUMN notification_user_sent_at DATETIME NULL AFTER notification_admin_sent_at",
+    ];
+
+    $columnExistsStmt = $pdo->prepare(
+        "SELECT 1
+         FROM information_schema.COLUMNS
+         WHERE TABLE_SCHEMA = DATABASE()
+           AND TABLE_NAME = 'pagos_membresia'
+           AND COLUMN_NAME = ?
+         LIMIT 1"
+    );
+
+    foreach ($requiredColumns as $column => $alterSql) {
+        $columnExistsStmt->execute([$column]);
+        $exists = (bool)$columnExistsStmt->fetchColumn();
+        if (!$exists) {
+            $pdo->exec($alterSql);
+        }
+    }
+
     $initialized = true;
+}
+
+function app_is_signup_membership_reference(string $externalReference): bool
+{
+    return preg_match('/^membership_signup_/i', $externalReference) === 1;
+}
+
+function app_membership_payment_context(string $externalReference): string
+{
+    return app_is_signup_membership_reference($externalReference) ? 'signup' : 'renewal';
+}
+
+function app_fetch_membership_user(PDO $pdo, int $userId): ?array
+{
+    $stmt = $pdo->prepare('SELECT id, nombre, email, rol, estatus FROM usuarios WHERE id = ? LIMIT 1');
+    $stmt->execute([$userId]);
+    $row = $stmt->fetch();
+
+    return is_array($row) ? $row : null;
+}
+
+function app_payment_provider_label(string $provider): string
+{
+    $provider = strtolower(trim($provider));
+    if ($provider === 'mercadopago') {
+        return 'Mercado Pago';
+    }
+    if ($provider === 'paypal') {
+        return 'PayPal';
+    }
+
+    return ucfirst($provider);
+}
+
+function app_payment_money_label(float $amount, string $currency): string
+{
+    return number_format($amount, 2, '.', ',') . ' ' . strtoupper($currency);
+}
+
+function app_send_membership_payment_notifications(PDO $pdo, string $externalReference): void
+{
+    app_ensure_membership_payment_schema($pdo);
+
+    $payment = app_get_membership_payment_by_external_reference($pdo, $externalReference);
+    if (!is_array($payment) || (string)($payment['status'] ?? '') !== 'approved') {
+        return;
+    }
+
+    $userId = (int)($payment['user_id'] ?? 0);
+    if ($userId <= 0) {
+        return;
+    }
+
+    $user = app_fetch_membership_user($pdo, $userId);
+    if (!is_array($user)) {
+        return;
+    }
+
+    $context = (string)($payment['notification_context'] ?? '');
+    if ($context === '') {
+        $context = app_membership_payment_context($externalReference);
+        $stmt = $pdo->prepare('UPDATE pagos_membresia SET notification_context = ? WHERE external_reference = ?');
+        $stmt->execute([$context, $externalReference]);
+    }
+
+    $providerLabel = app_payment_provider_label((string)($payment['provider'] ?? ''));
+    $amountLabel = app_payment_money_label(
+        (float)($payment['amount'] ?? app_membership_fee_amount()),
+        (string)($payment['currency'] ?? app_membership_fee_currency())
+    );
+    $paidAt = (string)($payment['paid_at'] ?? '');
+    $paidAtLabel = $paidAt !== '' ? $paidAt : date('Y-m-d H:i:s');
+    $portalUrl = app_public_base_url();
+    $dashboardUrl = $portalUrl !== '' ? $portalUrl . '/dashboard.php' : '';
+    $userName = trim((string)($user['nombre'] ?? 'Asociado'));
+    $userEmail = trim((string)($user['email'] ?? ''));
+    $adminEmail = app_payment_admin_email();
+
+    if (($payment['notification_admin_sent_at'] ?? null) === null && filter_var($adminEmail, FILTER_VALIDATE_EMAIL)) {
+        if ($context === 'signup') {
+            $adminSubject = 'Nuevo usuario con afiliacion pagada: ' . $userName;
+            $adminHtml = '<p>Se confirmo un pago exitoso de afiliacion para un nuevo usuario.</p>'
+                . '<p><strong>Nombre:</strong> ' . htmlspecialchars($userName, ENT_QUOTES, 'UTF-8') . '<br>'
+                . '<strong>Email:</strong> ' . htmlspecialchars($userEmail, ENT_QUOTES, 'UTF-8') . '<br>'
+                . '<strong>Pasarela:</strong> ' . htmlspecialchars($providerLabel, ENT_QUOTES, 'UTF-8') . '<br>'
+                . '<strong>Monto:</strong> ' . htmlspecialchars($amountLabel, ENT_QUOTES, 'UTF-8') . '<br>'
+                . '<strong>Fecha de pago:</strong> ' . htmlspecialchars($paidAtLabel, ENT_QUOTES, 'UTF-8') . '</p>';
+            $adminText = "Se confirmo un pago exitoso de afiliacion para un nuevo usuario.\n"
+                . "Nombre: {$userName}\n"
+                . "Email: {$userEmail}\n"
+                . "Pasarela: {$providerLabel}\n"
+                . "Monto: {$amountLabel}\n"
+                . "Fecha de pago: {$paidAtLabel}\n";
+        } else {
+            $adminSubject = 'Renovacion pagada correctamente: ' . $userName;
+            $adminHtml = '<p>Se confirmo un pago exitoso de renovacion para un usuario existente.</p>'
+                . '<p><strong>Nombre:</strong> ' . htmlspecialchars($userName, ENT_QUOTES, 'UTF-8') . '<br>'
+                . '<strong>Email:</strong> ' . htmlspecialchars($userEmail, ENT_QUOTES, 'UTF-8') . '<br>'
+                . '<strong>Pasarela:</strong> ' . htmlspecialchars($providerLabel, ENT_QUOTES, 'UTF-8') . '<br>'
+                . '<strong>Monto:</strong> ' . htmlspecialchars($amountLabel, ENT_QUOTES, 'UTF-8') . '<br>'
+                . '<strong>Fecha de pago:</strong> ' . htmlspecialchars($paidAtLabel, ENT_QUOTES, 'UTF-8') . '</p>';
+            $adminText = "Se confirmo un pago exitoso de renovacion para un usuario existente.\n"
+                . "Nombre: {$userName}\n"
+                . "Email: {$userEmail}\n"
+                . "Pasarela: {$providerLabel}\n"
+                . "Monto: {$amountLabel}\n"
+                . "Fecha de pago: {$paidAtLabel}\n";
+        }
+
+        if (app_send_html_email($adminEmail, $adminSubject, $adminHtml, $adminText)) {
+            $stmt = $pdo->prepare('UPDATE pagos_membresia SET notification_admin_sent_at = NOW() WHERE external_reference = ?');
+            $stmt->execute([$externalReference]);
+        }
+    }
+
+    if (($payment['notification_user_sent_at'] ?? null) === null && filter_var($userEmail, FILTER_VALIDATE_EMAIL)) {
+        if ($context === 'signup') {
+            $userSubject = 'Tu pago y afiliacion en Anafinet fueron confirmados';
+            $userHtml = '<p>Hola ' . htmlspecialchars($userName, ENT_QUOTES, 'UTF-8') . '.</p>'
+                . '<p>Tu pago se confirmo correctamente y tu afiliacion a Anafinet quedo completada con exito.</p>'
+                . '<p>Te damos la bienvenida a la afiliacion.</p>'
+                . '<p><strong>Pasarela:</strong> ' . htmlspecialchars($providerLabel, ENT_QUOTES, 'UTF-8') . '<br>'
+                . '<strong>Monto:</strong> ' . htmlspecialchars($amountLabel, ENT_QUOTES, 'UTF-8') . '</p>'
+                . ($dashboardUrl !== '' ? '<p>Puedes ingresar a tu panel aqui: <a href="' . htmlspecialchars($dashboardUrl, ENT_QUOTES, 'UTF-8') . '">' . htmlspecialchars($dashboardUrl, ENT_QUOTES, 'UTF-8') . '</a></p>' : '');
+            $userText = "Hola {$userName}.\n\n"
+                . "Tu pago se confirmo correctamente y tu afiliacion a Anafinet quedo completada con exito.\n"
+                . "Te damos la bienvenida a la afiliacion.\n"
+                . "Pasarela: {$providerLabel}\n"
+                . "Monto: {$amountLabel}\n"
+                . ($dashboardUrl !== '' ? "Panel: {$dashboardUrl}\n" : '');
+        } else {
+            $userSubject = 'Tu renovacion en Anafinet fue exitosa';
+            $userHtml = '<p>Hola ' . htmlspecialchars($userName, ENT_QUOTES, 'UTF-8') . '.</p>'
+                . '<p>Tu renovacion como usuario fue confirmada exitosamente.</p>'
+                . '<p><strong>Pasarela:</strong> ' . htmlspecialchars($providerLabel, ENT_QUOTES, 'UTF-8') . '<br>'
+                . '<strong>Monto:</strong> ' . htmlspecialchars($amountLabel, ENT_QUOTES, 'UTF-8') . '</p>'
+                . ($dashboardUrl !== '' ? '<p>Puedes continuar usando tu panel aqui: <a href="' . htmlspecialchars($dashboardUrl, ENT_QUOTES, 'UTF-8') . '">' . htmlspecialchars($dashboardUrl, ENT_QUOTES, 'UTF-8') . '</a></p>' : '');
+            $userText = "Hola {$userName}.\n\n"
+                . "Tu renovacion como usuario fue confirmada exitosamente.\n"
+                . "Pasarela: {$providerLabel}\n"
+                . "Monto: {$amountLabel}\n"
+                . ($dashboardUrl !== '' ? "Panel: {$dashboardUrl}\n" : '');
+        }
+
+        if (app_send_html_email($userEmail, $userSubject, $userHtml, $userText)) {
+            $stmt = $pdo->prepare('UPDATE pagos_membresia SET notification_user_sent_at = NOW() WHERE external_reference = ?');
+            $stmt->execute([$externalReference]);
+        }
+    }
 }
 
 function app_membership_payment_reference(int $userId): string
@@ -323,6 +498,23 @@ function app_paypal_access_token(): string
     return $token;
 }
 
+function app_get_paypal_order(string $orderId): array
+{
+    $response = app_http_json_request(
+        'GET',
+        app_paypal_api_base_url() . '/v2/checkout/orders/' . rawurlencode($orderId),
+        [
+            'Authorization: Bearer ' . app_paypal_access_token(),
+        ]
+    );
+
+    if ($response['status'] < 200 || $response['status'] >= 300 || !is_array($response['body'])) {
+        throw new RuntimeException('PayPal no devolvio una orden valida.');
+    }
+
+    return $response['body'];
+}
+
 function app_capture_paypal_order(string $orderId): array
 {
     $response = app_http_json_request(
@@ -340,6 +532,24 @@ function app_capture_paypal_order(string $orderId): array
     }
 
     return $response['body'];
+}
+
+function app_resolve_paypal_order(string $orderId): array
+{
+    $order = app_get_paypal_order($orderId);
+    $orderStatus = strtoupper((string)($order['status'] ?? ''));
+    $capture = $order['purchase_units'][0]['payments']['captures'][0] ?? null;
+    $captureStatus = strtoupper((string)($capture['status'] ?? ''));
+
+    if ($orderStatus === 'COMPLETED' || $captureStatus === 'COMPLETED') {
+        return $order;
+    }
+
+    if (in_array($orderStatus, ['CREATED', 'SAVED', 'APPROVED', 'PAYER_ACTION_REQUIRED'], true)) {
+        return app_capture_paypal_order($orderId);
+    }
+
+    return $order;
 }
 
 function app_map_paypal_status_to_membership(array $order): array
@@ -378,19 +588,26 @@ function app_sync_paypal_order(PDO $pdo, int $userId, string $externalReference,
 {
     app_ensure_membership_payment_schema($pdo);
 
-    $capturedOrder = app_capture_paypal_order($orderId);
+    $capturedOrder = app_resolve_paypal_order($orderId);
     $purchaseUnit = $capturedOrder['purchase_units'][0] ?? [];
+    if ($externalReference === '') {
+        $externalReference = (string)($purchaseUnit['custom_id'] ?? '');
+    }
+    if ($externalReference === '') {
+        $externalReference = app_membership_payment_reference($userId);
+    }
     $capture = $purchaseUnit['payments']['captures'][0] ?? [];
     $mappedStatus = app_map_paypal_status_to_membership($capturedOrder);
     $amountValue = $capture['amount']['value'] ?? $purchaseUnit['amount']['value'] ?? app_membership_fee_amount();
     $currency = $capture['amount']['currency_code'] ?? $purchaseUnit['amount']['currency_code'] ?? app_membership_fee_currency();
     $captureId = (string)($capture['id'] ?? '');
+    $notificationContext = app_membership_payment_context($externalReference);
 
     $stmt = $pdo->prepare(
         'INSERT INTO pagos_membresia (
             user_id, provider, external_reference, provider_order_id, provider_payment_id,
-            amount, currency, status, status_detail, raw_payload, paid_at
-         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            amount, currency, status, status_detail, raw_payload, paid_at, notification_context
+         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
          ON DUPLICATE KEY UPDATE
             provider_order_id = VALUES(provider_order_id),
             provider_payment_id = VALUES(provider_payment_id),
@@ -399,7 +616,8 @@ function app_sync_paypal_order(PDO $pdo, int $userId, string $externalReference,
             status = VALUES(status),
             status_detail = VALUES(status_detail),
             raw_payload = VALUES(raw_payload),
-            paid_at = VALUES(paid_at)'
+            paid_at = VALUES(paid_at),
+            notification_context = COALESCE(notification_context, VALUES(notification_context))'
     );
 
     $stmt->execute([
@@ -414,10 +632,15 @@ function app_sync_paypal_order(PDO $pdo, int $userId, string $externalReference,
         $mappedStatus['status_detail'],
         json_encode($capturedOrder, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
         $mappedStatus['paid_at'],
+        $notificationContext,
     ]);
 
     $userUpdate = $pdo->prepare('UPDATE usuarios SET estatus = ? WHERE id = ?');
     $userUpdate->execute([$mappedStatus['user_status'], $userId]);
+
+    if ($mappedStatus['payment_status'] === 'approved') {
+        app_send_membership_payment_notifications($pdo, $externalReference);
+    }
 
     return [
         'external_reference' => $externalReference,
@@ -434,8 +657,8 @@ function app_insert_membership_payment_attempt(PDO $pdo, int $userId, string $pr
     app_ensure_membership_payment_schema($pdo);
 
     $stmt = $pdo->prepare(
-        'INSERT INTO pagos_membresia (user_id, provider, external_reference, amount, currency, status)
-         VALUES (?, ?, ?, ?, ?, ?)'
+        'INSERT INTO pagos_membresia (user_id, provider, external_reference, amount, currency, status, notification_context)
+         VALUES (?, ?, ?, ?, ?, ?, ?)'
     );
     $stmt->execute([
         $userId,
@@ -444,6 +667,7 @@ function app_insert_membership_payment_attempt(PDO $pdo, int $userId, string $pr
         app_membership_fee_amount(),
         app_membership_fee_currency(),
         'initiated',
+        app_membership_payment_context($externalReference),
     ]);
 }
 
@@ -558,12 +782,13 @@ function app_sync_mercadopago_payment(PDO $pdo, string $paymentId): ?array
     if ($userId === null) {
         return null;
     }
+    $notificationContext = app_membership_payment_context($externalReference);
 
     $stmt = $pdo->prepare(
         'INSERT INTO pagos_membresia (
             user_id, provider, external_reference, provider_order_id, provider_payment_id,
-            amount, currency, status, status_detail, raw_payload, paid_at
-         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            amount, currency, status, status_detail, raw_payload, paid_at, notification_context
+         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
          ON DUPLICATE KEY UPDATE
             provider_order_id = VALUES(provider_order_id),
             provider_payment_id = VALUES(provider_payment_id),
@@ -572,7 +797,8 @@ function app_sync_mercadopago_payment(PDO $pdo, string $paymentId): ?array
             status = VALUES(status),
             status_detail = VALUES(status_detail),
             raw_payload = VALUES(raw_payload),
-            paid_at = VALUES(paid_at)'
+            paid_at = VALUES(paid_at),
+            notification_context = COALESCE(notification_context, VALUES(notification_context))'
     );
 
     $stmt->execute([
@@ -587,11 +813,16 @@ function app_sync_mercadopago_payment(PDO $pdo, string $paymentId): ?array
         $localStatus['status_detail'],
         json_encode($payment, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
         $localStatus['paid_at'],
+        $notificationContext,
     ]);
 
     $userStatus = $localStatus['user_status'];
     $userUpdate = $pdo->prepare('UPDATE usuarios SET estatus = ? WHERE id = ?');
     $userUpdate->execute([$userStatus, $userId]);
+
+    if ($localStatus['payment_status'] === 'approved') {
+        app_send_membership_payment_notifications($pdo, $externalReference);
+    }
 
     return [
         'external_reference' => $externalReference,

@@ -80,6 +80,95 @@ function fetch_user_email(?PDO $pdo, ?int $userId): ?string
     return null;
 }
 
+function fetch_user_state(?PDO $pdo, ?int $userId): ?string
+{
+    if (!$pdo || !$userId) {
+        return null;
+    }
+    try {
+        $stmt = $pdo->prepare("SELECT estado FROM usuarios WHERE id = ? LIMIT 1");
+        $stmt->execute([$userId]);
+        $row = $stmt->fetch();
+        if (is_array($row) && isset($row['estado'])) {
+            return (string)$row['estado'];
+        }
+    } catch (Throwable $e) {
+        return null;
+    }
+
+    return null;
+}
+
+function app_state_member_code(string $state): string
+{
+    $state = trim($state);
+    if ($state === '') {
+        return 'SOC';
+    }
+
+    $normalized = normalize_text_value($state);
+    $map = [
+        'aguascalientes' => 'AGS',
+        'bajacalifornia' => 'BCN',
+        'bajacaliforniasur' => 'BCS',
+        'campeche' => 'CAM',
+        'chiapas' => 'CHP',
+        'chihuahua' => 'CHH',
+        'ciudaddemexico' => 'CDM',
+        'coahuila' => 'COA',
+        'coahuiladezaragoza' => 'COA',
+        'colima' => 'COL',
+        'durango' => 'DGO',
+        'estadodemexico' => 'MEX',
+        'guanajuato' => 'GTO',
+        'guerrero' => 'GRO',
+        'hidalgo' => 'HGO',
+        'jalisco' => 'JAL',
+        'michoacan' => 'MIC',
+        'michoacandeocampo' => 'MIC',
+        'morelos' => 'MOR',
+        'nayarit' => 'NAY',
+        'nuevoleon' => 'NLE',
+        'oaxaca' => 'OAX',
+        'puebla' => 'PUE',
+        'queretaro' => 'QRO',
+        'quintanaroo' => 'ROO',
+        'sanluispotosi' => 'SLP',
+        'sinaloa' => 'SIN',
+        'sonora' => 'SON',
+        'tabasco' => 'TAB',
+        'tamaulipas' => 'TAM',
+        'tlaxcala' => 'TLA',
+        'veracruz' => 'VER',
+        'veracruzdellave' => 'VER',
+        'yucatan' => 'YUC',
+        'zacatecas' => 'ZAC',
+    ];
+
+    if (isset($map[$normalized])) {
+        return $map[$normalized];
+    }
+
+    $lettersOnly = preg_replace('/[^A-Z]/', '', strtoupper(app_ascii_transliterate($state)));
+    $lettersOnly = is_string($lettersOnly) ? $lettersOnly : 'SOC';
+
+    return str_pad(substr($lettersOnly, 0, 3), 3, 'X');
+}
+
+function app_member_identifier(?PDO $pdo, ?int $userId, ?string $state = null): string
+{
+    $resolvedUserId = (int)$userId;
+    if ($resolvedUserId <= 0) {
+        return '';
+    }
+
+    if ($state === null || trim($state) === '') {
+        $state = fetch_user_state($pdo, $resolvedUserId) ?? '';
+    }
+
+    return app_state_member_code((string)$state) . str_pad((string)$resolvedUserId, 3, '0', STR_PAD_LEFT);
+}
+
 function current_user_has_master_access(?PDO $pdo, ?int $userId = null): bool
 {
     $email = (string)($_SESSION['user_email'] ?? '');

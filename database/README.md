@@ -11,4 +11,6 @@ Comandos:
 ```powershell
 php .\scripts\import_wp_users.php
 php .\scripts\import_wp_users.php "C:\ruta-segura\wp_users (1).sql"
+php .\scripts\import_wp_users.php "C:\ruta-segura\wp_users (1).sql" --generic-password=Anafinet2026!
+php .\scripts\import_wp_users.php "C:\ruta-segura\wp_users (1).sql" --generic-password=Anafinet2026! --output=database\usuarios_asociados_generic_password.sql
 ```

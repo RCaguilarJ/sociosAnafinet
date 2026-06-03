@@ -257,6 +257,7 @@ $biografia = (string)($user['biografia'] ?? '');
 $cedula = (string)($user['cedula_profesional'] ?? '');
 $miembroDesde = !empty($user['creado_at']) ? date("Y", strtotime((string)$user['creado_at'])) : '';
 $ubicacion = trim($ciudad . ($ciudad !== '' && $estado !== '' ? ', ' : '') . $estado);
+$memberIdentifier = app_member_identifier($pdo ?? null, (int)($_SESSION['user_id'] ?? 0), $estado);
 ?>
 
 <!DOCTYPE html>
@@ -340,7 +341,12 @@ $ubicacion = trim($ciudad . ($ciudad !== '' && $estado !== '' ? ', ' : '') . $es
                             </form>
                             <div class="space-y-2">
                                 <h2 class="text-xl font-bold text-gray-800"><?php echo htmlspecialchars($nombre); ?></h2>
-                                <p class="text-sm text-gray-400"><?php echo htmlspecialchars($rol); ?></p>
+                                <div class="flex flex-wrap items-center gap-2 text-sm text-gray-400">
+                                    <span><?php echo htmlspecialchars($rol); ?></span>
+                                    <?php if ($memberIdentifier !== ''): ?>
+                                        <span class="rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-bold tracking-[0.12em] text-slate-600"><?php echo htmlspecialchars($memberIdentifier); ?></span>
+                                    <?php endif; ?>
+                                </div>
                                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs text-gray-500">
                                     <?php if ($email !== ''): ?>
                                         <span class="flex items-center gap-2"><i class="fa-regular fa-envelope"></i> <?php echo htmlspecialchars($email); ?></span>
