@@ -1,356 +1,197 @@
 <?php
-if (!isset($_SESSION['afiliacion']['paso1'])) {
-    header('Location: index.php?paso=1');
-    exit();
-}
+// Verificaciones de pasarelas del .env (para el modo de demostración visual)
+$mpHabilitado = function_exists('app_mercadopago_enabled') ? app_mercadopago_enabled() : false;
+$ppHabilitado = function_exists('app_paypal_enabled') ? app_paypal_enabled() : false;
 
-if (!isset($_SESSION['afiliacion']['paso2'])) {
-    header('Location: index.php?paso=2');
-    exit();
-}
-
-$mensajeGeneral = $_SESSION['afiliacion_error_general'] ?? '';
-if ($mensajeGeneral !== '') {
-    unset($_SESSION['afiliacion_error_general']);
-}
-
-$monto_afiliacion = number_format(app_membership_fee_amount(), 2, '.', '');
-$moneda_afiliacion = app_membership_fee_currency();
-$concepto_afiliacion = app_membership_fee_label();
-$paypal_client_id = app_paypal_client_id();
-$mercadopago_public_key = app_mercadopago_public_key();
-$mercadopago_preference_id = '';
-$erroresPasarela = [];
-
-if (!isset($_SESSION['afiliacion_payment_external_reference']) || trim((string) $_SESSION['afiliacion_payment_external_reference']) === '') {
-    $_SESSION['afiliacion_payment_external_reference'] = app_membership_signup_reference();
-}
-
-$afiliacionExternalReference = (string) $_SESSION['afiliacion_payment_external_reference'];
-$paypalHabilitado = app_paypal_enabled();
-$mercadoPagoHabilitado = app_mercadopago_enabled() && $mercadopago_public_key !== '';
-
-if ($mercadoPagoHabilitado && $pdo instanceof PDO) {
-    try {
-        $baseUrl = app_public_base_url();
-        $backUrls = [
-            'success' => $baseUrl . '/afiliacion/finalizar_registro.php?gateway=mercadopago&mp_return=success&external_reference=' . rawurlencode($afiliacionExternalReference),
-            'failure' => $baseUrl . '/afiliacion/finalizar_registro.php?gateway=mercadopago&mp_return=failure&external_reference=' . rawurlencode($afiliacionExternalReference),
-            'pending' => $baseUrl . '/afiliacion/finalizar_registro.php?gateway=mercadopago&mp_return=pending&external_reference=' . rawurlencode($afiliacionExternalReference),
-        ];
-
-        $preference = app_create_mercadopago_preference(
-            $pdo,
-            [
-                'nombre' => (string) ($_SESSION['afiliacion']['paso1']['nombre'] ?? ''),
-                'email' => (string) ($_SESSION['afiliacion']['paso1']['email'] ?? ''),
-            ],
-            $afiliacionExternalReference,
-            ['back_urls' => $backUrls]
-        );
-
-        $mercadopago_preference_id = (string) ($preference['id'] ?? '');
-        if ($mercadopago_preference_id === '') {
-            $mercadoPagoHabilitado = false;
-            $erroresPasarela[] = 'Mercado Pago no devolvio una preferencia valida para este registro.';
-        }
-    } catch (Throwable $e) {
-        $mercadoPagoHabilitado = false;
-        $erroresPasarela[] = 'No fue posible preparar Mercado Pago en este momento.';
-    }
-}
-
-if (!$paypalHabilitado) {
-    $erroresPasarela[] = 'PayPal aun no esta configurado en este ambiente.';
-}
-
-$pasarelaInicial = $mercadoPagoHabilitado ? 'mercadopago' : ($paypalHabilitado ? 'paypal' : '');
+$montoTotal = "1,500.00";
+$conceptoPago = "Membresía Anafinet · Cuota de Afiliación";
 ?>
 
-<div class="animate-fadeIn">
-    <h2 class="text-2xl font-bold text-gray-800 mb-2">Metodo de Pago</h2>
-    <p class="text-gray-500 text-sm mb-8">Paso 3 de 3: completa el pago de tu afiliacion. Al aprobarse, tu cuenta se crea automaticamente y se enlaza con la membresia.</p>
+<style>
+    .tab-active {
+        background-color: #ffffff !important;
+        color: #009EE3 !important;
+        border-bottom: 3px solid #009EE3 !important;
+    }
+    .tab-active.paypal-theme {
+        color: #003087 !important;
+        border-bottom: 3px solid #003087 !important;
+    }
+</style>
 
-    <?php if ($mensajeGeneral !== ''): ?>
-        <div class="mb-6 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
-            <?php echo htmlspecialchars($mensajeGeneral, ENT_QUOTES, 'UTF-8'); ?>
-        </div>
-    <?php endif; ?>
+<div class="text-left">
+    <h2 class="text-2xl font-bold text-slate-800">Método de Pago</h2>
+    <p class="text-sm text-slate-500 mt-1 mb-6">Paso 3 de 3: completa el pago de tu afiliación. Al aprobarse, tu cuenta se crea automáticamente y se enlaza con la membresía.</p>
 
-    <?php if (!empty($erroresPasarela) && !$mercadoPagoHabilitado && !$paypalHabilitado): ?>
-        <div class="mb-6 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
-            <p class="font-semibold">Las pasarelas en linea no estan disponibles por configuracion.</p>
-            <p class="mt-1">Puedes continuar con el registro y reportar el pago manualmente desde tu portal.</p>
-        </div>
-    <?php endif; ?>
-
-    <div class="w-full max-w-md mx-auto bg-white rounded-lg border border-gray-200 p-6">
-        <div class="mb-5 flex items-start justify-between gap-4">
+    <!-- Tarjeta Principal del Formulario Integrado -->
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden max-w-xl mx-auto">
+        
+        <!-- Resumen del Monto -->
+        <div class="bg-slate-50 border-b border-slate-200 p-6 flex justify-between items-center">
             <div>
-                <p class="text-xs font-semibold uppercase tracking-[0.2em] text-gray-400">Cuota de afiliacion</p>
-                <h3 class="mt-1 text-2xl font-bold text-gray-900">$<?php echo htmlspecialchars(number_format((float) $monto_afiliacion, 2), ENT_QUOTES, 'UTF-8'); ?> <span class="text-sm font-medium text-gray-500"><?php echo htmlspecialchars($moneda_afiliacion, ENT_QUOTES, 'UTF-8'); ?></span></h3>
-                <p class="mt-1 text-sm text-gray-500"><?php echo htmlspecialchars($concepto_afiliacion, ENT_QUOTES, 'UTF-8'); ?></p>
+                <span class="text-xs font-bold text-slate-400 uppercase tracking-wider block">CUOTA DE AFILIACION</span>
+                <div class="text-2xl font-black text-slate-900 mt-1">
+                    $<?= $montoTotal ?> <span class="text-base font-semibold text-slate-500">MXN</span>
+                </div>
+                <p class="text-xs text-slate-500 mt-0.5"><?= $conceptoPago ?></p>
             </div>
-            <div class="rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
+            <span class="px-3 py-1 text-xs font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-full">
                 Pago seguro
-            </div>
+            </span>
         </div>
 
-        <div class="grid grid-cols-2 gap-3 mb-5">
-            <button
-                type="button"
-                id="selectorMercadoPago"
-                data-metodo="mercadopago"
-                class="rounded-lg border px-4 py-3 text-sm font-semibold transition-all"
-                <?php echo !$mercadoPagoHabilitado ? 'disabled' : ''; ?>
-            >
+        <!-- Selector de Métodos (Pestañas) -->
+        <div class="flex border-b border-slate-200 bg-slate-50">
+            <button type="button" id="tab-mp" onclick="switchStepPayment('mp')" class="flex-1 py-3 text-sm font-bold flex items-center justify-center gap-2 border-r border-slate-200 text-slate-400 transition-all tab-active">
+                <svg class="w-6 h-5" viewBox="0 0 50 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect width="50" height="32" rx="5" fill="#009EE3"/>
+                    <path d="M8 22l4-10 3 5.5 2.5-3.5 4 8" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+                    <circle cx="34" cy="16" r="5" fill="white"/>
+                </svg>
                 Mercado Pago
             </button>
-            <button
-                type="button"
-                id="selectorPayPal"
-                data-metodo="paypal"
-                class="rounded-lg border px-4 py-3 text-sm font-semibold transition-all"
-                <?php echo !$paypalHabilitado ? 'disabled' : ''; ?>
-            >
+            <button type="button" id="tab-paypal" onclick="switchStepPayment('paypal')" class="flex-1 py-3 text-sm font-bold flex items-center justify-center gap-2 text-slate-400 transition-all">
+                <svg class="w-6 h-5" viewBox="0 0 50 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect width="50" height="32" rx="5" fill="#003087"/>
+                    <path d="M14 7h8c4 0 6.5 2 6 5.5C27.5 17 25 19 21.5 19h-3.5l-1.5 6H12L14 7z" fill="#009CDE"/>
+                </svg>
                 PayPal
             </button>
         </div>
 
-        <div class="mb-5 rounded-lg border border-gray-200 bg-gray-50 p-4">
-            <label class="flex items-start gap-3">
-                <input id="aceptaPagoInline" type="checkbox" class="mt-1 rounded border-gray-300 text-blue-600 focus:ring-blue-500">
-                <span class="text-xs leading-relaxed text-gray-600">
+        <!-- Checkbox de Autorización Obligatorio del Registro -->
+        <div class="p-6 bg-slate-50 border-b border-slate-100">
+            <label class="flex items-start gap-3 cursor-pointer select-none">
+                <input type="checkbox" id="auth-check" class="mt-1 rounded border-slate-300 text-blue-600 focus:ring-blue-500">
+                <span class="text-xs text-slate-600 leading-relaxed">
                     Acepto completar mi registro y autorizo que el estado de mi cuenta se actualice con base en la respuesta de la pasarela seleccionada.
                 </span>
             </label>
-            <p id="paymentGatewayFeedback" class="mt-3 hidden rounded-md border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700"></p>
         </div>
 
-        <div id="paymentGatewayPanels" class="space-y-4">
-            <div id="mercadopagoPanel" class="<?php echo $pasarelaInicial === 'mercadopago' ? 'block' : 'hidden'; ?>">
-                <div class="rounded-lg border border-gray-200 bg-white p-4">
-                    <p class="mb-3 text-xs font-medium uppercase tracking-[0.18em] text-gray-400">Mercado Pago</p>
-                    <div id="walletPaymentBrick_container" class="min-h-[56px]"></div>
+        <!-- PANEL 1: MERCADO PAGO -->
+        <div id="panel-mp" class="step-payment-panel p-6 block">
+            <?php if (!$mpHabilitado): ?>
+                <div class="mb-4 p-2.5 bg-amber-50 border border-amber-200 rounded-xl flex items-center justify-between">
+                    <span class="text-xs font-semibold text-amber-800">Modo Demostración Ilustrativa</span>
+                    <span class="px-2 py-0.5 text-[10px] uppercase font-bold bg-amber-200 text-amber-900 rounded-full">Muestra</span>
                 </div>
+            <?php endif; ?>
+
+            <div class="flex gap-2 mb-4 opacity-75">
+                <span class="px-2 py-0.5 text-[10px] font-bold border border-slate-200 rounded bg-slate-100 text-slate-600">VISA</span>
+                <span class="px-2 py-0.5 text-[10px] font-bold border border-slate-200 rounded bg-slate-100 text-slate-600">MC</span>
+                <span class="px-2 py-0.5 text-[10px] font-bold border border-slate-200 rounded bg-slate-100 text-slate-600">AMEX</span>
+                <span class="px-2 py-0.5 text-[10px] font-bold border border-slate-200 rounded bg-emerald-50 text-emerald-700 border-emerald-200">OXXO</span>
             </div>
 
-            <div id="paypalPanel" class="<?php echo $pasarelaInicial === 'paypal' ? 'block' : 'hidden'; ?>">
-                <div class="rounded-lg border border-gray-200 bg-white p-4">
-                    <p class="mb-3 text-xs font-medium uppercase tracking-[0.18em] text-gray-400">PayPal</p>
-                    <div id="paypal-button-container" class="min-h-[44px]"></div>
+            <form action="procesar_paso.php" method="POST" id="form-mp" class="space-y-4" onsubmit="return validateAuth(event)">
+                <input type="hidden" name="metodo_pago" value="mercadopago">
+                
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Número de Tarjeta</label>
+                    <input type="text" placeholder="0000 0000 0000 0000" oninput="formatCardNum(this)" maxlength="19" class="w-full px-4 py-2 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all" required <?= !$mpHabilitado ? 'disabled value="4556 7812 9011 4452"' : '' ?>>
                 </div>
-            </div>
-        </div>
-    </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Nombre del Titular</label>
+                    <input type="text" placeholder="Como aparece en el plástico" class="w-full px-4 py-2 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all" required <?= !$mpHabilitado ? 'disabled value="JUAN PÉREZ LOZANO"' : '' ?>>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Expiración</label>
+                        <input type="text" placeholder="MM/AA" oninput="formatExp(this)" maxlength="5" class="w-full px-4 py-2 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all" required <?= !$mpHabilitado ? 'disabled value="12/29"' : '' ?>>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">CVV</label>
+                        <input type="password" placeholder="•••" maxlength="4" class="w-full px-4 py-2 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all" required <?= !$mpHabilitado ? 'disabled value="123"' : '' ?>>
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Plazos <span class="ml-1 text-[10px] bg-emerald-100 text-emerald-700 font-bold px-1.5 py-0.5 rounded-full">MSI</span></label>
+                    <select class="w-full px-4 py-2 rounded-xl border border-slate-200 text-sm bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all" <?= !$mpHabilitado ? 'disabled' : '' ?>>
+                        <option>1 Pago líquido de $1,500.00</option>
+                        <option>3 Mensualidades de $500.00 sin intereses</option>
+                        <option>6 Mensualidades de $250.00 sin intereses</option>
+                    </select>
+                </div>
 
-    <div class="flex flex-col md:flex-row gap-4 pt-8">
-        <a href="<?php echo BASE_URL; ?>/afiliacion/index.php?paso=2" class="flex-1 text-center py-4 text-gray-500 font-bold hover:text-gray-700 transition-all">
-            Anterior
-        </a>
-
-        <?php if (!$mercadoPagoHabilitado && !$paypalHabilitado): ?>
-            <form action="<?php echo BASE_URL; ?>/afiliacion/finalizar_registro.php" method="POST" class="flex-[2]">
-                <button type="submit" class="w-full bg-green-600 text-white py-4 rounded-2xl font-bold shadow-lg shadow-green-100 hover:bg-green-700 hover:-translate-y-0.5 transition-all">
-                    Crear cuenta y continuar
+                <button type="submit" class="w-full py-3 bg-[#009EE3] text-white font-bold rounded-xl transition-all shadow-md shadow-blue-100 flex items-center justify-center gap-2" <?= !$mpHabilitado ? 'disabled opacity-60 cursor-not-allowed' : '' ?>>
+                    Pagar con Mercado Pago
                 </button>
             </form>
-        <?php else: ?>
-            <div class="flex-[2] rounded-2xl border border-gray-200 bg-gray-50 px-5 py-4 text-sm text-gray-500">
-                Selecciona una pasarela y aprueba el pago para finalizar tu registro.
+        </div>
+
+        <!-- PANEL 2: PAYPAL -->
+        <div id="panel-paypal" class="step-payment-panel p-6 hidden">
+            <?php if (!$ppHabilitado): ?>
+                <div class="mb-4 p-2.5 bg-amber-50 border border-amber-200 rounded-xl flex items-center justify-between">
+                    <span class="text-xs font-semibold text-amber-800">Modo Demostración Ilustrativa</span>
+                    <span class="px-2 py-0.5 text-[10px] uppercase font-bold bg-amber-200 text-amber-900 rounded-full">Muestra</span>
+                </div>
+            <?php endif; ?>
+
+            <div class="bg-slate-50 border border-slate-200 rounded-xl p-5 text-center mb-4">
+                <div class="flex justify-center mb-2">
+                    <span class="text-xl font-black italic text-[#003087]">Pay<span class="text-[#009CDE]">Pal</span></span>
+                </div>
+                <p class="text-xs text-slate-500 leading-relaxed">Serás redirigido a la ventana segura de PayPal para finalizar tu transacción. Tu cuenta quedará vinculada al instante.</p>
             </div>
-        <?php endif; ?>
+
+            <form action="procesar_paso.php" method="POST" id="form-paypal" onsubmit="return validateAuth(event)">
+                <input type="hidden" name="metodo_pago" value="paypal">
+                
+                <div class="field mb-4">
+                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Correo de tu Cuenta PayPal</label>
+                    <input type="email" placeholder="correo@ejemplo.com" class="w-full px-4 py-2 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all" <?= !$ppHabilitado ? 'disabled' : '' ?>>
+                </div>
+
+                <?php if ($ppHabilitado): ?>
+                    <div id="paypal-button-container" class="w-full"></div>
+                <?php else: ?>
+                    <button type="submit" class="w-full py-3 bg-[#003087] text-white font-bold rounded-xl opacity-60 cursor-not-allowed flex items-center justify-center gap-2" disabled>
+                        Continuar con PayPal
+                    </button>
+                <?php endif; ?>
+            </form>
+        </div>
+
     </div>
 </div>
 
-<script src="https://sdk.mercadopago.com/js/v2"></script>
-<?php if ($paypal_client_id !== '' && $paypalHabilitado): ?>
-<script src="https://www.paypal.com/sdk/js?client-id=<?php echo urlencode($paypal_client_id); ?>&currency=<?php echo urlencode($moneda_afiliacion); ?>"></script>
-<?php endif; ?>
 <script>
-    (function () {
-        const gatewayFeedback = document.getElementById('paymentGatewayFeedback');
-        const aceptaPagoInline = document.getElementById('aceptaPagoInline');
-        const gatewayPanels = document.getElementById('paymentGatewayPanels');
-        const paypalPanel = document.getElementById('paypalPanel');
-        const mercadoPagoPanel = document.getElementById('mercadopagoPanel');
-        const selectorMercadoPago = document.getElementById('selectorMercadoPago');
-        const selectorPayPal = document.getElementById('selectorPayPal');
+    function switchStepPayment(method) {
+        document.querySelectorAll('.step-payment-panel').forEach(p => p.classList.replace('block', 'hidden'));
+        document.getElementById('tab-mp').classList.remove('tab-active');
+        document.getElementById('tab-paypal').classList.remove('tab-active', 'paypal-theme');
 
-        const estadoPasarelas = {
-            mercadopago: <?php echo $mercadoPagoHabilitado ? 'true' : 'false'; ?>,
-            paypal: <?php echo $paypalHabilitado ? 'true' : 'false'; ?>
-        };
-
-        let metodoActivo = <?php echo json_encode($pasarelaInicial, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES); ?>;
-        let mercadoPagoInicializado = false;
-        let paypalInicializado = false;
-
-        const estilosTabs = {
-            activo: ['border-blue-600', 'bg-blue-50', 'text-blue-700', 'shadow-sm'],
-            inactivo: ['border-gray-200', 'bg-white', 'text-gray-500', 'hover:border-gray-300', 'hover:text-gray-700'],
-            deshabilitado: ['border-gray-200', 'bg-gray-100', 'text-gray-400', 'cursor-not-allowed']
-        };
-
-        const mostrarFeedback = function (mensaje) {
-            if (!gatewayFeedback) {
-                return;
-            }
-
-            if (!mensaje) {
-                gatewayFeedback.textContent = '';
-                gatewayFeedback.classList.add('hidden');
-                return;
-            }
-
-            gatewayFeedback.textContent = mensaje;
-            gatewayFeedback.classList.remove('hidden');
-        };
-
-        const aplicarEstilosSelector = function (elemento, activo, disponible) {
-            if (!elemento) {
-                return;
-            }
-
-            elemento.classList.remove(...estilosTabs.activo, ...estilosTabs.inactivo, ...estilosTabs.deshabilitado);
-
-            if (!disponible) {
-                elemento.classList.add(...estilosTabs.deshabilitado);
-                return;
-            }
-
-            elemento.classList.add(...(activo ? estilosTabs.activo : estilosTabs.inactivo));
-        };
-
-        const actualizarBloqueoPasarelas = function () {
-            if (!gatewayPanels || !aceptaPagoInline) {
-                return;
-            }
-
-            const bloqueado = !aceptaPagoInline.checked;
-            gatewayPanels.classList.toggle('pointer-events-none', bloqueado);
-            gatewayPanels.classList.toggle('opacity-60', bloqueado);
-
-            if (bloqueado) {
-                mostrarFeedback('Debes aceptar la autorizacion para habilitar la pasarela.');
-            } else {
-                mostrarFeedback('');
-            }
-        };
-
-        window.alternarPasarela = function (metodo) {
-            if (!estadoPasarelas[metodo]) {
-                return;
-            }
-
-            metodoActivo = metodo;
-            mercadoPagoPanel.classList.toggle('hidden', metodo !== 'mercadopago');
-            mercadoPagoPanel.classList.toggle('block', metodo === 'mercadopago');
-            paypalPanel.classList.toggle('hidden', metodo !== 'paypal');
-            paypalPanel.classList.toggle('block', metodo === 'paypal');
-
-            aplicarEstilosSelector(selectorMercadoPago, metodo === 'mercadopago', estadoPasarelas.mercadopago);
-            aplicarEstilosSelector(selectorPayPal, metodo === 'paypal', estadoPasarelas.paypal);
-            mostrarFeedback('');
-
-            if (metodo === 'mercadopago') {
-                inicializarMercadoPago();
-            }
-
-            if (metodo === 'paypal') {
-                inicializarPayPal();
-            }
-        };
-
-        const inicializarMercadoPago = async function () {
-            if (mercadoPagoInicializado || !estadoPasarelas.mercadopago || typeof window.MercadoPago !== 'function') {
-                return;
-            }
-
-            try {
-                const mp = new window.MercadoPago(<?php echo json_encode($mercadopago_public_key, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES); ?>, {
-                    locale: 'es-MX'
-                });
-                const bricksBuilder = mp.bricks();
-
-                window.walletPaymentBrickController = await bricksBuilder.create('wallet', 'walletPaymentBrick_container', {
-                    initialization: {
-                        preferenceId: <?php echo json_encode($mercadopago_preference_id, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES); ?>
-                    }
-                });
-
-                mercadoPagoInicializado = true;
-            } catch (error) {
-                mostrarFeedback('No fue posible inicializar Mercado Pago en este momento.');
-            }
-        };
-
-        const inicializarPayPal = function () {
-            if (paypalInicializado || !estadoPasarelas.paypal || !window.paypal || typeof window.paypal.Buttons !== 'function') {
-                return;
-            }
-
-            window.paypal.Buttons({
-                style: {
-                    layout: 'vertical',
-                    shape: 'rect',
-                    label: 'paypal'
-                },
-                onClick: function (data, actions) {
-                    if (!aceptaPagoInline.checked) {
-                        mostrarFeedback('Debes aceptar la autorizacion antes de continuar con PayPal.');
-                        return actions.reject();
-                    }
-
-                    mostrarFeedback('');
-                    return actions.resolve();
-                },
-                createOrder: function (data, actions) {
-                    return actions.order.create({
-                        purchase_units: [{
-                            description: <?php echo json_encode($concepto_afiliacion, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES); ?>,
-                            custom_id: <?php echo json_encode($afiliacionExternalReference, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES); ?>,
-                            amount: {
-                                currency_code: <?php echo json_encode($moneda_afiliacion, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES); ?>,
-                                value: <?php echo json_encode($monto_afiliacion, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES); ?>
-                            }
-                        }]
-                    });
-                },
-                onApprove: function (data) {
-                    const targetUrl = <?php echo json_encode(BASE_URL . '/afiliacion/finalizar_registro.php', JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES); ?>;
-                    const query = new URLSearchParams({
-                        gateway: 'paypal',
-                        order_id: data.orderID,
-                        external_reference: <?php echo json_encode($afiliacionExternalReference, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES); ?>
-                    });
-
-                    window.location.href = targetUrl + '?' + query.toString();
-                },
-                onError: function () {
-                    mostrarFeedback('No fue posible iniciar PayPal. Intenta de nuevo o usa Mercado Pago.');
-                }
-            }).render('#paypal-button-container');
-
-            paypalInicializado = true;
-        };
-
-        selectorMercadoPago.addEventListener('click', function () {
-            window.alternarPasarela('mercadopago');
-        });
-
-        selectorPayPal.addEventListener('click', function () {
-            window.alternarPasarela('paypal');
-        });
-
-        aceptaPagoInline.addEventListener('change', actualizarBloqueoPasarelas);
-
-        aplicarEstilosSelector(selectorMercadoPago, metodoActivo === 'mercadopago', estadoPasarelas.mercadopago);
-        aplicarEstilosSelector(selectorPayPal, metodoActivo === 'paypal', estadoPasarelas.paypal);
-        actualizarBloqueoPasarelas();
-
-        if (metodoActivo) {
-            window.alternarPasarela(metodoActivo);
+        document.getElementById('panel-' + method).classList.replace('hidden', 'block');
+        const activeTab = document.getElementById('tab-' + method);
+        
+        if (method === 'paypal') {
+            activeTab.classList.add('tab-active', 'paypal-theme');
+        } else {
+            activeTab.classList.add('tab-active');
         }
-    })();
+    }
+
+    function validateAuth(e) {
+        const isChecked = document.getElementById('auth-check').checked;
+        if (!isChecked) {
+            e.preventDefault();
+            alert('Por favor, autoriza la actualización de tu cuenta marcando la casilla de aceptación.');
+            return false;
+        }
+        return true;
+    }
+
+    function formatCardNum(el) {
+        let v = el.value.replace(/\D/g, '').substring(0, 16);
+        el.value = v.replace(/(.{4})/g, '$1 ').trim();
+    }
+
+    function formatExp(el) {
+        let v = el.value.replace(/\D/g, '').substring(0, 4);
+        if (v.length >= 3) v = v.substring(0,2) + '/' + v.substring(2);
+        el.value = v;
+    }
 </script>
