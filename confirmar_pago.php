@@ -463,7 +463,7 @@ require __DIR__ . '/menu.php';
                                         <div>
                                             <label class="block text-xs font-bold uppercase tracking-[0.18em] text-slate-500 mb-2">Plazos</label>
                                             <select class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100" <?php echo !$mpHabilitado ? 'disabled' : ''; ?>>
-                                                <option>1 Pago liquido de $<?php echo htmlspecialchars($montoTotal, ENT_QUOTES, 'UTF-8'); ?></option>
+                                                <option>1 Solo pago de $<?php echo htmlspecialchars($montoTotal, ENT_QUOTES, 'UTF-8'); ?></option>
                                                 <option>3 Mensualidades sin intereses</option>
                                                 <option>6 Mensualidades sin intereses</option>
                                             </select>

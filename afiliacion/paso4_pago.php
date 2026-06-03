@@ -109,7 +109,7 @@ $conceptoPago = "Membresía Anafinet · Cuota de Afiliación";
                 <div>
                     <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Plazos <span class="ml-1 text-[10px] bg-emerald-100 text-emerald-700 font-bold px-1.5 py-0.5 rounded-full">MSI</span></label>
                     <select class="w-full px-4 py-2 rounded-xl border border-slate-200 text-sm bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all" <?= !$mpHabilitado ? 'disabled' : '' ?>>
-                        <option>1 Pago líquido de $1,500.00</option>
+                        <option>1 Solo pago de $1,500.00</option>
                         <option>3 Mensualidades de $500.00 sin intereses</option>
                         <option>6 Mensualidades de $250.00 sin intereses</option>
                     </select>
