@@ -200,6 +200,143 @@ function app_payment_money_label(float $amount, string $currency): string
     return number_format($amount, 2, '.', ',') . ' ' . strtoupper($currency);
 }
 
+function app_send_manual_payment_received_notifications(PDO $pdo, int $userId, string $reference, string $proofUrl = ''): void
+{
+    $user = app_fetch_membership_user($pdo, $userId);
+    if (!is_array($user)) {
+        return;
+    }
+
+    $userName = trim((string)($user['nombre'] ?? 'Asociado'));
+    $userEmail = trim((string)($user['email'] ?? ''));
+    $adminEmail = app_payment_admin_email();
+    $portalUrl = app_public_base_url();
+    $paymentPageUrl = $portalUrl !== '' ? $portalUrl . '/confirmar_pago.php' : '';
+    $adminPageUrl = $portalUrl !== '' ? $portalUrl . '/revisar_pagos.php' : '';
+    $amountLabel = app_payment_money_label(app_membership_fee_amount(), app_membership_fee_currency());
+    $reportedAtLabel = date('Y-m-d H:i:s');
+
+    if (filter_var($userEmail, FILTER_VALIDATE_EMAIL)) {
+        $userSubject = 'Recibimos tu comprobante de pago en Anafinet';
+        $userIntroHtml = '<p style="margin:0 0 16px 0;">Hola ' . htmlspecialchars($userName, ENT_QUOTES, 'UTF-8') . '.</p>'
+            . '<p style="margin:0 0 16px 0;">Recibimos correctamente tu comprobante de pago y ya quedo registrado en Anafinet.</p>'
+            . '<p style="margin:0;">Tesoreria revisara el monto, la cuenta de deposito y la evidencia adjunta. En cuanto quede aprobado, tu acceso se activara.</p>';
+        $userSummaryHtml = app_mail_payment_summary_rows([
+            'Estatus' => 'Comprobante recibido',
+            'Concepto' => 'Afiliacion Anafinet',
+            'Monto esperado' => $amountLabel,
+            'Referencia' => $reference,
+            'Revision' => 'Validacion manual por tesoreria',
+            'Fecha de registro' => $reportedAtLabel,
+        ]);
+        $userButtonHtml = app_mail_button($paymentPageUrl, 'Ver mi confirmacion');
+        $userFooterHtml = '<p style="margin:0 0 12px 0;">Tu acceso total se liberara cuando el pago sea validado manualmente.</p>'
+            . ($paymentPageUrl !== '' ? '<p style="margin:0;">Si necesitas revisar tu estatus, entra aqui:<br><a href="' . htmlspecialchars($paymentPageUrl, ENT_QUOTES, 'UTF-8') . '" style="color:#2563EB;">' . htmlspecialchars($paymentPageUrl, ENT_QUOTES, 'UTF-8') . '</a></p>' : '');
+        $userHtml = app_mail_wrap_layout(
+            'Comprobante recibido',
+            'Tu pago esta en revision',
+            $userIntroHtml,
+            $userSummaryHtml,
+            $userButtonHtml,
+            $userFooterHtml,
+            'Recibimos tu comprobante y ya esta en revision por tesoreria.'
+        );
+        $userText = "Hola {$userName}.\n\n"
+            . "Recibimos correctamente tu comprobante de pago y ya quedo registrado en Anafinet.\n"
+            . "Tesoreria revisara el monto, la cuenta de deposito y la evidencia adjunta. En cuanto quede aprobado, tu acceso se activara.\n"
+            . "Estatus: Comprobante recibido\n"
+            . "Concepto: Afiliacion Anafinet\n"
+            . "Monto esperado: {$amountLabel}\n"
+            . "Referencia: {$reference}\n"
+            . "Revision: Validacion manual por tesoreria\n"
+            . "Fecha de registro: {$reportedAtLabel}\n"
+            . ($paymentPageUrl !== '' ? "Seguimiento: {$paymentPageUrl}\n" : '');
+        app_send_html_email($userEmail, $userSubject, $userHtml, $userText);
+    }
+
+    if (filter_var($adminEmail, FILTER_VALIDATE_EMAIL)) {
+        $adminSubject = 'Nuevo comprobante manual por revisar: ' . $userName;
+        $adminLines = [
+            '<p>Se registro un nuevo comprobante de pago manual para revision.</p>',
+            '<p><strong>Nombre:</strong> ' . htmlspecialchars($userName, ENT_QUOTES, 'UTF-8') . '<br>'
+                . '<strong>Email:</strong> ' . htmlspecialchars($userEmail, ENT_QUOTES, 'UTF-8') . '<br>'
+                . '<strong>Referencia:</strong> ' . htmlspecialchars($reference, ENT_QUOTES, 'UTF-8') . '<br>'
+                . '<strong>Monto esperado:</strong> ' . htmlspecialchars($amountLabel, ENT_QUOTES, 'UTF-8') . '<br>'
+                . '<strong>Fecha de registro:</strong> ' . htmlspecialchars($reportedAtLabel, ENT_QUOTES, 'UTF-8') . '</p>',
+        ];
+        if ($proofUrl !== '') {
+            $adminLines[] = '<p><strong>Comprobante:</strong> <a href="' . htmlspecialchars($proofUrl, ENT_QUOTES, 'UTF-8') . '">' . htmlspecialchars($proofUrl, ENT_QUOTES, 'UTF-8') . '</a></p>';
+        }
+        if ($adminPageUrl !== '') {
+            $adminLines[] = '<p>Revisa el caso en el panel administrativo: <a href="' . htmlspecialchars($adminPageUrl, ENT_QUOTES, 'UTF-8') . '">' . htmlspecialchars($adminPageUrl, ENT_QUOTES, 'UTF-8') . '</a></p>';
+        }
+        $adminHtml = implode('', $adminLines);
+        $adminText = "Se registro un nuevo comprobante de pago manual para revision.\n"
+            . "Nombre: {$userName}\n"
+            . "Email: {$userEmail}\n"
+            . "Referencia: {$reference}\n"
+            . "Monto esperado: {$amountLabel}\n"
+            . "Fecha de registro: {$reportedAtLabel}\n"
+            . ($proofUrl !== '' ? "Comprobante: {$proofUrl}\n" : '')
+            . ($adminPageUrl !== '' ? "Panel: {$adminPageUrl}\n" : '');
+        app_send_html_email($adminEmail, $adminSubject, $adminHtml, $adminText);
+    }
+}
+
+function app_send_manual_payment_approved_notification(PDO $pdo, int $userId): void
+{
+    $user = app_fetch_membership_user($pdo, $userId);
+    if (!is_array($user)) {
+        return;
+    }
+
+    $userEmail = trim((string)($user['email'] ?? ''));
+    if (!filter_var($userEmail, FILTER_VALIDATE_EMAIL)) {
+        return;
+    }
+
+    $userName = trim((string)($user['nombre'] ?? 'Asociado'));
+    $portalUrl = app_public_base_url();
+    $dashboardUrl = $portalUrl !== '' ? $portalUrl . '/dashboard.php' : '';
+    $approvedAtLabel = date('Y-m-d H:i:s');
+    $amountLabel = app_payment_money_label(app_membership_fee_amount(), app_membership_fee_currency());
+
+    $subject = 'Tu comprobante fue aprobado y tu acceso ya esta activo';
+    $introHtml = '<p style="margin:0 0 16px 0;">Hola ' . htmlspecialchars($userName, ENT_QUOTES, 'UTF-8') . '.</p>'
+        . '<p style="margin:0 0 16px 0;">Tu comprobante fue validado correctamente por tesoreria.</p>'
+        . '<p style="margin:0;">Tu afiliacion ya esta activa y puedes entrar a tu panel para usar el portal completo.</p>';
+    $summaryHtml = app_mail_payment_summary_rows([
+        'Estatus' => 'Pago aprobado manualmente',
+        'Concepto' => 'Afiliacion Anafinet',
+        'Monto validado' => $amountLabel,
+        'Acceso' => 'Portal completo habilitado',
+        'Fecha de aprobacion' => $approvedAtLabel,
+    ]);
+    $buttonHtml = app_mail_button($dashboardUrl, 'Entrar a mi panel');
+    $footerHtml = $dashboardUrl !== ''
+        ? '<p style="margin:0;">Si el boton no funciona, copia y pega este enlace en tu navegador:<br><a href="' . htmlspecialchars($dashboardUrl, ENT_QUOTES, 'UTF-8') . '" style="color:#2563EB;">' . htmlspecialchars($dashboardUrl, ENT_QUOTES, 'UTF-8') . '</a></p>'
+        : '';
+    $html = app_mail_wrap_layout(
+        'Pago aprobado',
+        'Tu afiliacion ya esta activa',
+        $introHtml,
+        $summaryHtml,
+        $buttonHtml,
+        $footerHtml,
+        'Tu comprobante fue aprobado y tu acceso al portal ya esta activo.'
+    );
+    $text = "Hola {$userName}.\n\n"
+        . "Tu comprobante fue validado correctamente por tesoreria.\n"
+        . "Tu afiliacion ya esta activa y puedes entrar a tu panel para usar el portal completo.\n"
+        . "Estatus: Pago aprobado manualmente\n"
+        . "Concepto: Afiliacion Anafinet\n"
+        . "Monto validado: {$amountLabel}\n"
+        . "Acceso: Portal completo habilitado\n"
+        . "Fecha de aprobacion: {$approvedAtLabel}\n"
+        . ($dashboardUrl !== '' ? "Panel: {$dashboardUrl}\n" : '');
+    app_send_html_email($userEmail, $subject, $html, $text);
+}
+
 function app_send_membership_payment_notifications(PDO $pdo, string $externalReference): void
 {
     app_ensure_membership_payment_schema($pdo);
@@ -279,29 +416,70 @@ function app_send_membership_payment_notifications(PDO $pdo, string $externalRef
     if (($payment['notification_user_sent_at'] ?? null) === null && filter_var($userEmail, FILTER_VALIDATE_EMAIL)) {
         if ($context === 'signup') {
             $userSubject = 'Tu pago y afiliacion en Anafinet fueron confirmados';
-            $userHtml = '<p>Hola ' . htmlspecialchars($userName, ENT_QUOTES, 'UTF-8') . '.</p>'
-                . '<p>Tu pago se confirmo correctamente y tu afiliacion a Anafinet quedo completada con exito.</p>'
-                . '<p>Te damos la bienvenida a la afiliacion.</p>'
-                . '<p><strong>Pasarela:</strong> ' . htmlspecialchars($providerLabel, ENT_QUOTES, 'UTF-8') . '<br>'
-                . '<strong>Monto:</strong> ' . htmlspecialchars($amountLabel, ENT_QUOTES, 'UTF-8') . '</p>'
-                . ($dashboardUrl !== '' ? '<p>Puedes ingresar a tu panel aqui: <a href="' . htmlspecialchars($dashboardUrl, ENT_QUOTES, 'UTF-8') . '">' . htmlspecialchars($dashboardUrl, ENT_QUOTES, 'UTF-8') . '</a></p>' : '');
+            $userIntroHtml = '<p style="margin:0 0 16px 0;">Hola ' . htmlspecialchars($userName, ENT_QUOTES, 'UTF-8') . '.</p>'
+                . '<p style="margin:0 0 16px 0;">Tu pago se confirmo correctamente y tu afiliacion a Anafinet quedo completada con exito.</p>'
+                . '<p style="margin:0;">Ya puedes entrar a tu panel y comenzar a usar los beneficios de tu membresia.</p>';
+            $userSummaryHtml = app_mail_payment_summary_rows([
+                'Estatus' => 'Pago confirmado',
+                'Concepto' => 'Afiliacion Anafinet',
+                'Pasarela' => $providerLabel,
+                'Monto' => $amountLabel,
+                'Fecha de pago' => $paidAtLabel,
+            ]);
+            $userButtonHtml = app_mail_button($dashboardUrl, 'Entrar a mi panel');
+            $userFooterHtml = '<p style="margin:0 0 12px 0;">Te damos la bienvenida a la afiliacion.</p>'
+                . ($dashboardUrl !== '' ? '<p style="margin:0;">Si el boton no funciona, copia y pega este enlace en tu navegador:<br><a href="' . htmlspecialchars($dashboardUrl, ENT_QUOTES, 'UTF-8') . '" style="color:#2563EB;">' . htmlspecialchars($dashboardUrl, ENT_QUOTES, 'UTF-8') . '</a></p>' : '');
+            $userHtml = app_mail_wrap_layout(
+                'Confirmacion de pago',
+                'Tu afiliacion ya esta activa',
+                $userIntroHtml,
+                $userSummaryHtml,
+                $userButtonHtml,
+                $userFooterHtml,
+                'Tu pago fue confirmado y tu afiliacion a Anafinet ya esta activa.'
+            );
             $userText = "Hola {$userName}.\n\n"
                 . "Tu pago se confirmo correctamente y tu afiliacion a Anafinet quedo completada con exito.\n"
-                . "Te damos la bienvenida a la afiliacion.\n"
+                . "Tu afiliacion ya esta activa.\n"
+                . "Estatus: Pago confirmado\n"
+                . "Concepto: Afiliacion Anafinet\n"
                 . "Pasarela: {$providerLabel}\n"
                 . "Monto: {$amountLabel}\n"
+                . "Fecha de pago: {$paidAtLabel}\n"
+                . "Te damos la bienvenida a la afiliacion.\n"
                 . ($dashboardUrl !== '' ? "Panel: {$dashboardUrl}\n" : '');
         } else {
             $userSubject = 'Tu renovacion en Anafinet fue exitosa';
-            $userHtml = '<p>Hola ' . htmlspecialchars($userName, ENT_QUOTES, 'UTF-8') . '.</p>'
-                . '<p>Tu renovacion como usuario fue confirmada exitosamente.</p>'
-                . '<p><strong>Pasarela:</strong> ' . htmlspecialchars($providerLabel, ENT_QUOTES, 'UTF-8') . '<br>'
-                . '<strong>Monto:</strong> ' . htmlspecialchars($amountLabel, ENT_QUOTES, 'UTF-8') . '</p>'
-                . ($dashboardUrl !== '' ? '<p>Puedes continuar usando tu panel aqui: <a href="' . htmlspecialchars($dashboardUrl, ENT_QUOTES, 'UTF-8') . '">' . htmlspecialchars($dashboardUrl, ENT_QUOTES, 'UTF-8') . '</a></p>' : '');
+            $userIntroHtml = '<p style="margin:0 0 16px 0;">Hola ' . htmlspecialchars($userName, ENT_QUOTES, 'UTF-8') . '.</p>'
+                . '<p style="margin:0 0 16px 0;">Tu renovacion como usuario fue confirmada exitosamente.</p>'
+                . '<p style="margin:0;">Tu acceso permanece activo y puedes seguir usando tu panel con normalidad.</p>';
+            $userSummaryHtml = app_mail_payment_summary_rows([
+                'Estatus' => 'Renovacion confirmada',
+                'Concepto' => 'Renovacion de membresia',
+                'Pasarela' => $providerLabel,
+                'Monto' => $amountLabel,
+                'Fecha de pago' => $paidAtLabel,
+            ]);
+            $userButtonHtml = app_mail_button($dashboardUrl, 'Ir a mi panel');
+            $userFooterHtml = $dashboardUrl !== ''
+                ? '<p style="margin:0;">Si el boton no funciona, copia y pega este enlace en tu navegador:<br><a href="' . htmlspecialchars($dashboardUrl, ENT_QUOTES, 'UTF-8') . '" style="color:#2563EB;">' . htmlspecialchars($dashboardUrl, ENT_QUOTES, 'UTF-8') . '</a></p>'
+                : '';
+            $userHtml = app_mail_wrap_layout(
+                'Confirmacion de renovacion',
+                'Tu renovacion fue aplicada',
+                $userIntroHtml,
+                $userSummaryHtml,
+                $userButtonHtml,
+                $userFooterHtml,
+                'Tu renovacion en Anafinet fue confirmada exitosamente.'
+            );
             $userText = "Hola {$userName}.\n\n"
                 . "Tu renovacion como usuario fue confirmada exitosamente.\n"
+                . "Estatus: Renovacion confirmada\n"
+                . "Concepto: Renovacion de membresia\n"
                 . "Pasarela: {$providerLabel}\n"
                 . "Monto: {$amountLabel}\n"
+                . "Fecha de pago: {$paidAtLabel}\n"
                 . ($dashboardUrl !== '' ? "Panel: {$dashboardUrl}\n" : '');
         }
 

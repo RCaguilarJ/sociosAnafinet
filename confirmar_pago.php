@@ -136,6 +136,8 @@ function process_manual_payment_report(PDO $pdo, int $userId): array
     }
 
     $_SESSION['user_estatus'] = $newStatus;
+    $proofUrl = uploaded_file_url('comprobantes_pago', $filename, true);
+    app_send_manual_payment_received_notifications($pdo, $userId, $reference, is_string($proofUrl) ? $proofUrl : '');
 
     return ['Tu confirmacion manual fue guardada correctamente. Tesoreria revisara el comprobante.', 'success'];
 }

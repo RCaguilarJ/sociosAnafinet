@@ -40,6 +40,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $nuevoEstatus = $action === 'aprobar' ? 'Activo' : 'Pendiente de pago';
         $stmt = $pdo->prepare("UPDATE usuarios SET estatus = ? WHERE id = ?");
         $stmt->execute([$nuevoEstatus, $targetUserId]);
+        if ($action === 'aprobar') {
+            app_send_manual_payment_approved_notification($pdo, $targetUserId);
+        }
         $mensaje = $action === 'aprobar'
             ? 'Pago aprobado y cuenta marcada como Activo.'
             : 'El usuario fue regresado a Pendiente de pago.';
