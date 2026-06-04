@@ -299,6 +299,16 @@ function app_mail_html_escape(string $value): string
     return htmlspecialchars($value, ENT_QUOTES, 'UTF-8');
 }
 
+function app_mail_brand_logo_url(): string
+{
+    $baseUrl = trim((string)env_value('PUBLIC_APP_URL', ''));
+    if ($baseUrl === '') {
+        return '';
+    }
+
+    return rtrim($baseUrl, '/') . '/logo_anafinet.png';
+}
+
 function app_mail_payment_summary_rows(array $rows): string
 {
     if ($rows === []) {
@@ -314,8 +324,8 @@ function app_mail_payment_summary_rows(array $rows): string
         }
 
         $html .= '<tr>'
-            . '<td style="padding:10px 0;border-bottom:1px solid #E2E8F0;color:#64748B;font-size:13px;font-weight:700;letter-spacing:0.04em;text-transform:uppercase;">' . app_mail_html_escape($label) . '</td>'
-            . '<td style="padding:10px 0;border-bottom:1px solid #E2E8F0;color:#0F172A;font-size:15px;font-weight:600;text-align:right;">' . app_mail_html_escape($value) . '</td>'
+            . '<td style="width:34%;padding:10px 12px;border:1px solid #DCE8F8;color:#4A78B3;font-size:13px;font-weight:700;background:#F8FBFF;">' . app_mail_html_escape($label) . ':</td>'
+            . '<td style="padding:10px 12px;border:1px solid #DCE8F8;color:#1E293B;font-size:14px;font-weight:600;background:#FFFFFF;">' . app_mail_html_escape($value) . '</td>'
             . '</tr>';
     }
 
@@ -323,7 +333,7 @@ function app_mail_payment_summary_rows(array $rows): string
         return '';
     }
 
-    return '<table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="border-collapse:collapse;">' . $html . '</table>';
+    return '<table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="border-collapse:collapse;border-spacing:0;">' . $html . '</table>';
 }
 
 function app_mail_button(?string $url, string $label): string
@@ -336,10 +346,10 @@ function app_mail_button(?string $url, string $label): string
 
     $escapedUrl = app_mail_html_escape($url);
 
-    return '<table role="presentation" cellspacing="0" cellpadding="0" style="margin:24px 0 0 0;">'
+    return '<table role="presentation" cellspacing="0" cellpadding="0" align="center" style="margin:28px auto 0 auto;">'
         . '<tr>'
-        . '<td align="center" bgcolor="#2563EB" style="border-radius:999px;">'
-        . '<a href="' . $escapedUrl . '" style="display:inline-block;padding:14px 26px;font-size:15px;font-weight:700;line-height:1;color:#FFFFFF;text-decoration:none;">' . app_mail_html_escape($label) . '</a>'
+        . '<td align="center" bgcolor="#2563EB" style="border-radius:10px;box-shadow:0 10px 24px rgba(37,99,235,0.22);">'
+        . '<a href="' . $escapedUrl . '" style="display:inline-block;min-width:220px;padding:14px 28px;font-size:15px;font-weight:700;line-height:1;color:#FFFFFF;text-decoration:none;">' . app_mail_html_escape($label) . '</a>'
         . '</td>'
         . '</tr>'
         . '</table>';
@@ -357,17 +367,20 @@ function app_mail_wrap_layout(
     $eyebrow = trim($eyebrow);
     $title = trim($title);
     $preheader = trim($preheader);
+    $logoUrl = app_mail_brand_logo_url();
+    $logoBlock = $logoUrl !== ''
+        ? '<div style="text-align:center;margin:0 0 18px 0;"><img src="' . app_mail_html_escape($logoUrl) . '" alt="Anafinet" style="display:block;margin:0 auto;width:180px;max-width:100%;height:auto;border:0;"></div>'
+        : '<div style="text-align:center;margin:0 0 18px 0;color:#1E3A8A;font-size:36px;font-weight:800;letter-spacing:0.02em;">Anafinet</div>';
     $summaryBlock = $summaryHtml !== ''
-        ? '<div style="margin:28px 0 0 0;padding:22px 24px;border:1px solid #DBEAFE;border-radius:20px;background:#F8FBFF;">'
-            . '<p style="margin:0 0 14px 0;color:#1D4ED8;font-size:12px;font-weight:800;letter-spacing:0.16em;text-transform:uppercase;">Resumen del pago</p>'
+        ? '<div style="margin:26px auto 0 auto;max-width:420px;padding:0;">'
             . $summaryHtml
             . '</div>'
         : '';
     $buttonBlock = $buttonHtml !== ''
-        ? '<div style="margin:0;">' . $buttonHtml . '</div>'
+        ? '<div style="margin:0;text-align:center;">' . $buttonHtml . '</div>'
         : '';
     $footerBlock = $footerHtml !== ''
-        ? '<div style="margin:24px 0 0 0;color:#475569;font-size:14px;line-height:1.7;">' . $footerHtml . '</div>'
+        ? '<div style="margin:18px auto 0 auto;max-width:420px;color:#5B6472;font-size:13px;line-height:1.7;text-align:center;">' . $footerHtml . '</div>'
         : '';
 
     return '<!doctype html>'
@@ -377,27 +390,26 @@ function app_mail_wrap_layout(
         . '<meta name="viewport" content="width=device-width, initial-scale=1.0">'
         . '<title>' . app_mail_html_escape($title) . '</title>'
         . '</head>'
-        . '<body style="margin:0;padding:0;background:#EAF1F8;font-family:Arial,Helvetica,sans-serif;color:#0F172A;">'
+        . '<body style="margin:0;padding:0;background:#F5F7FB;font-family:Arial,Helvetica,sans-serif;color:#0F172A;">'
         . ($preheader !== '' ? '<div style="display:none;max-height:0;overflow:hidden;opacity:0;color:transparent;">' . app_mail_html_escape($preheader) . '</div>' : '')
-        . '<table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#EAF1F8;border-collapse:collapse;">'
+        . '<table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#F5F7FB;border-collapse:collapse;">'
         . '<tr>'
-        . '<td align="center" style="padding:32px 16px;">'
-        . '<table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:640px;border-collapse:collapse;">'
+        . '<td align="center" style="padding:30px 16px 36px 16px;">'
+        . '<table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:620px;border-collapse:collapse;">'
         . '<tr>'
-        . '<td style="padding:0 0 16px 4px;color:#1E3A8A;font-size:24px;font-weight:800;letter-spacing:0.03em;">Anafinet</td>'
-        . '</tr>'
-        . '<tr>'
-        . '<td style="background:#FFFFFF;border-radius:28px;padding:40px 36px;box-shadow:0 18px 50px rgba(15,23,42,0.10);">'
-        . ($eyebrow !== '' ? '<p style="margin:0 0 14px 0;color:#2563EB;font-size:12px;font-weight:800;letter-spacing:0.18em;text-transform:uppercase;">' . app_mail_html_escape($eyebrow) . '</p>' : '')
-        . '<h1 style="margin:0;color:#0F172A;font-size:30px;line-height:1.2;font-weight:800;">' . app_mail_html_escape($title) . '</h1>'
-        . '<div style="margin:20px 0 0 0;color:#334155;font-size:16px;line-height:1.8;">' . $introHtml . '</div>'
+        . '<td style="background:#FFFFFF;border-radius:24px;padding:36px 28px 30px 28px;box-shadow:0 12px 40px rgba(15,23,42,0.08);">'
+        . $logoBlock
+        . ($eyebrow !== '' ? '<p style="margin:0 0 10px 0;color:#4A78B3;font-size:12px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;text-align:center;">' . app_mail_html_escape($eyebrow) . '</p>' : '')
+        . '<h1 style="margin:0;text-align:center;color:#0F172A;font-size:22px;line-height:1.25;font-weight:800;">' . app_mail_html_escape($title) . '</h1>'
+        . '<div style="margin:16px auto 0 auto;max-width:420px;color:#334155;font-size:14px;line-height:1.7;text-align:left;">' . $introHtml . '</div>'
         . $summaryBlock
         . $buttonBlock
         . $footerBlock
+        . '<div style="margin:28px auto 0 auto;max-width:520px;height:16px;border-radius:0 0 16px 16px;background:linear-gradient(180deg,#F6FBFF 0%,#DDEAF9 100%);"></div>'
         . '</td>'
         . '</tr>'
         . '<tr>'
-        . '<td style="padding:18px 8px 0 8px;color:#64748B;font-size:12px;line-height:1.6;text-align:center;">Este correo fue generado automaticamente por Anafinet.</td>'
+        . '<td style="padding:14px 8px 0 8px;color:#7A8699;font-size:11px;line-height:1.6;text-align:center;">Este correo fue generado automaticamente por Anafinet.</td>'
         . '</tr>'
         . '</table>'
         . '</td>'

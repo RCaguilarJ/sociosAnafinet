@@ -49,6 +49,7 @@ if (!function_exists('load_env_file')) {
 }
 
 load_env_file(__DIR__ . DIRECTORY_SEPARATOR . '.env');
+load_env_file(__DIR__ . DIRECTORY_SEPARATOR . '.env.production');
 
 if (!function_exists('env_value')) {
     function env_value(string $key, ?string $default = null): ?string

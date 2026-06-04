@@ -256,21 +256,32 @@ function app_send_manual_payment_received_notifications(PDO $pdo, int $userId, s
 
     if (filter_var($adminEmail, FILTER_VALIDATE_EMAIL)) {
         $adminSubject = 'Nuevo comprobante manual por revisar: ' . $userName;
-        $adminLines = [
-            '<p>Se registro un nuevo comprobante de pago manual para revision.</p>',
-            '<p><strong>Nombre:</strong> ' . htmlspecialchars($userName, ENT_QUOTES, 'UTF-8') . '<br>'
-                . '<strong>Email:</strong> ' . htmlspecialchars($userEmail, ENT_QUOTES, 'UTF-8') . '<br>'
-                . '<strong>Referencia:</strong> ' . htmlspecialchars($reference, ENT_QUOTES, 'UTF-8') . '<br>'
-                . '<strong>Monto esperado:</strong> ' . htmlspecialchars($amountLabel, ENT_QUOTES, 'UTF-8') . '<br>'
-                . '<strong>Fecha de registro:</strong> ' . htmlspecialchars($reportedAtLabel, ENT_QUOTES, 'UTF-8') . '</p>',
-        ];
+        $adminIntroHtml = '<p style="margin:0 0 16px 0;">Se registro un nuevo comprobante de pago manual para revision.</p>'
+            . '<p style="margin:0;">Valida el monto, la cuenta de deposito y el archivo adjunto antes de aprobar el acceso del asociado.</p>';
+        $adminSummaryHtml = app_mail_payment_summary_rows([
+            'Nombre' => $userName,
+            'Email' => $userEmail,
+            'Referencia' => $reference,
+            'Monto esperado' => $amountLabel,
+            'Fecha de registro' => $reportedAtLabel,
+        ]);
+        $adminButtonHtml = app_mail_button($adminPageUrl, 'Revisar pago en el panel');
+        $adminFooterParts = [];
         if ($proofUrl !== '') {
-            $adminLines[] = '<p><strong>Comprobante:</strong> <a href="' . htmlspecialchars($proofUrl, ENT_QUOTES, 'UTF-8') . '">' . htmlspecialchars($proofUrl, ENT_QUOTES, 'UTF-8') . '</a></p>';
+            $adminFooterParts[] = '<p style="margin:0 0 10px 0;">Comprobante adjunto:<br><a href="' . htmlspecialchars($proofUrl, ENT_QUOTES, 'UTF-8') . '" style="color:#2563EB;">' . htmlspecialchars($proofUrl, ENT_QUOTES, 'UTF-8') . '</a></p>';
         }
         if ($adminPageUrl !== '') {
-            $adminLines[] = '<p>Revisa el caso en el panel administrativo: <a href="' . htmlspecialchars($adminPageUrl, ENT_QUOTES, 'UTF-8') . '">' . htmlspecialchars($adminPageUrl, ENT_QUOTES, 'UTF-8') . '</a></p>';
+            $adminFooterParts[] = '<p style="margin:0;">Panel administrativo:<br><a href="' . htmlspecialchars($adminPageUrl, ENT_QUOTES, 'UTF-8') . '" style="color:#2563EB;">' . htmlspecialchars($adminPageUrl, ENT_QUOTES, 'UTF-8') . '</a></p>';
         }
-        $adminHtml = implode('', $adminLines);
+        $adminHtml = app_mail_wrap_layout(
+            'Revision manual',
+            'Nuevo comprobante por validar',
+            $adminIntroHtml,
+            $adminSummaryHtml,
+            $adminButtonHtml,
+            implode('', $adminFooterParts),
+            'Se registro un nuevo comprobante de pago manual para revision.'
+        );
         $adminText = "Se registro un nuevo comprobante de pago manual para revision.\n"
             . "Nombre: {$userName}\n"
             . "Email: {$userEmail}\n"
@@ -379,12 +390,22 @@ function app_send_membership_payment_notifications(PDO $pdo, string $externalRef
     if (($payment['notification_admin_sent_at'] ?? null) === null && filter_var($adminEmail, FILTER_VALIDATE_EMAIL)) {
         if ($context === 'signup') {
             $adminSubject = 'Nuevo usuario con afiliacion pagada: ' . $userName;
-            $adminHtml = '<p>Se confirmo un pago exitoso de afiliacion para un nuevo usuario.</p>'
-                . '<p><strong>Nombre:</strong> ' . htmlspecialchars($userName, ENT_QUOTES, 'UTF-8') . '<br>'
-                . '<strong>Email:</strong> ' . htmlspecialchars($userEmail, ENT_QUOTES, 'UTF-8') . '<br>'
-                . '<strong>Pasarela:</strong> ' . htmlspecialchars($providerLabel, ENT_QUOTES, 'UTF-8') . '<br>'
-                . '<strong>Monto:</strong> ' . htmlspecialchars($amountLabel, ENT_QUOTES, 'UTF-8') . '<br>'
-                . '<strong>Fecha de pago:</strong> ' . htmlspecialchars($paidAtLabel, ENT_QUOTES, 'UTF-8') . '</p>';
+            $adminHtml = app_mail_wrap_layout(
+                'Pago confirmado',
+                'Nuevo usuario pagado',
+                '<p style="margin:0 0 16px 0;">Se confirmo un pago exitoso de afiliacion para un nuevo usuario.</p>'
+                    . '<p style="margin:0;">El asociado ya puede ser identificado en el portal como usuario activo.</p>',
+                app_mail_payment_summary_rows([
+                    'Nombre' => $userName,
+                    'Email' => $userEmail,
+                    'Pasarela' => $providerLabel,
+                    'Monto' => $amountLabel,
+                    'Fecha de pago' => $paidAtLabel,
+                ]),
+                '',
+                '',
+                'Se confirmo un pago exitoso de afiliacion para un nuevo usuario.'
+            );
             $adminText = "Se confirmo un pago exitoso de afiliacion para un nuevo usuario.\n"
                 . "Nombre: {$userName}\n"
                 . "Email: {$userEmail}\n"
@@ -393,12 +414,22 @@ function app_send_membership_payment_notifications(PDO $pdo, string $externalRef
                 . "Fecha de pago: {$paidAtLabel}\n";
         } else {
             $adminSubject = 'Renovacion pagada correctamente: ' . $userName;
-            $adminHtml = '<p>Se confirmo un pago exitoso de renovacion para un usuario existente.</p>'
-                . '<p><strong>Nombre:</strong> ' . htmlspecialchars($userName, ENT_QUOTES, 'UTF-8') . '<br>'
-                . '<strong>Email:</strong> ' . htmlspecialchars($userEmail, ENT_QUOTES, 'UTF-8') . '<br>'
-                . '<strong>Pasarela:</strong> ' . htmlspecialchars($providerLabel, ENT_QUOTES, 'UTF-8') . '<br>'
-                . '<strong>Monto:</strong> ' . htmlspecialchars($amountLabel, ENT_QUOTES, 'UTF-8') . '<br>'
-                . '<strong>Fecha de pago:</strong> ' . htmlspecialchars($paidAtLabel, ENT_QUOTES, 'UTF-8') . '</p>';
+            $adminHtml = app_mail_wrap_layout(
+                'Pago confirmado',
+                'Renovacion aplicada',
+                '<p style="margin:0 0 16px 0;">Se confirmo un pago exitoso de renovacion para un usuario existente.</p>'
+                    . '<p style="margin:0;">El asociado conserva su acceso activo al portal.</p>',
+                app_mail_payment_summary_rows([
+                    'Nombre' => $userName,
+                    'Email' => $userEmail,
+                    'Pasarela' => $providerLabel,
+                    'Monto' => $amountLabel,
+                    'Fecha de pago' => $paidAtLabel,
+                ]),
+                '',
+                '',
+                'Se confirmo un pago exitoso de renovacion para un usuario existente.'
+            );
             $adminText = "Se confirmo un pago exitoso de renovacion para un usuario existente.\n"
                 . "Nombre: {$userName}\n"
                 . "Email: {$userEmail}\n"
