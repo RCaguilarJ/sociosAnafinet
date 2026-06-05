@@ -23,6 +23,23 @@ function is_admin_role(string $role): bool
     return str_contains($normalized, 'admin');
 }
 
+function app_display_user_name(string $userName, string $role = ''): string
+{
+    $userName = trim($userName);
+    if ($userName === '') {
+        return 'Usuario';
+    }
+
+    if (is_admin_role($role)) {
+        $normalized = normalize_text_value($userName);
+        if (in_array($normalized, ['administradorproduccion', 'administradorlocal', 'administrador'], true)) {
+            return 'Administrador';
+        }
+    }
+
+    return $userName;
+}
+
 function fetch_user_role(?PDO $pdo, ?int $userId): ?string
 {
     if (!$pdo || !$userId) {

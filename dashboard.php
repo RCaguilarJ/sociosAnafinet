@@ -121,6 +121,7 @@ try {
     $demoMode = !($pdo instanceof PDO) && app_demo_mode_enabled();
     $userStatus = $_SESSION['user_estatus'] ?? '';
     $masterAccess = current_user_has_master_access($pdo ?? null, (int)($_SESSION['user_id'] ?? 0));
+    $displayUserName = app_display_user_name((string)($_SESSION['user_name'] ?? ''), (string)($_SESSION['user_rol'] ?? ''));
 
     if ($pdo instanceof PDO) {
         try {
@@ -204,7 +205,7 @@ try {
         <?php endif; ?>
 
         <header class="mb-8">
-            <h1 class="text-2xl font-bold text-gray-800">Bienvenido, <?php echo htmlspecialchars((string)($_SESSION['user_name'] ?? ''), ENT_QUOTES, 'UTF-8'); ?></h1>
+            <h1 class="text-2xl font-bold text-gray-800">Bienvenido, <?php echo htmlspecialchars($displayUserName, ENT_QUOTES, 'UTF-8'); ?></h1>
             <p class="text-gray-500">Accede a todos los recursos y contenido exclusivo.</p>
         </header>
 

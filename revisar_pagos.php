@@ -54,7 +54,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 $where = "WHERE rol = 'Asociado'";
 if ($filtro === 'pendientes') {
-    $where .= " AND estatus IN ('Pendiente de pago', 'Pago reportado')";
+    $where .= " AND estatus IN ('Pendiente de pago', 'Pago reportado', 'Pago en proceso')";
 } elseif ($filtro === 'aprobados') {
     $where .= " AND estatus IN ('Activo', 'Afiliado')";
 }
@@ -62,11 +62,13 @@ if ($filtro === 'pendientes') {
 $stats = [
     'pendientes_pago' => 0,
     'pagos_reportados' => 0,
+    'pagos_en_proceso' => 0,
     'activos' => 0,
 ];
 
 $stats['pendientes_pago'] = (int) $pdo->query("SELECT COUNT(*) FROM usuarios WHERE rol = 'Asociado' AND estatus = 'Pendiente de pago'")->fetchColumn();
 $stats['pagos_reportados'] = (int) $pdo->query("SELECT COUNT(*) FROM usuarios WHERE rol = 'Asociado' AND estatus = 'Pago reportado'")->fetchColumn();
+$stats['pagos_en_proceso'] = (int) $pdo->query("SELECT COUNT(*) FROM usuarios WHERE rol = 'Asociado' AND estatus = 'Pago en proceso'")->fetchColumn();
 $stats['activos'] = (int) $pdo->query("SELECT COUNT(*) FROM usuarios WHERE rol = 'Asociado' AND estatus IN ('Activo', 'Afiliado')")->fetchColumn();
 
 $stmt = $pdo->query("
@@ -76,9 +78,10 @@ $stmt = $pdo->query("
     ORDER BY 
         CASE estatus
             WHEN 'Pago reportado' THEN 1
-            WHEN 'Pendiente de pago' THEN 2
-            WHEN 'Activo' THEN 3
-            WHEN 'Afiliado' THEN 3
+            WHEN 'Pago en proceso' THEN 2
+            WHEN 'Pendiente de pago' THEN 3
+            WHEN 'Activo' THEN 4
+            WHEN 'Afiliado' THEN 4
             ELSE 4
         END,
         pago_reportado_at DESC,
@@ -115,7 +118,7 @@ $usuarios = $stmt->fetchAll();
                 </div>
             <?php endif; ?>
 
-            <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
+            <div class="grid grid-cols-1 gap-4 md:grid-cols-4">
                 <div class="rounded-2xl bg-white p-5 border border-gray-100 shadow-sm">
                     <p class="text-xs font-bold uppercase tracking-wide text-gray-400">Pendiente de pago</p>
                     <p class="mt-2 text-3xl font-bold text-slate-900"><?php echo number_format($stats['pendientes_pago']); ?></p>
@@ -123,6 +126,10 @@ $usuarios = $stmt->fetchAll();
                 <div class="rounded-2xl bg-white p-5 border border-gray-100 shadow-sm">
                     <p class="text-xs font-bold uppercase tracking-wide text-gray-400">Pago reportado</p>
                     <p class="mt-2 text-3xl font-bold text-amber-600"><?php echo number_format($stats['pagos_reportados']); ?></p>
+                </div>
+                <div class="rounded-2xl bg-white p-5 border border-gray-100 shadow-sm">
+                    <p class="text-xs font-bold uppercase tracking-wide text-gray-400">Pago en proceso</p>
+                    <p class="mt-2 text-3xl font-bold text-sky-600"><?php echo number_format($stats['pagos_en_proceso']); ?></p>
                 </div>
                 <div class="rounded-2xl bg-white p-5 border border-gray-100 shadow-sm">
                     <p class="text-xs font-bold uppercase tracking-wide text-gray-400">Activos</p>
@@ -156,6 +163,8 @@ $usuarios = $stmt->fetchAll();
                         $badgeClass = 'bg-slate-100 text-slate-700';
                         if ($estatus === 'Pago reportado') {
                             $badgeClass = 'bg-amber-100 text-amber-800';
+                        } elseif ($estatus === 'Pago en proceso') {
+                            $badgeClass = 'bg-sky-100 text-sky-800';
                         } elseif (app_is_membership_active_status($estatus)) {
                             $badgeClass = 'bg-emerald-100 text-emerald-800';
                         } elseif ($estatus === 'Pendiente de pago') {

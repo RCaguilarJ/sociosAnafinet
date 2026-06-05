@@ -26,6 +26,7 @@ if (isset($pdo)) {
 }
 
 $memberIdentifier = app_member_identifier($pdo ?? null, $userId, $userState);
+$displayUserName = app_display_user_name((string)$userName, (string)$userRole);
 
 $menuItems = [
     ['key' => 'dashboard', 'label' => 'Dashboard', 'href' => base_url('dashboard.php'), 'icon' => 'fa-house'],
@@ -73,7 +74,7 @@ function menu_link_classes(string $key, string $activePage): string
     <div class="flex items-start justify-between">
         <div class="text-center w-full">
             <img src="<?php echo htmlspecialchars(base_url('logo.avif'), ENT_QUOTES, 'UTF-8'); ?>" alt="Logo Anafinet" class="w-28 mx-auto mb-4">
-            <h3 class="font-bold text-gray-800"><?php echo htmlspecialchars($userName); ?></h3>
+            <h3 class="font-bold text-gray-800"><?php echo htmlspecialchars($displayUserName); ?></h3>
             <div class="mt-1 flex items-center justify-center gap-2 text-xs text-gray-400">
                 <span><?php echo htmlspecialchars($userRole); ?></span>
                 <?php if ($memberIdentifier !== ''): ?>
