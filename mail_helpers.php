@@ -8,6 +8,10 @@ function app_payment_admin_email(): string
 function app_mail_from_email(): string
 {
     $configured = (string)env_value('MAIL_FROM_EMAIL', '');
+    if ($configured === '') {
+        $configured = (string)env_value('MAIL_FROM_ADDRESS', '');
+    }
+
     if ($configured !== '' && filter_var($configured, FILTER_VALIDATE_EMAIL)) {
         return $configured;
     }
@@ -22,45 +26,93 @@ function app_mail_from_email(): string
 
 function app_mail_from_name(): string
 {
-    return (string)env_value('MAIL_FROM_NAME', 'Anafinet');
+    $configured = (string)env_value('MAIL_FROM_NAME', '');
+    if ($configured === '') {
+        $configured = (string)env_value('MAIL_FROM_NAME', 'Anafinet');
+    }
+
+    return $configured !== '' ? $configured : 'Anafinet';
 }
 
 function app_mail_transport(): string
 {
-    $transport = strtolower(trim((string)env_value('MAIL_TRANSPORT', 'mail')));
+    $transport = (string)env_value('MAIL_TRANSPORT', '');
+    if ($transport === '') {
+        $transport = (string)env_value('MAIL_MAILER', 'mail');
+    }
+
+    $transport = strtolower(trim($transport));
     return in_array($transport, ['mail', 'smtp'], true) ? $transport : 'mail';
 }
 
 function app_smtp_host(): string
 {
-    return trim((string)env_value('SMTP_HOST', ''));
+    $host = (string)env_value('SMTP_HOST', '');
+    if ($host === '') {
+        $host = (string)env_value('MAIL_HOST', '');
+    }
+
+    return trim($host);
 }
 
 function app_smtp_port(): int
 {
-    $port = (int)env_value('SMTP_PORT', '587');
+    $portValue = (string)env_value('SMTP_PORT', '');
+    if ($portValue === '') {
+        $portValue = (string)env_value('MAIL_PORT', '587');
+    }
+
+    $port = (int)$portValue;
     return $port > 0 ? $port : 587;
 }
 
 function app_smtp_secure(): string
 {
-    $secure = strtolower(trim((string)env_value('SMTP_SECURE', 'tls')));
+    $secure = (string)env_value('SMTP_SECURE', '');
+    if ($secure === '') {
+        $secure = (string)env_value('MAIL_ENCRYPTION', '');
+    }
+    if ($secure === '') {
+        $secure = (string)env_value('MAIL_SCHEME', 'tls');
+    }
+
+    $secure = strtolower(trim($secure));
+    if ($secure === 'null') {
+        $secure = 'none';
+    }
+
     return in_array($secure, ['none', 'tls', 'ssl'], true) ? $secure : 'tls';
 }
 
 function app_smtp_auth_enabled(): bool
 {
-    return env_value('SMTP_AUTH', '1') !== '0';
+    $auth = env_value('SMTP_AUTH');
+    if ($auth !== null) {
+        return $auth !== '0';
+    }
+
+    $username = app_smtp_username();
+    return $username !== '';
 }
 
 function app_smtp_username(): string
 {
-    return trim((string)env_value('SMTP_USERNAME', ''));
+    $username = (string)env_value('SMTP_USERNAME', '');
+    if ($username === '') {
+        $username = (string)env_value('MAIL_USERNAME', '');
+    }
+
+    return trim($username);
 }
 
 function app_smtp_password(): string
 {
-    return (string)env_value('SMTP_PASSWORD', '');
+    $password = (string)env_value('SMTP_PASSWORD', '');
+    if ($password === '') {
+        $password = (string)env_value('MAIL_PASSWORD', '');
+    }
+
+    return $password;
 }
 
 function app_smtp_timeout(): int

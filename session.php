@@ -4,13 +4,13 @@ require_once __DIR__ . '/config.php';
 if (!class_exists('DatabaseSessionHandler')) {
     class DatabaseSessionHandler implements SessionHandlerInterface
     {
-        private PDO $pdo;
-        private int $ttl;
+        private $pdo;
+        private $ttl;
 
-        public function __construct(PDO $pdo, int $ttl)
+        public function __construct($pdo, $ttl)
         {
             $this->pdo = $pdo;
-            $this->ttl = $ttl;
+            $this->ttl = (int)$ttl;
         }
 
         public function open(string $path, string $name): bool
@@ -58,19 +58,19 @@ if (!class_exists('DatabaseSessionHandler')) {
             return $stmt->execute([$id]);
         }
 
-        public function gc(int $max_lifetime): int|false
+        public function gc(int $max_lifetime): int
         {
             $threshold = time() - max($max_lifetime, $this->ttl);
             $stmt = $this->pdo->prepare('DELETE FROM app_sessions WHERE last_activity < ?');
             $stmt->execute([$threshold]);
 
-            return $stmt->rowCount();
+            return (int)$stmt->rowCount();
         }
     }
 }
 
 if (!function_exists('ensure_session_table')) {
-    function ensure_session_table(PDO $pdo): void
+    function ensure_session_table($pdo)
     {
         static $initialized = false;
         if ($initialized) {
@@ -90,7 +90,7 @@ if (!function_exists('ensure_session_table')) {
 }
 
 if (!function_exists('app_start_session')) {
-    function app_start_session(?PDO $pdo): void
+    function app_start_session($pdo)
     {
         if (session_status() === PHP_SESSION_ACTIVE) {
             return;
@@ -102,21 +102,35 @@ if (!function_exists('app_start_session')) {
         ini_set('session.use_only_cookies', '1');
         ini_set('session.cookie_httponly', '1');
         session_name((string)env_value('SESSION_NAME', 'anafinet_session'));
-        session_set_cookie_params([
-            'lifetime' => 0,
-            'path' => app_cookie_path(),
-            'domain' => '',
-            'secure' => app_is_secure_request(),
-            'httponly' => true,
-            'samesite' => 'Lax',
-        ]);
+        $cookiePath = app_cookie_path();
+        $cookieSecure = app_is_secure_request();
+        if (PHP_VERSION_ID >= 70300) {
+            session_set_cookie_params([
+                'lifetime' => 0,
+                'path' => $cookiePath,
+                'domain' => '',
+                'secure' => $cookieSecure,
+                'httponly' => true,
+                'samesite' => 'Lax',
+            ]);
+        } else {
+            session_set_cookie_params(
+                0,
+                $cookiePath . '; samesite=Lax',
+                '',
+                $cookieSecure,
+                true
+            );
+        }
         ini_set('session.gc_maxlifetime', (string)$ttl);
 
         if ($pdo instanceof PDO) {
             try {
                 ensure_session_table($pdo);
                 session_set_save_handler(new DatabaseSessionHandler($pdo, $ttl), true);
-            } catch (Throwable $e) {
+            } catch (Exception $e) {
+                $GLOBALS['appSessionError'] = $e->getMessage();
+            } catch (Error $e) {
                 $GLOBALS['appSessionError'] = $e->getMessage();
             }
         }
