@@ -1,6 +1,6 @@
 <?php
 if (!function_exists('load_env_file')) {
-    function load_env_file(string $path): void
+    function load_env_file(string $path, bool $override = false): void
     {
         static $loaded = [];
 
@@ -37,7 +37,7 @@ if (!function_exists('load_env_file')) {
                 $value = substr($value, 1, -1);
             }
 
-            if (getenv($name) === false) {
+            if ($override || getenv($name) === false) {
                 putenv($name . '=' . $value);
                 $_ENV[$name] = $value;
                 $_SERVER[$name] = $value;
@@ -49,7 +49,7 @@ if (!function_exists('load_env_file')) {
 }
 
 load_env_file(__DIR__ . DIRECTORY_SEPARATOR . '.env');
-load_env_file(__DIR__ . DIRECTORY_SEPARATOR . '.env.production');
+load_env_file(__DIR__ . DIRECTORY_SEPARATOR . '.env.production', true);
 
 if (!function_exists('env_value')) {
     function env_value(string $key, ?string $default = null): ?string
