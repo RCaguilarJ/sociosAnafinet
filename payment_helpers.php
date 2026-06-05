@@ -95,12 +95,21 @@ function app_mercadopago_api_url(string $path): string
 function app_is_membership_active_status(string $status): bool
 {
     $normalized = normalize_text_value($status);
-    return in_array($normalized, ['activo', 'afiliado'], true);
+    return in_array($normalized, ['activo', 'afiliado', 'aprobado', 'confirmado', 'pagado'], true);
 }
 
 function app_is_membership_restricted_status(string $status): bool
 {
-    return !app_is_membership_active_status($status);
+    $normalized = normalize_text_value($status);
+    if ($normalized === '') {
+        return true;
+    }
+
+    if (app_is_membership_active_status($status)) {
+        return false;
+    }
+
+    return in_array($normalized, ['pendientedepago', 'pagoreportado', 'pagoenproceso', 'inactivo', 'suspendido', 'bloqueado'], true);
 }
 
 function app_ensure_membership_payment_schema(PDO $pdo): void
@@ -454,6 +463,8 @@ function app_send_membership_payment_notifications(PDO $pdo, string $externalRef
         if (app_send_html_email($adminEmail, $adminSubject, $adminHtml, $adminText)) {
             $stmt = $pdo->prepare('UPDATE pagos_membresia SET notification_admin_sent_at = NOW() WHERE external_reference = ?');
             $stmt->execute([$externalReference]);
+        } else {
+            error_log('Membership payment admin notification failed for reference ' . $externalReference . ' to ' . $adminEmail);
         }
     }
 
@@ -530,7 +541,47 @@ function app_send_membership_payment_notifications(PDO $pdo, string $externalRef
         if (app_send_html_email($userEmail, $userSubject, $userHtml, $userText)) {
             $stmt = $pdo->prepare('UPDATE pagos_membresia SET notification_user_sent_at = NOW() WHERE external_reference = ?');
             $stmt->execute([$externalReference]);
+        } else {
+            error_log('Membership payment user notification failed for reference ' . $externalReference . ' to ' . $userEmail);
         }
+    }
+}
+
+function app_retry_pending_membership_notifications(PDO $pdo, ?int $userId = null, int $limit = 5): void
+{
+    app_ensure_membership_payment_schema($pdo);
+
+    $limit = max(1, min($limit, 25));
+    $sql = 'SELECT external_reference
+            FROM pagos_membresia
+            WHERE status = ? 
+              AND (notification_user_sent_at IS NULL OR notification_admin_sent_at IS NULL)';
+    $params = ['approved'];
+
+    if ($userId !== null && $userId > 0) {
+        $sql .= ' AND user_id = ?';
+        $params[] = $userId;
+    }
+
+    $sql .= ' ORDER BY paid_at DESC, id DESC LIMIT ' . $limit;
+
+    try {
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute($params);
+        $references = $stmt->fetchAll(PDO::FETCH_COLUMN);
+        foreach ($references as $externalReference) {
+            if (!is_string($externalReference) || trim($externalReference) === '') {
+                continue;
+            }
+
+            try {
+                app_send_membership_payment_notifications($pdo, $externalReference);
+            } catch (Throwable $e) {
+                error_log('Retry membership payment notification failed for reference ' . $externalReference . ': ' . $e->getMessage());
+            }
+        }
+    } catch (Throwable $e) {
+        error_log('Unable to query pending membership notifications: ' . $e->getMessage());
     }
 }
 

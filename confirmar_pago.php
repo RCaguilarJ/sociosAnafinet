@@ -28,6 +28,14 @@ if ($flashMessage !== '') {
     $mensajeTipo = $flashType !== '' ? $flashType : 'info';
 }
 
+$showPaymentPopup = $flashMessage !== '' && in_array($mensajeTipo, ['success', 'info'], true);
+$paymentPopupTitle = $mensajeTipo === 'success'
+    ? 'Pago recibido con exito'
+    : 'Tu tramite de pago esta en proceso';
+$paymentPopupBody = $mensajeTipo === 'success'
+    ? 'Tu pago fue procesado correctamente. Ademas de la activacion de tu acceso, el sistema enviara la confirmacion por correo al usuario que realizo el pago.'
+    : 'Recibimos tu operacion y el tramite de pago ya esta en proceso. El sistema enviara un correo al usuario que realizo el pago con la confirmacion y el seguimiento correspondiente.';
+
 function payment_status_badge(string $status): array
 {
     $normalized = strtolower(trim($status));
@@ -158,10 +166,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && ($isPaypalReturn || $isMercadoPagoRe
 
             $syncedPayment = app_sync_paypal_order($pdo, $userId, $externalReference, $orderId);
             if ($syncedPayment['payment_status'] === 'approved') {
-                $_SESSION['payment_flash_message'] = 'Tu renovacion fue confirmada exitosamente.';
+                $_SESSION['payment_flash_message'] = 'Tu renovacion fue confirmada exitosamente. Tambien recibiras un correo con la confirmacion de tu pago.';
                 $_SESSION['payment_flash_type'] = 'success';
             } elseif ($syncedPayment['payment_status'] === 'processing') {
-                $_SESSION['payment_flash_message'] = 'Tu pago en PayPal quedo en proceso. Revisa nuevamente en unos minutos.';
+                $_SESSION['payment_flash_message'] = 'Tu pago en PayPal quedo en proceso. Te enviaremos un correo con la confirmacion y podras revisar nuevamente en unos minutos.';
                 $_SESSION['payment_flash_type'] = 'info';
             } else {
                 $_SESSION['payment_flash_message'] = 'No fue posible confirmar el pago en PayPal.';
@@ -179,10 +187,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && ($isPaypalReturn || $isMercadoPagoRe
                 $paymentStatus = (string)($syncedPayment['payment_status'] ?? '');
 
                 if ($paymentStatus === 'approved') {
-                    $_SESSION['payment_flash_message'] = 'Tu renovacion fue confirmada exitosamente.';
+                    $_SESSION['payment_flash_message'] = 'Tu renovacion fue confirmada exitosamente. Tambien recibiras un correo con la confirmacion de tu pago.';
                     $_SESSION['payment_flash_type'] = 'success';
                 } elseif ($paymentStatus === 'processing' || $returnState === 'pending') {
-                    $_SESSION['payment_flash_message'] = 'Tu pago en Mercado Pago esta en proceso. Revisa nuevamente en unos minutos.';
+                    $_SESSION['payment_flash_message'] = 'Tu pago en Mercado Pago esta en proceso. Te enviaremos un correo con la confirmacion y podras revisar nuevamente en unos minutos.';
                     $_SESSION['payment_flash_type'] = 'info';
                 } else {
                     $_SESSION['payment_flash_message'] = 'No fue posible confirmar el pago en Mercado Pago.';
@@ -197,7 +205,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && ($isPaypalReturn || $isMercadoPagoRe
                 ]);
 
                 $_SESSION['payment_flash_message'] = $status === 'processing'
-                    ? 'Tu pago en Mercado Pago quedo en proceso.'
+                    ? 'Tu pago en Mercado Pago quedo en proceso. Te enviaremos un correo con la confirmacion y podras darle seguimiento desde tu portal.'
                     : 'No fue posible confirmar el pago en Mercado Pago.';
                 $_SESSION['payment_flash_type'] = $status === 'processing' ? 'info' : 'error';
             }
@@ -293,6 +301,34 @@ if ($mensajeTipo === 'error') {
 $activePage = 'confirmar_pago';
 require __DIR__ . '/menu.php';
 ?>
+    <?php if ($showPaymentPopup): ?>
+        <div id="payment-status-popup" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+            <div class="w-full max-w-lg rounded-[2rem] border border-slate-200 bg-white p-6 shadow-2xl">
+                <div class="flex items-start justify-between gap-4">
+                    <div>
+                        <p class="text-xs font-bold uppercase tracking-[0.18em] <?php echo $mensajeTipo === 'success' ? 'text-emerald-600' : 'text-blue-600'; ?>">
+                            <?php echo $mensajeTipo === 'success' ? 'Confirmacion de pago' : 'Seguimiento del pago'; ?>
+                        </p>
+                        <h2 class="mt-2 text-2xl font-bold text-slate-900"><?php echo htmlspecialchars($paymentPopupTitle, ENT_QUOTES, 'UTF-8'); ?></h2>
+                    </div>
+                    <button type="button" id="payment-status-popup-close" class="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 text-slate-500 transition hover:bg-slate-100 hover:text-slate-700" aria-label="Cerrar aviso">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </div>
+                <div class="mt-4 rounded-2xl border px-4 py-3 text-sm font-medium <?php echo $alertClass; ?>">
+                    <?php echo htmlspecialchars($mensaje, ENT_QUOTES, 'UTF-8'); ?>
+                </div>
+                <p class="mt-4 text-sm leading-7 text-slate-600">
+                    <?php echo htmlspecialchars($paymentPopupBody, ENT_QUOTES, 'UTF-8'); ?>
+                </p>
+                <div class="mt-6 flex justify-end">
+                    <button type="button" id="payment-status-popup-accept" class="inline-flex items-center justify-center rounded-2xl bg-[#5282B2] px-6 py-3 text-sm font-bold text-white transition hover:bg-blue-700">
+                        Entendido
+                    </button>
+                </div>
+            </div>
+        </div>
+    <?php endif; ?>
     <main class="md:ml-64 p-6 md:p-8">
         <div class="mx-auto max-w-7xl space-y-6">
             <header class="space-y-2">
@@ -703,6 +739,21 @@ require __DIR__ . '/menu.php';
                 input.value = value;
             }
         }
+
+        const paymentStatusPopup = document.getElementById('payment-status-popup');
+        const closePaymentStatusPopup = () => {
+            if (paymentStatusPopup) {
+                paymentStatusPopup.classList.add('hidden');
+            }
+        };
+
+        document.getElementById('payment-status-popup-close')?.addEventListener('click', closePaymentStatusPopup);
+        document.getElementById('payment-status-popup-accept')?.addEventListener('click', closePaymentStatusPopup);
+        paymentStatusPopup?.addEventListener('click', (event) => {
+            if (event.target === paymentStatusPopup) {
+                closePaymentStatusPopup();
+            }
+        });
     </script>
 
     <?php if ($ppHabilitado): ?>

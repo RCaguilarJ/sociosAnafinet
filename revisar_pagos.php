@@ -56,7 +56,7 @@ $where = "WHERE rol = 'Asociado'";
 if ($filtro === 'pendientes') {
     $where .= " AND estatus IN ('Pendiente de pago', 'Pago reportado', 'Pago en proceso')";
 } elseif ($filtro === 'aprobados') {
-    $where .= " AND estatus IN ('Activo', 'Afiliado')";
+    $where .= " AND estatus IN ('Activo', 'Afiliado', 'Aprobado', 'Confirmado', 'Pagado')";
 }
 
 $stats = [
@@ -69,7 +69,7 @@ $stats = [
 $stats['pendientes_pago'] = (int) $pdo->query("SELECT COUNT(*) FROM usuarios WHERE rol = 'Asociado' AND estatus = 'Pendiente de pago'")->fetchColumn();
 $stats['pagos_reportados'] = (int) $pdo->query("SELECT COUNT(*) FROM usuarios WHERE rol = 'Asociado' AND estatus = 'Pago reportado'")->fetchColumn();
 $stats['pagos_en_proceso'] = (int) $pdo->query("SELECT COUNT(*) FROM usuarios WHERE rol = 'Asociado' AND estatus = 'Pago en proceso'")->fetchColumn();
-$stats['activos'] = (int) $pdo->query("SELECT COUNT(*) FROM usuarios WHERE rol = 'Asociado' AND estatus IN ('Activo', 'Afiliado')")->fetchColumn();
+$stats['activos'] = (int) $pdo->query("SELECT COUNT(*) FROM usuarios WHERE rol = 'Asociado' AND estatus IN ('Activo', 'Afiliado', 'Aprobado', 'Confirmado', 'Pagado')")->fetchColumn();
 
 $stmt = $pdo->query("
     SELECT id, nombre, email, estatus, referencia_pago, pago_reportado_at, comprobante_pago, creado_at
@@ -82,6 +82,9 @@ $stmt = $pdo->query("
             WHEN 'Pendiente de pago' THEN 3
             WHEN 'Activo' THEN 4
             WHEN 'Afiliado' THEN 4
+            WHEN 'Aprobado' THEN 4
+            WHEN 'Confirmado' THEN 4
+            WHEN 'Pagado' THEN 4
             ELSE 4
         END,
         pago_reportado_at DESC,

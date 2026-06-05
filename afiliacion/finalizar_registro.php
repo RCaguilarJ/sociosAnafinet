@@ -107,8 +107,8 @@ try {
 
             $syncedPayment = app_sync_paypal_order($pdo, $userId, $externalReference, $orderId);
             $_SESSION['payment_flash_message'] = $syncedPayment['payment_status'] === 'approved'
-                ? 'Tu pago en PayPal fue aprobado y tu membresia ya quedo activa.'
-                : 'Tu pago en PayPal quedo en proceso. Revisa el estado desde tu portal.';
+                ? 'Tu pago en PayPal fue aprobado y tu membresia ya quedo activa. Tambien recibiras un correo con la confirmacion de tu pago.'
+                : 'Tu pago en PayPal quedo en proceso. Te enviaremos un correo con la confirmacion y podras revisar el estado desde tu portal.';
             $_SESSION['payment_flash_type'] = $syncedPayment['payment_status'] === 'approved' ? 'success' : 'info';
         } else {
             $mercadoPagoPaymentId = trim((string) ($_GET['payment_id'] ?? $_GET['collection_id'] ?? ''));
@@ -119,10 +119,10 @@ try {
                 $paymentStatus = (string) ($syncedPayment['payment_status'] ?? '');
 
                 if ($paymentStatus === 'approved') {
-                    $_SESSION['payment_flash_message'] = 'Tu pago en Mercado Pago fue aprobado y tu membresia ya quedo activa.';
+                    $_SESSION['payment_flash_message'] = 'Tu pago en Mercado Pago fue aprobado y tu membresia ya quedo activa. Tambien recibiras un correo con la confirmacion de tu pago.';
                     $_SESSION['payment_flash_type'] = 'success';
                 } elseif ($paymentStatus === 'processing' || $returnState === 'pending') {
-                    $_SESSION['payment_flash_message'] = 'Tu pago en Mercado Pago esta en proceso. Podras darle seguimiento desde tu portal.';
+                    $_SESSION['payment_flash_message'] = 'Tu pago en Mercado Pago esta en proceso. Te enviaremos un correo con la confirmacion y podras darle seguimiento desde tu portal.';
                     $_SESSION['payment_flash_type'] = 'info';
                 } else {
                     $_SESSION['payment_flash_message'] = 'El pago en Mercado Pago no pudo confirmarse. Puedes intentarlo de nuevo desde tu portal.';
@@ -142,7 +142,7 @@ try {
                 $userUpdate->execute([$userStatus, $userId]);
 
                 $_SESSION['payment_flash_message'] = $status === 'processing'
-                    ? 'Tu pago en Mercado Pago quedo en proceso. Podras darle seguimiento desde tu portal.'
+                    ? 'Tu pago en Mercado Pago quedo en proceso. Te enviaremos un correo con la confirmacion y podras darle seguimiento desde tu portal.'
                     : 'No fue posible confirmar el pago en Mercado Pago. Puedes intentarlo de nuevo desde tu portal.';
                 $_SESSION['payment_flash_type'] = $status === 'processing' ? 'info' : 'error';
             }
