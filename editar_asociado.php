@@ -44,16 +44,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $asociado) {
     $nombre = trim($_POST['nombre'] ?? '');
     $email = trim($_POST['email'] ?? '');
     $rol = trim($_POST['rol'] ?? '');
+    $estatus = trim($_POST['estatus'] ?? '');
 
-    if ($nombre === '' || $email === '' || $rol === '') {
+    if ($nombre === '' || $email === '' || $rol === '' || $estatus === '') {
         $mensaje = 'Todos los campos son obligatorios.';
         $mensajeTipo = 'error';
     } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
         $mensaje = 'El email no es v&aacute;lido.';
         $mensajeTipo = 'error';
     } else {
-        $stmt = $pdo->prepare("UPDATE usuarios SET nombre = ?, email = ?, rol = ? WHERE id = ?");
-        $stmt->execute([$nombre, $email, $rol, $editId]);
+        $stmt = $pdo->prepare("UPDATE usuarios SET nombre = ?, email = ?, rol = ?, estatus = ? WHERE id = ?");
+        $stmt->execute([$nombre, $email, $rol, $estatus, $editId]);
         $mensaje = 'Cambios guardados correctamente.';
         $mensajeTipo = 'success';
         $stmt = $pdo->prepare("SELECT * FROM usuarios WHERE id = ? LIMIT 1");
@@ -111,6 +112,36 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $asociado) {
                     <input type="text" name="rol" required value="<?php echo htmlspecialchars((string)($asociado['rol'] ?? '')); ?>"
                            class="w-full p-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none">
                 </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Estatus</label>
+                    <?php $estatusActual = (string)($asociado['estatus'] ?? ''); ?>
+                    <select name="estatus" required class="w-full p-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none bg-white">
+                        <?php
+                        $estatusOpciones = [
+                            'Pendiente de pago',
+                            'Pago reportado',
+                            'Pago en proceso',
+                            'Activo',
+                            'Afiliado',
+                            'Aprobado',
+                            'Confirmado',
+                            'Pagado',
+                            'Inactivo',
+                            'Suspendido',
+                        ];
+                        foreach ($estatusOpciones as $opcion):
+                        ?>
+                            <option value="<?php echo htmlspecialchars($opcion, ENT_QUOTES, 'UTF-8'); ?>" <?php echo $estatusActual === $opcion ? 'selected' : ''; ?>>
+                                <?php echo htmlspecialchars($opcion, ENT_QUOTES, 'UTF-8'); ?>
+                            </option>
+                        <?php endforeach; ?>
+                        <?php if ($estatusActual !== '' && !in_array($estatusActual, $estatusOpciones, true)): ?>
+                            <option value="<?php echo htmlspecialchars($estatusActual, ENT_QUOTES, 'UTF-8'); ?>" selected>
+                                <?php echo htmlspecialchars($estatusActual, ENT_QUOTES, 'UTF-8'); ?>
+                            </option>
+                        <?php endif; ?>
+                    </select>
+                </div>
                 <button type="submit" class="w-full bg-blue-600 text-white py-3 rounded-xl font-bold shadow-lg hover:bg-blue-700 transition">
                     Guardar Cambios
                 </button>
@@ -120,6 +151,5 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $asociado) {
     </main>
 </body>
 </html>
-
 
 

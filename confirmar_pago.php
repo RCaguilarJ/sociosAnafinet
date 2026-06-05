@@ -21,7 +21,8 @@ $mensajeTipo = 'success';
 
 $flashMessage = (string)($_SESSION['payment_flash_message'] ?? '');
 $flashType = (string)($_SESSION['payment_flash_type'] ?? 'info');
-unset($_SESSION['payment_flash_message'], $_SESSION['payment_flash_type']);
+$flashSource = (string)($_SESSION['payment_flash_source'] ?? '');
+unset($_SESSION['payment_flash_message'], $_SESSION['payment_flash_type'], $_SESSION['payment_flash_source']);
 
 if ($flashMessage !== '') {
     $mensaje = $flashMessage;
@@ -35,6 +36,11 @@ $paymentPopupTitle = $mensajeTipo === 'success'
 $paymentPopupBody = $mensajeTipo === 'success'
     ? 'Tu pago fue procesado correctamente. Ademas de la activacion de tu acceso, el sistema enviara la confirmacion por correo al usuario que realizo el pago.'
     : 'Recibimos tu operacion y el tramite de pago ya esta en proceso. El sistema enviara un correo al usuario que realizo el pago con la confirmacion y el seguimiento correspondiente.';
+
+if ($flashSource === 'manual_confirmation') {
+    $paymentPopupTitle = 'Confirmacion manual registrada';
+    $paymentPopupBody = 'Tu confirmacion manual fue guardada correctamente. Tesoreria revisara el comprobante.';
+}
 
 function payment_status_badge(string $status): array
 {
@@ -221,6 +227,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && ($isPaypalReturn || $isMercadoPagoRe
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['reportar_transferencia'])) {
     [$mensaje, $mensajeTipo] = process_manual_payment_report($pdo, $userId);
+    $_SESSION['payment_flash_message'] = $mensaje;
+    $_SESSION['payment_flash_type'] = $mensajeTipo;
+    $_SESSION['payment_flash_source'] = 'manual_confirmation';
+    header('Location: ' . base_url('confirmar_pago.php'));
+    exit();
 }
 
 $paypalExternalReference = (string)($_SESSION['paypal_membership_external_reference'] ?? '');

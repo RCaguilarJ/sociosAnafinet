@@ -176,10 +176,12 @@ $total_despachos = $pdo->query("SELECT COUNT(DISTINCT empresa) FROM usuarios WHE
                         $nombre = (string)($asoc['nombre'] ?? '');
                         $initial = $nombre !== '' ? strtoupper(substr($nombre, 0, 1)) : '?';
                         $statusBadge = 'bg-slate-100 text-slate-700';
-                        if ($estatus === 'Activo') {
+                        if (function_exists('app_is_membership_active_status') && app_is_membership_active_status($estatus)) {
                             $statusBadge = 'bg-emerald-100 text-emerald-800';
                         } elseif ($estatus === 'Pago reportado') {
                             $statusBadge = 'bg-amber-100 text-amber-800';
+                        } elseif ($estatus === 'Pago en proceso') {
+                            $statusBadge = 'bg-sky-100 text-sky-800';
                         } elseif ($estatus === 'Pendiente de pago') {
                             $statusBadge = 'bg-blue-100 text-blue-800';
                         }
