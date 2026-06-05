@@ -94,7 +94,8 @@ function app_mercadopago_api_url(string $path): string
 
 function app_is_membership_active_status(string $status): bool
 {
-    return normalize_text_value($status) === 'activo';
+    $normalized = normalize_text_value($status);
+    return in_array($normalized, ['activo', 'afiliado'], true);
 }
 
 function app_is_membership_restricted_status(string $status): bool
@@ -204,6 +205,7 @@ function app_send_manual_payment_received_notifications(PDO $pdo, int $userId, s
 {
     $user = app_fetch_membership_user($pdo, $userId);
     if (!is_array($user)) {
+        error_log('Manual payment received notification skipped: user not found for ID ' . $userId);
         return;
     }
 
@@ -251,7 +253,9 @@ function app_send_manual_payment_received_notifications(PDO $pdo, int $userId, s
             . "Revision: Validacion manual por tesoreria\n"
             . "Fecha de registro: {$reportedAtLabel}\n"
             . ($paymentPageUrl !== '' ? "Seguimiento: {$paymentPageUrl}\n" : '');
-        app_send_html_email($userEmail, $userSubject, $userHtml, $userText);
+        if (!app_send_html_email($userEmail, $userSubject, $userHtml, $userText)) {
+            error_log('Manual payment received notification failed for user ' . $userId . ' (' . $userEmail . ')');
+        }
     }
 
     if (filter_var($adminEmail, FILTER_VALIDATE_EMAIL)) {
@@ -290,20 +294,24 @@ function app_send_manual_payment_received_notifications(PDO $pdo, int $userId, s
             . "Fecha de registro: {$reportedAtLabel}\n"
             . ($proofUrl !== '' ? "Comprobante: {$proofUrl}\n" : '')
             . ($adminPageUrl !== '' ? "Panel: {$adminPageUrl}\n" : '');
-        app_send_html_email($adminEmail, $adminSubject, $adminHtml, $adminText);
+        if (!app_send_html_email($adminEmail, $adminSubject, $adminHtml, $adminText)) {
+            error_log('Manual payment received admin notification failed for user ' . $userId . ' to ' . $adminEmail);
+        }
     }
 }
 
-function app_send_manual_payment_approved_notification(PDO $pdo, int $userId): void
+function app_send_manual_payment_approved_notification(PDO $pdo, int $userId): bool
 {
     $user = app_fetch_membership_user($pdo, $userId);
     if (!is_array($user)) {
-        return;
+        error_log('Manual payment approved notification skipped: user not found for ID ' . $userId);
+        return false;
     }
 
     $userEmail = trim((string)($user['email'] ?? ''));
     if (!filter_var($userEmail, FILTER_VALIDATE_EMAIL)) {
-        return;
+        error_log('Manual payment approved notification skipped: invalid email for user ' . $userId . ' (' . $userEmail . ')');
+        return false;
     }
 
     $userName = trim((string)($user['nombre'] ?? 'Asociado'));
@@ -345,7 +353,12 @@ function app_send_manual_payment_approved_notification(PDO $pdo, int $userId): v
         . "Acceso: Portal completo habilitado\n"
         . "Fecha de aprobacion: {$approvedAtLabel}\n"
         . ($dashboardUrl !== '' ? "Panel: {$dashboardUrl}\n" : '');
-    app_send_html_email($userEmail, $subject, $html, $text);
+    $sent = app_send_html_email($userEmail, $subject, $html, $text);
+    if (!$sent) {
+        error_log('Manual payment approved notification failed for user ' . $userId . ' (' . $userEmail . ')');
+    }
+
+    return $sent;
 }
 
 function app_send_membership_payment_notifications(PDO $pdo, string $externalReference): void

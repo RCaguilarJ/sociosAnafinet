@@ -60,3 +60,10 @@
 - Si usas `SMTP_SECURE=tls`, el puerto habitual es `587`. Para conexion SSL implicita usa `SMTP_SECURE=ssl` con puerto `465`.
 - Si el certificado del servidor SMTP no valida correctamente en un entorno local, puedes usar `SMTP_VERIFY_PEER=0` solo para pruebas. En produccion debe mantenerse en `1`.
 - Si `MAIL_TRANSPORT=mail`, la app conserva el comportamiento anterior y usara `mail()` de PHP.
+
+## Verificacion de correo
+
+- Para probar el envio sin pasar por el flujo de pago, ejecuta `php scripts/test_email.php destino@dominio.com`.
+- El script muestra el transporte activo (`mail` o `smtp`) y un resumen seguro de la configuracion cargada.
+- Si el resultado indica fallo, revisa `error_log` de PHP o del servidor web. El sistema ya registra errores de SMTP, falta de `SMTP_HOST`, fallo de `mail()` y rechazos del servidor remoto.
+- En produccion, la configuracion recomendada es `MAIL_TRANSPORT=smtp` con `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE`, `SMTP_USERNAME`, `SMTP_PASSWORD`, `MAIL_FROM_EMAIL` y `PUBLIC_APP_URL`.

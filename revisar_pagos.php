@@ -41,12 +41,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmt = $pdo->prepare("UPDATE usuarios SET estatus = ? WHERE id = ?");
         $stmt->execute([$nuevoEstatus, $targetUserId]);
         if ($action === 'aprobar') {
-            app_send_manual_payment_approved_notification($pdo, $targetUserId);
+            $emailSent = app_send_manual_payment_approved_notification($pdo, $targetUserId);
         }
         $mensaje = $action === 'aprobar'
-            ? 'Pago aprobado y cuenta marcada como Activo.'
+            ? (($emailSent ?? false)
+                ? 'Pago aprobado y cuenta marcada como Activo.'
+                : 'Pago aprobado y cuenta marcada como Activo, pero el correo de confirmacion al usuario no pudo enviarse. Revisa la configuracion de correo del servidor.')
             : 'El usuario fue regresado a Pendiente de pago.';
-        $mensajeTipo = 'success';
+        $mensajeTipo = $action === 'aprobar' && !($emailSent ?? true) ? 'error' : 'success';
     }
 }
 
@@ -54,7 +56,7 @@ $where = "WHERE rol = 'Asociado'";
 if ($filtro === 'pendientes') {
     $where .= " AND estatus IN ('Pendiente de pago', 'Pago reportado')";
 } elseif ($filtro === 'aprobados') {
-    $where .= " AND estatus = 'Activo'";
+    $where .= " AND estatus IN ('Activo', 'Afiliado')";
 }
 
 $stats = [
@@ -65,7 +67,7 @@ $stats = [
 
 $stats['pendientes_pago'] = (int) $pdo->query("SELECT COUNT(*) FROM usuarios WHERE rol = 'Asociado' AND estatus = 'Pendiente de pago'")->fetchColumn();
 $stats['pagos_reportados'] = (int) $pdo->query("SELECT COUNT(*) FROM usuarios WHERE rol = 'Asociado' AND estatus = 'Pago reportado'")->fetchColumn();
-$stats['activos'] = (int) $pdo->query("SELECT COUNT(*) FROM usuarios WHERE rol = 'Asociado' AND estatus = 'Activo'")->fetchColumn();
+$stats['activos'] = (int) $pdo->query("SELECT COUNT(*) FROM usuarios WHERE rol = 'Asociado' AND estatus IN ('Activo', 'Afiliado')")->fetchColumn();
 
 $stmt = $pdo->query("
     SELECT id, nombre, email, estatus, referencia_pago, pago_reportado_at, comprobante_pago, creado_at
@@ -76,6 +78,7 @@ $stmt = $pdo->query("
             WHEN 'Pago reportado' THEN 1
             WHEN 'Pendiente de pago' THEN 2
             WHEN 'Activo' THEN 3
+            WHEN 'Afiliado' THEN 3
             ELSE 4
         END,
         pago_reportado_at DESC,
@@ -153,7 +156,7 @@ $usuarios = $stmt->fetchAll();
                         $badgeClass = 'bg-slate-100 text-slate-700';
                         if ($estatus === 'Pago reportado') {
                             $badgeClass = 'bg-amber-100 text-amber-800';
-                        } elseif ($estatus === 'Activo') {
+                        } elseif (app_is_membership_active_status($estatus)) {
                             $badgeClass = 'bg-emerald-100 text-emerald-800';
                         } elseif ($estatus === 'Pendiente de pago') {
                             $badgeClass = 'bg-blue-100 text-blue-800';
@@ -198,7 +201,7 @@ $usuarios = $stmt->fetchAll();
                                                 <a href="<?php echo BASE_URL; ?>/editar_asociado.php?id=<?php echo (int) $usuario['id']; ?>" class="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-700 hover:bg-slate-100">
                                                     Editar
                                                 </a>
-                                                <?php if ($estatus !== 'Activo'): ?>
+                                                <?php if (!app_is_membership_active_status($estatus)): ?>
                                                     <form method="POST">
                                                         <input type="hidden" name="user_id" value="<?php echo (int) $usuario['id']; ?>">
                                                         <input type="hidden" name="action" value="aprobar">
