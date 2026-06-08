@@ -1,6 +1,14 @@
 <?php
 require_once __DIR__ . '/config.php';
 
+if (!function_exists('app_session_driver')) {
+    function app_session_driver(): string
+    {
+        $driver = strtolower(trim((string)env_value('SESSION_DRIVER', 'database')));
+        return in_array($driver, ['database', 'files'], true) ? $driver : 'database';
+    }
+}
+
 if (!class_exists('DatabaseSessionHandler')) {
     class DatabaseSessionHandler implements SessionHandlerInterface
     {
@@ -150,7 +158,7 @@ if (!function_exists('app_start_session')) {
         }
         ini_set('session.gc_maxlifetime', (string)$ttl);
 
-        if ($pdo instanceof PDO) {
+        if (app_session_driver() === 'database' && $pdo instanceof PDO) {
             try {
                 ensure_session_table($pdo);
                 session_set_save_handler(new DatabaseSessionHandler($pdo, $ttl), true);
@@ -163,7 +171,9 @@ if (!function_exists('app_start_session')) {
             }
         }
 
-        session_start();
+        if (!session_start()) {
+            error_log('Session start failed using driver: ' . app_session_driver());
+        }
     }
 }
 ?>
