@@ -28,6 +28,10 @@ ensure_user_payment_columns($pdo);
 $mensaje = '';
 $mensajeTipo = 'success';
 $filtro = trim($_GET['filtro'] ?? 'pendientes');
+$emailPopupMessage = '';
+$emailPopupTitle = 'Correo enviado correctamente';
+$emailPopupType = 'success';
+$masterAccess = current_user_has_master_access($pdo ?? null, $userId);
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $targetUserId = (int) ($_POST['user_id'] ?? 0);
@@ -40,12 +44,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $statusStmt = $pdo->prepare("SELECT estatus FROM usuarios WHERE id = ? LIMIT 1");
         $statusStmt->execute([$targetUserId]);
         $previousStatus = (string)($statusStmt->fetchColumn() ?: '');
+        $userDetailStmt = $pdo->prepare("SELECT email FROM usuarios WHERE id = ? LIMIT 1");
+        $userDetailStmt->execute([$targetUserId]);
+        $targetUserEmail = trim((string)($userDetailStmt->fetchColumn() ?: ''));
         $nuevoEstatus = $action === 'aprobar' ? 'Activo' : 'Pendiente de pago';
         $stmt = $pdo->prepare("UPDATE usuarios SET estatus = ? WHERE id = ?");
         $stmt->execute([$nuevoEstatus, $targetUserId]);
         if ($action === 'aprobar') {
             app_apply_membership_cycle($pdo, $targetUserId, date('Y-m-d H:i:s'));
             $emailSent = app_send_manual_payment_activation_notification_if_needed($pdo, $targetUserId, $previousStatus, 'Activo');
+            if (($emailSent ?? false) && $masterAccess) {
+                $emailPopupMessage = 'Se envio correctamente el correo de confirmacion de acceso al foro a '
+                    . ($targetUserEmail !== '' ? $targetUserEmail : 'este usuario')
+                    . '.';
+            }
+            if (!($emailSent ?? false) && $masterAccess) {
+                $emailPopupTitle = 'No se envio el correo';
+                $emailPopupType = 'error';
+                $emailPopupMessage = app_mail_last_error() !== ''
+                    ? app_mail_last_error()
+                    : 'El sistema no devolvio detalle adicional sobre el fallo del correo.';
+            }
         }
         $mensaje = $action === 'aprobar'
             ? (($emailSent ?? false)
@@ -107,6 +126,30 @@ $usuarios = $stmt->fetchAll();
     <title>Revisar Pagos - Anafinet</title>
 </head>
 <body class="bg-slate-50 min-h-screen">
+    <?php if ($emailPopupMessage !== ''): ?>
+        <div id="email-status-popup" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 p-4">
+            <div class="w-full max-w-lg rounded-[2rem] bg-white p-6 shadow-2xl">
+                <div class="flex items-start justify-between gap-4">
+                    <div>
+                        <p class="text-xs font-bold uppercase tracking-[0.18em] <?php echo $emailPopupType === 'error' ? 'text-red-600' : 'text-emerald-600'; ?>">Master log</p>
+                        <h2 class="mt-2 text-2xl font-bold text-slate-900"><?php echo htmlspecialchars($emailPopupTitle, ENT_QUOTES, 'UTF-8'); ?></h2>
+                    </div>
+                    <button type="button" id="email-status-popup-close" class="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 text-slate-500 transition hover:bg-slate-100 hover:text-slate-700" aria-label="Cerrar aviso">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </div>
+                <div class="mt-5 rounded-2xl px-4 py-4 text-sm font-medium <?php echo $emailPopupType === 'error' ? 'border border-red-100 bg-red-50 text-red-900' : 'border border-emerald-100 bg-emerald-50 text-emerald-900'; ?>">
+                    <?php echo htmlspecialchars($emailPopupMessage, ENT_QUOTES, 'UTF-8'); ?>
+                </div>
+                <div class="mt-6 flex justify-end">
+                    <button type="button" id="email-status-popup-accept" class="inline-flex items-center justify-center rounded-2xl px-6 py-3 text-sm font-bold text-white transition <?php echo $emailPopupType === 'error' ? 'bg-red-600 hover:bg-red-700' : 'bg-emerald-600 hover:bg-emerald-700'; ?>">
+                        Entendido
+                    </button>
+                </div>
+            </div>
+        </div>
+    <?php endif; ?>
+
     <?php
     $activePage = 'revisar_pagos';
     require 'menu.php';
@@ -246,5 +289,24 @@ $usuarios = $stmt->fetchAll();
             <?php endif; ?>
         </div>
     </main>
+    <?php if ($emailPopupMessage !== ''): ?>
+    <script>
+        (function () {
+            const popup = document.getElementById('email-status-popup');
+            if (!popup) {
+                return;
+            }
+
+            const closePopup = () => popup.classList.add('hidden');
+            document.getElementById('email-status-popup-close')?.addEventListener('click', closePopup);
+            document.getElementById('email-status-popup-accept')?.addEventListener('click', closePopup);
+            popup.addEventListener('click', (event) => {
+                if (event.target === popup) {
+                    closePopup();
+                }
+            });
+        }());
+    </script>
+    <?php endif; ?>
 </body>
 </html>

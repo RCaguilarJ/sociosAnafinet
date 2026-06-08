@@ -28,6 +28,10 @@ $editId = isset($_GET['id']) ? (int)$_GET['id'] : 0;
 $asociado = null;
 $mensaje = '';
 $mensajeTipo = 'success';
+$emailPopupMessage = '';
+$emailPopupTitle = 'Correo enviado correctamente';
+$emailPopupType = 'success';
+$masterAccess = current_user_has_master_access($pdo ?? null, $userId);
 
 if ($editId > 0) {
     $stmt = $pdo->prepare("SELECT * FROM usuarios WHERE id = ? LIMIT 1");
@@ -58,6 +62,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $asociado) {
         $stmt->execute([$nombre, $email, $rol, $estatus, $editId]);
         $emailSent = app_send_manual_payment_activation_notification_if_needed($pdo, $editId, $previousStatus, $estatus);
         $activatedByStatusChange = !app_is_membership_active_status($previousStatus) && app_is_membership_active_status($estatus);
+        if ($activatedByStatusChange && $emailSent && $masterAccess) {
+            $emailPopupMessage = 'Se envio correctamente el correo de confirmacion de acceso al foro a '
+                . $email
+                . '.';
+        }
+        if ($activatedByStatusChange && !$emailSent && $masterAccess) {
+            $emailPopupTitle = 'No se envio el correo';
+            $emailPopupType = 'error';
+            $emailPopupMessage = app_mail_last_error() !== ''
+                ? app_mail_last_error()
+                : 'El sistema no devolvio detalle adicional sobre el fallo del correo.';
+        }
         if ($activatedByStatusChange && !$emailSent) {
             $mensaje = 'Cambios guardados correctamente, pero no se pudo enviar el correo de activacion al usuario.';
             $mensajeTipo = 'error';
@@ -82,6 +98,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $asociado) {
     <title>Editar Asociado - Anafinet</title>
 </head>
 <body class="bg-slate-50 min-h-screen">
+    <?php if ($emailPopupMessage !== ''): ?>
+        <div id="email-status-popup" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 p-4">
+            <div class="w-full max-w-lg rounded-[2rem] bg-white p-6 shadow-2xl">
+                <div class="flex items-start justify-between gap-4">
+                    <div>
+                        <p class="text-xs font-bold uppercase tracking-[0.18em] <?php echo $emailPopupType === 'error' ? 'text-red-600' : 'text-emerald-600'; ?>">Master log</p>
+                        <h2 class="mt-2 text-2xl font-bold text-slate-900"><?php echo htmlspecialchars($emailPopupTitle, ENT_QUOTES, 'UTF-8'); ?></h2>
+                    </div>
+                    <button type="button" id="email-status-popup-close" class="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 text-slate-500 transition hover:bg-slate-100 hover:text-slate-700" aria-label="Cerrar aviso">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </div>
+                <div class="mt-5 rounded-2xl px-4 py-4 text-sm font-medium <?php echo $emailPopupType === 'error' ? 'border border-red-100 bg-red-50 text-red-900' : 'border border-emerald-100 bg-emerald-50 text-emerald-900'; ?>">
+                    <?php echo htmlspecialchars($emailPopupMessage, ENT_QUOTES, 'UTF-8'); ?>
+                </div>
+                <div class="mt-6 flex justify-end">
+                    <button type="button" id="email-status-popup-accept" class="inline-flex items-center justify-center rounded-2xl px-6 py-3 text-sm font-bold text-white transition <?php echo $emailPopupType === 'error' ? 'bg-red-600 hover:bg-red-700' : 'bg-emerald-600 hover:bg-emerald-700'; ?>">
+                        Entendido
+                    </button>
+                </div>
+            </div>
+        </div>
+    <?php endif; ?>
+
     <?php
     $activePage = 'asociados';
     require 'menu.php';
@@ -157,6 +197,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $asociado) {
             <?php endif; ?>
         </div>
     </main>
+    <?php if ($emailPopupMessage !== ''): ?>
+    <script>
+        (function () {
+            const popup = document.getElementById('email-status-popup');
+            if (!popup) {
+                return;
+            }
+
+            const closePopup = () => popup.classList.add('hidden');
+            document.getElementById('email-status-popup-close')?.addEventListener('click', closePopup);
+            document.getElementById('email-status-popup-accept')?.addEventListener('click', closePopup);
+            popup.addEventListener('click', (event) => {
+                if (event.target === popup) {
+                    closePopup();
+                }
+            });
+        }());
+    </script>
+    <?php endif; ?>
 </body>
 </html>
-

@@ -1,5 +1,20 @@
 <?php
 
+function app_mail_set_last_error(string $message): void
+{
+    $GLOBALS['app_mail_last_error'] = trim($message);
+}
+
+function app_mail_last_error(): string
+{
+    return trim((string)($GLOBALS['app_mail_last_error'] ?? ''));
+}
+
+function app_mail_clear_last_error(): void
+{
+    unset($GLOBALS['app_mail_last_error']);
+}
+
 function app_payment_admin_email(): string
 {
     return (string)env_value('PAYMENT_ADMIN_EMAIL', 'tesoreria@anafinet.mx');
@@ -298,13 +313,17 @@ function app_mail_smtp_normalize_message(string $message): string
 function app_send_smtp_email(string $to, string $subject, array $headers, string $message, string $envelopeFrom): bool
 {
     if (!function_exists('stream_socket_client')) {
-        error_log('Email not sent via SMTP: stream_socket_client() no esta disponible.');
+        $message = 'stream_socket_client() no esta disponible.';
+        app_mail_set_last_error($message);
+        error_log('Email not sent via SMTP: ' . $message);
         return false;
     }
 
     $host = app_smtp_host();
     if ($host === '') {
-        error_log('Email not sent via SMTP: SMTP_HOST no esta configurado.');
+        $message = 'SMTP_HOST no esta configurado.';
+        app_mail_set_last_error($message);
+        error_log('Email not sent via SMTP: ' . $message);
         return false;
     }
 
@@ -323,7 +342,9 @@ function app_send_smtp_email(string $to, string $subject, array $headers, string
 
     $socket = @stream_socket_client($remote, $errno, $errstr, $timeout, STREAM_CLIENT_CONNECT, $context);
     if (!is_resource($socket)) {
-        error_log('Email not sent via SMTP: no fue posible conectar a ' . $remote . ' (' . $errno . ') ' . $errstr);
+        $message = 'No fue posible conectar a ' . $remote . ' (' . $errno . ') ' . $errstr;
+        app_mail_set_last_error($message);
+        error_log('Email not sent via SMTP: ' . $message);
         return false;
     }
 
@@ -368,9 +389,11 @@ function app_send_smtp_email(string $to, string $subject, array $headers, string
         app_mail_smtp_write($socket, $smtpData);
         app_mail_smtp_expect($socket, [250]);
         app_mail_smtp_expect($socket, [221], 'QUIT');
+        app_mail_clear_last_error();
 
         return true;
     } catch (Throwable $e) {
+        app_mail_set_last_error($e->getMessage());
         error_log('Email not sent via SMTP: ' . $e->getMessage());
         return false;
     } finally {
@@ -544,8 +567,11 @@ function app_mail_wrap_layout(
 function app_send_html_email(string $to, string $subject, string $htmlBody, ?string $textBody = null, array $options = []): bool
 {
     if (!filter_var($to, FILTER_VALIDATE_EMAIL)) {
+        app_mail_set_last_error('El destinatario no tiene un email valido.');
         return false;
     }
+
+    app_mail_clear_last_error();
 
     $sender = app_mail_resolve_sender($options);
     $boundary = 'anafinet_' . bin2hex(random_bytes(12));
@@ -558,6 +584,7 @@ function app_send_html_email(string $to, string $subject, string $htmlBody, ?str
     }
 
     if (!function_exists('mail')) {
+        app_mail_set_last_error('mail() no esta disponible.');
         error_log('Email not sent: mail() no esta disponible.');
         return false;
     }
@@ -566,7 +593,10 @@ function app_send_html_email(string $to, string $subject, string $htmlBody, ?str
     $sent = @mail($to, $encodedSubject, $message, implode("\r\n", $headers));
 
     if (!$sent) {
+        app_mail_set_last_error('mail() devolvio false al intentar enviar el correo.');
         error_log('Email not sent to ' . $to . ' with subject ' . $subject);
+    } else {
+        app_mail_clear_last_error();
     }
 
     return $sent;

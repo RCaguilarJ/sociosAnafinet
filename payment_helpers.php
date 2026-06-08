@@ -535,12 +535,14 @@ function app_send_manual_payment_approved_notification(PDO $pdo, int $userId): b
 {
     $user = app_fetch_membership_user($pdo, $userId);
     if (!is_array($user)) {
+        app_mail_set_last_error('No se encontro el usuario para enviar la confirmacion de acceso.');
         error_log('Manual payment approved notification skipped: user not found for ID ' . $userId);
         return false;
     }
 
     $userEmail = trim((string)($user['email'] ?? ''));
     if (!filter_var($userEmail, FILTER_VALIDATE_EMAIL)) {
+        app_mail_set_last_error('El usuario no tiene un email valido para recibir la confirmacion de acceso.');
         error_log('Manual payment approved notification skipped: invalid email for user ' . $userId . ' (' . $userEmail . ')');
         return false;
     }
