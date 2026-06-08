@@ -109,6 +109,18 @@ try {
     header('Pragma: no-cache');
 
     if (!isset($_SESSION['user_id'])) {
+        if (app_session_debug_enabled()) {
+            $params = [
+                'error' => 'session_lost',
+                'session_debug' => '1',
+                'driver' => function_exists('app_session_driver') ? app_session_driver() : 'unknown',
+                'auth_marker' => (string)($_GET['login_debug'] ?? ''),
+                'auth_user' => (string)($_GET['auth_user'] ?? ''),
+            ];
+            header('Location: ' . base_url('index.php') . '?' . http_build_query($params));
+            exit();
+        }
+
         header('Location: index.php');
         exit();
     }
@@ -124,6 +136,15 @@ try {
     $displayUserName = app_display_user_name((string)($_SESSION['user_name'] ?? ''), (string)($_SESSION['user_rol'] ?? ''));
     $membershipExpiresAt = '';
     $membershipDaysRemaining = null;
+    $loginDebugMessage = '';
+
+    if (app_session_debug_enabled() && (string)($_GET['login_debug'] ?? '') === 'auth_ok') {
+        $loginDebugMessage = 'Diagnostico login: auth.php autentico correctamente al usuario '
+            . (int)($_SESSION['user_id'] ?? 0)
+            . ' usando SESSION_DRIVER='
+            . (function_exists('app_session_driver') ? app_session_driver() : 'unknown')
+            . '.';
+    }
 
     if ($pdo instanceof PDO) {
         try {
@@ -189,6 +210,12 @@ try {
 ?>
 
     <main class="md:ml-64 p-8">
+        <?php if ($loginDebugMessage !== ''): ?>
+            <div class="mb-6 rounded-2xl border border-sky-200 bg-sky-50 px-4 py-3 text-sm text-sky-900">
+                <?php echo htmlspecialchars($loginDebugMessage, ENT_QUOTES, 'UTF-8'); ?>
+            </div>
+        <?php endif; ?>
+
         <?php if ($demoMode): ?>
             <div class="mb-6 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
                 Modo demo activo: la base de datos no esta conectada en Vercel. Solo se habilito el acceso temporal con credenciales demo.

@@ -297,6 +297,13 @@ if (!function_exists('app_environment_label')) {
     }
 }
 
+if (!function_exists('app_session_debug_enabled')) {
+    function app_session_debug_enabled(): bool
+    {
+        return env_value('SESSION_DEBUG', '0') === '1';
+    }
+}
+
 if (!function_exists('app_current_database_name')) {
     function app_current_database_name(?PDO $pdo = null): string
     {

@@ -4,6 +4,20 @@ require_once 'config.php';
 $demoLoginAvailable = app_demo_login_available();
 $demoCredentials = app_demo_credentials();
 $loginError = $_GET['error'] ?? '';
+$sessionDebugEnabled = app_session_debug_enabled();
+$sessionDebugMessage = '';
+
+if ($sessionDebugEnabled && $loginError === 'session_lost') {
+    $sessionDebugMessage = 'Diagnostico login: auth.php reporto autenticacion correcta'
+        . ((string)($_GET['auth_marker'] ?? '') === 'auth_ok' ? ' antes de redirigir a dashboard.php.' : '.')
+        . ' El dashboard no encontro $_SESSION["user_id"] en el siguiente request.'
+        . ' SESSION_DRIVER=' . htmlspecialchars((string)($_GET['driver'] ?? 'unknown'), ENT_QUOTES, 'UTF-8')
+        . ((string)($_GET['auth_user'] ?? '') !== '' ? ' | Usuario autenticado: #' . (int)$_GET['auth_user'] : '');
+} elseif ($sessionDebugEnabled && $loginError === 'session_start_failed') {
+    $sessionDebugMessage = 'Diagnostico login: session_start() no pudo dejar activa la sesion.'
+        . ' SESSION_DRIVER=' . htmlspecialchars((string)($_GET['driver'] ?? 'unknown'), ENT_QUOTES, 'UTF-8')
+        . ((string)($_GET['session_error'] ?? '') !== '' ? ' | Detalle: ' . htmlspecialchars((string)$_GET['session_error'], ENT_QUOTES, 'UTF-8') : '');
+}
 ?>
 
 <!DOCTYPE html>
@@ -31,6 +45,20 @@ $loginError = $_GET['error'] ?? '';
         <?php elseif ($loginError === 'db'): ?>
             <div class="mb-6 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
                 No fue posible iniciar sesion por un problema de conexion o configuracion del servidor.
+            </div>
+        <?php elseif ($loginError === 'session_lost'): ?>
+            <div class="mb-6 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+                La autenticacion parece completarse, pero la sesion no se conserva al entrar al dashboard.
+            </div>
+        <?php elseif ($loginError === 'session_start_failed'): ?>
+            <div class="mb-6 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+                La sesion no pudo iniciarse correctamente antes de validar el login.
+            </div>
+        <?php endif; ?>
+
+        <?php if ($sessionDebugMessage !== ''): ?>
+            <div class="mb-6 rounded-lg border border-sky-200 bg-sky-50 p-3 text-sm text-sky-900">
+                <?php echo htmlspecialchars_decode($sessionDebugMessage); ?>
             </div>
         <?php endif; ?>
 

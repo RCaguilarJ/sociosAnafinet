@@ -1,8 +1,31 @@
 <?php
 require_once __DIR__ . '/bootstrap.php';
 
+if (!function_exists('app_auth_redirect_url')) {
+    function app_auth_redirect_url(string $path, array $params = []): string
+    {
+        $url = base_url($path);
+        if ($params === []) {
+            return $url;
+        }
+
+        return $url . (strpos($url, '?') === false ? '?' : '&') . http_build_query($params);
+    }
+}
+
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     header('Location: index.php');
+    exit();
+}
+
+if (app_session_debug_enabled() && session_status() !== PHP_SESSION_ACTIVE) {
+    $params = [
+        'error' => 'session_start_failed',
+        'session_debug' => '1',
+        'driver' => function_exists('app_session_driver') ? app_session_driver() : 'unknown',
+        'session_error' => (string)($GLOBALS['appSessionError'] ?? ''),
+    ];
+    header('Location: ' . app_auth_redirect_url('index.php', $params));
     exit();
 }
 
@@ -23,7 +46,10 @@ if (!($pdo instanceof PDO) && $allowDemoLogin) {
         $_SESSION['demo_mode'] = true;
         session_write_close();
 
-        header('Location: dashboard.php');
+        $redirectParams = app_session_debug_enabled()
+            ? ['login_debug' => 'auth_ok', 'auth_user' => 1, 'driver' => function_exists('app_session_driver') ? app_session_driver() : 'unknown']
+            : [];
+        header('Location: ' . app_auth_redirect_url('dashboard.php', $redirectParams));
         exit();
     }
 
@@ -72,7 +98,10 @@ try {
     $_SESSION['master_access'] = app_email_is_master((string)($_SESSION['user_email'] ?? ''));
     session_write_close();
 
-    header('Location: dashboard.php');
+    $redirectParams = app_session_debug_enabled()
+        ? ['login_debug' => 'auth_ok', 'auth_user' => (int)$user['id'], 'driver' => function_exists('app_session_driver') ? app_session_driver() : 'unknown']
+        : [];
+    header('Location: ' . app_auth_redirect_url('dashboard.php', $redirectParams));
     exit();
 } catch (Throwable $e) {
     header('Location: index.php?error=db');

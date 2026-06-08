@@ -1,251 +1,621 @@
 <?php
-require_once __DIR__ . '/bootstrap.php';
-require_once 'role_helpers.php';
 
-if (!isset($_SESSION['user_id'])) {
-    header("Location: index.php");
-    exit();
-}
-
-$userRole = $_SESSION['user_rol'] ?? '';
-$userId = isset($_SESSION['user_id']) ? (int)$_SESSION['user_id'] : null;
-if (isset($pdo)) {
-    $dbRole = fetch_user_role($pdo, $userId);
-    if ($dbRole !== null) {
-        $userRole = $dbRole;
+if (!function_exists('app_mail_set_last_error')) {
+    function app_mail_set_last_error(string $message): void
+    {
+        $GLOBALS['app_mail_last_error'] = trim($message);
     }
 }
-$isAdmin = is_admin_role($userRole);
 
-if (!$isAdmin) {
-    header("Location: dashboard.php");
-    exit();
-}
-
-require_database_connection($pdo ?? null, 'asociados', 'Editar Asociado');
-
-$editId = isset($_GET['id']) ? (int)$_GET['id'] : 0;
-$asociado = null;
-$mensaje = '';
-$mensajeTipo = 'success';
-$emailPopupMessage = '';
-$emailPopupTitle = 'Correo enviado correctamente';
-$emailPopupType = 'success';
-$masterAccess = current_user_has_master_access($pdo ?? null, $userId);
-
-if ($editId > 0) {
-    $stmt = $pdo->prepare("SELECT * FROM usuarios WHERE id = ? LIMIT 1");
-    $stmt->execute([$editId]);
-    $asociado = $stmt->fetch();
-}
-
-if (!$asociado) {
-    $mensaje = 'No se encontr&oacute; el usuario solicitado.';
-    $mensajeTipo = 'error';
-}
-
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && $asociado) {
-    $nombre = trim($_POST['nombre'] ?? '');
-    $email = trim($_POST['email'] ?? '');
-    $rol = trim($_POST['rol'] ?? '');
-    $estatus = trim($_POST['estatus'] ?? '');
-    $previousStatus = trim((string)($asociado['estatus'] ?? ''));
-
-    if ($nombre === '' || $email === '' || $rol === '' || $estatus === '') {
-        $mensaje = 'Todos los campos son obligatorios.';
-        $mensajeTipo = 'error';
-    } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-        $mensaje = 'El email no es v&aacute;lido.';
-        $mensajeTipo = 'error';
-    } else {
-        $stmt = $pdo->prepare("UPDATE usuarios SET nombre = ?, email = ?, rol = ?, estatus = ? WHERE id = ?");
-        $stmt->execute([$nombre, $email, $rol, $estatus, $editId]);
-        
-        $activatedByStatusChange = !app_is_membership_active_status($previousStatus) && app_is_membership_active_status($estatus);
-        $emailSent = false;
-
-        if ($activatedByStatusChange) {
-            $introActivacion = "<p>Hola <strong>" . htmlspecialchars($nombre, ENT_QUOTES, 'UTF-8') . "</strong>,</p>"
-                             . "<p>Nos complace informarte que tu pago ha sido verificado con éxito por nuestro equipo administrativo.</p>"
-                             . "<p>Tu membresía ya se encuentra completamente activa, por lo que a partir de este momento puedes disfrutar de todos los beneficios y recursos exclusivos dentro de nuestra comunidad corporativa.</p>";
-            
-            $buttonForo = app_mail_button(BASE_URL . '/foro.php', 'Acceder al Foro Fiscal');
-            
-            $htmlActivacion = app_mail_wrap_layout(
-                'Membresía Activa',
-                '¡Tu pago fue verificado correctamente!',
-                $introActivacion,
-                '', 
-                $buttonForo,
-                'Si tienes algún problema con tus accesos, contacta a soporte.',
-                'Tu cuenta ha sido activada correctamente'
-            );
-
-            // CORRECCIÓN SMTP: Sale desde noreply corporativo pero firma visualmente como Tesorería y redirige respuestas allá
-            $emailSent = app_send_html_email(
-                $email,
-                '¡Membresía Activada! Bienvenido al Foro Anafinet',
-                $htmlActivacion,
-                null,
-                [
-                    'from_email' => 'noreply@anafinet.mx',
-                    'from_name'  => 'Tesorería Anafinet',
-                    'reply_to'   => 'tesoreria@anafinet.mx'
-                ]
-            );
-        }
-
-        if ($activatedByStatusChange && $emailSent && $masterAccess) {
-            $emailPopupMessage = 'Se envió correctamente el correo de confirmación de acceso al foro a ' . $email . '.';
-        }
-        if ($activatedByStatusChange && !$emailSent && $masterAccess) {
-            $emailPopupTitle = 'No se envió el correo';
-            $emailPopupType = 'error';
-            $emailPopupMessage = app_mail_last_error() !== ''
-                ? app_mail_last_error()
-                : 'El servidor de correo rechazó los encabezados SMTP en producción.';
-        }
-        if ($activatedByStatusChange && !$emailSent) {
-            $mensaje = 'Cambios guardados correctamente, pero no se pudo enviar el correo de activación al usuario.';
-            $mensajeTipo = 'error';
-        } else {
-            $mensaje = 'Cambios guardados correctamente.';
-            $mensajeTipo = 'success';
-        }
-        
-        $stmt = $pdo->prepare("SELECT * FROM usuarios WHERE id = ? LIMIT 1");
-        $stmt->execute([$editId]);
-        $asociado = $stmt->fetch();
+if (!function_exists('app_mail_last_error')) {
+    function app_mail_last_error(): string
+    {
+        return (string)($GLOBALS['app_mail_last_error'] ?? '');
     }
 }
-?>
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="<?php echo BASE_URL; ?>/assets/tailwind.build.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <title>Editar Asociado - Anafinet</title>
-</head>
-<body class="bg-slate-50 min-h-screen">
-    <?php if ($emailPopupMessage !== ''): ?>
-        <div id="email-status-popup" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 p-4">
-            <div class="w-full max-w-lg rounded-[2rem] bg-white p-6 shadow-2xl">
-                <div class="flex items-start justify-between gap-4">
-                    <div>
-                        <p class="text-xs font-bold uppercase tracking-[0.18em] <?php echo $emailPopupType === 'error' ? 'text-red-600' : 'text-emerald-600'; ?>">Master log</p>
-                        <h2 class="mt-2 text-2xl font-bold text-slate-900"><?php echo htmlspecialchars($emailPopupTitle, ENT_QUOTES, 'UTF-8'); ?></h2>
-                    </div>
-                    <button type="button" id="email-status-popup-close" class="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 text-slate-500 transition hover:bg-slate-100 hover:text-slate-700" aria-label="Cerrar aviso">
-                        <i class="fa-solid fa-xmark"></i>
-                    </button>
-                </div>
-                <div class="mt-5 rounded-2xl px-4 py-4 text-sm font-medium <?php echo $emailPopupType === 'error' ? 'border border-red-100 bg-red-50 text-red-900' : 'border border-emerald-100 bg-emerald-50 text-emerald-900'; ?>">
-                    <?php echo htmlspecialchars($emailPopupMessage, ENT_QUOTES, 'UTF-8'); ?>
-                </div>
-                <div class="mt-6 flex justify-end">
-                    <button type="button" id="email-status-popup-accept" class="inline-flex items-center justify-center rounded-2xl px-6 py-3 text-sm font-bold text-white transition <?php echo $emailPopupType === 'error' ? 'bg-red-600 hover:bg-red-700' : 'bg-emerald-600 hover:bg-emerald-700'; ?>">
-                        Entendido
-                    </button>
-                </div>
-            </div>
-        </div>
-    <?php endif; ?>
 
-    <?php
-    $activePage = 'asociados';
-    require 'menu.php';
-    ?>
+if (!function_exists('app_mail_html_escape')) {
+    function app_mail_html_escape(string $text): string
+    {
+        return htmlspecialchars($text, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+    }
+}
 
-    <main class="md:ml-64 p-6 md:p-10 flex justify-center">
-        <div class="bg-white rounded-3xl border border-gray-100 shadow-sm p-8 w-full max-w-xl">
-            <div class="flex items-center justify-between mb-6">
-                <div>
-                    <h1 class="text-2xl font-bold text-gray-800">Editar Asociado</h1>
-                    <p class="text-gray-500 text-sm">Actualiza los datos del miembro seleccionado.</p>
-                </div>
-                <a href="<?php echo BASE_URL; ?>/lista_asociados.php" class="text-sm text-gray-500 hover:text-gray-700">Volver</a>
-            </div>
+if (!function_exists('app_mail_encode_header')) {
+    function app_mail_encode_header(string $value): string
+    {
+        if ($value === '') {
+            return '';
+        }
 
-            <?php if ($mensaje): ?>
-                <div class="mb-4 p-3 rounded-lg text-sm <?php echo $mensajeTipo === 'error' ? 'bg-red-50 text-red-600' : 'bg-green-50 text-green-600'; ?>">
-                    <?php echo htmlspecialchars_decode($mensaje); ?>
-                </div>
-            <?php endif; ?>
+        if (function_exists('mb_encode_mimeheader')) {
+            return mb_encode_mimeheader($value, 'UTF-8', 'B', "\r\n");
+        }
 
-            <?php if ($asociado): ?>
-            <form method="POST" class="space-y-5">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Nombre</label>
-                    <input type="text" name="nombre" required value="<?php echo htmlspecialchars((string)($asociado['nombre'] ?? '')); ?>"
-                           class="w-full p-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
-                    <input type="email" name="email" required value="<?php echo htmlspecialchars((string)($asociado['email'] ?? '')); ?>"
-                           class="w-full p-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Rol</label>
-                    <input type="text" name="rol" required value="<?php echo htmlspecialchars((string)($asociado['rol'] ?? '')); ?>"
-                           class="w-full p-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Estatus</label>
-                    <?php $estatusActual = (string)($asociado['estatus'] ?? ''); ?>
-                    <select name="estatus" required class="w-full p-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none bg-white">
-                        <?php
-                        $estatusOpciones = [
-                            'Pendiente de pago',
-                            'Pago reportado',
-                            'Pago en proceso',
-                            'Activo',
-                            'Afiliado',
-                            'Aprobado',
-                            'Confirmado',
-                            'Pagado',
-                            'Inactivo',
-                            'Suspendido',
-                        ];
-                        foreach ($estatusOpciones as $opcion):
-                        ?>
-                            <option value="<?php echo htmlspecialchars($opcion, ENT_QUOTES, 'UTF-8'); ?>" <?php echo $estatusActual === $opcion ? 'selected' : ''; ?>>
-                                <?php echo htmlspecialchars($opcion, ENT_QUOTES, 'UTF-8'); ?>
-                            </option>
-                        <?php endforeach; ?>
-                        <?php if ($estatusActual !== '' && !in_array($estatusActual, $estatusOpciones, true)): ?>
-                            <option value="<?php echo htmlspecialchars($estatusActual, ENT_QUOTES, 'UTF-8'); ?>" selected>
-                                <?php echo htmlspecialchars($estatusActual, ENT_QUOTES, 'UTF-8'); ?>
-                            </option>
-                        <?php endif; ?>
-                    </select>
-                </div>
-                <button type="submit" class="w-full bg-blue-600 text-white py-3 rounded-xl font-bold shadow-lg hover:bg-blue-700 transition">
-                    Guardar Cambios
-                </button>
-            </form>
-            <?php endif; ?>
-        </div>
-    </main>
-    <?php if ($emailPopupMessage !== ''): ?>
-    <script>
-        (function () {
-            const popup = document.getElementById('email-status-popup');
-            if (!popup) {
-                return;
+        return $value;
+    }
+}
+
+if (!function_exists('app_mail_transport')) {
+    function app_mail_transport(): string
+    {
+        $transport = strtolower(trim((string)env_value('MAIL_TRANSPORT', env_value('MAIL_MAILER', 'mail'))));
+        if ($transport === 'smtp') {
+            return 'smtp';
+        }
+
+        return 'mail';
+    }
+}
+
+if (!function_exists('app_mail_from_email')) {
+    function app_mail_from_email(): string
+    {
+        $candidates = [
+            env_value('MAIL_FROM_EMAIL'),
+            env_value('MAIL_FROM_ADDRESS'),
+            env_value('PAYMENT_MAIL_FROM_EMAIL'),
+            env_value('SMTP_USERNAME'),
+            env_value('MAIL_USERNAME'),
+        ];
+
+        foreach ($candidates as $candidate) {
+            $email = trim((string)$candidate);
+            if ($email !== '' && filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                return $email;
+            }
+        }
+
+        $host = trim((string)($_SERVER['HTTP_HOST'] ?? 'localhost'));
+        $host = preg_replace('/:\d+$/', '', $host) ?: 'localhost';
+        return 'noreply@' . $host;
+    }
+}
+
+if (!function_exists('app_mail_from_name')) {
+    function app_mail_from_name(): string
+    {
+        $candidates = [
+            env_value('MAIL_FROM_NAME'),
+            env_value('PAYMENT_MAIL_FROM_NAME'),
+        ];
+
+        foreach ($candidates as $candidate) {
+            $name = trim((string)$candidate);
+            if ($name !== '') {
+                return $name;
+            }
+        }
+
+        return 'Anafinet';
+    }
+}
+
+if (!function_exists('app_payment_mail_from_email')) {
+    function app_payment_mail_from_email(): string
+    {
+        $email = trim((string)env_value('PAYMENT_MAIL_FROM_EMAIL', ''));
+        if ($email !== '' && filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            return $email;
+        }
+
+        return app_mail_from_email();
+    }
+}
+
+if (!function_exists('app_payment_mail_from_name')) {
+    function app_payment_mail_from_name(): string
+    {
+        $name = trim((string)env_value('PAYMENT_MAIL_FROM_NAME', ''));
+        if ($name !== '') {
+            return $name;
+        }
+
+        return app_mail_from_name();
+    }
+}
+
+if (!function_exists('app_payment_admin_email')) {
+    function app_payment_admin_email(): string
+    {
+        $email = trim((string)env_value('PAYMENT_ADMIN_EMAIL', ''));
+        if ($email !== '' && filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            return $email;
+        }
+
+        return 'tesoreria@anafinet.mx';
+    }
+}
+
+if (!function_exists('app_smtp_host')) {
+    function app_smtp_host(): string
+    {
+        return trim((string)env_value('SMTP_HOST', env_value('MAIL_HOST', '')));
+    }
+}
+
+if (!function_exists('app_smtp_port')) {
+    function app_smtp_port(): int
+    {
+        $defaultPort = app_smtp_secure() === 'ssl' ? 465 : 587;
+        return max(1, (int)env_value('SMTP_PORT', env_value('MAIL_PORT', (string)$defaultPort)));
+    }
+}
+
+if (!function_exists('app_smtp_secure')) {
+    function app_smtp_secure(): string
+    {
+        $secure = strtolower(trim((string)env_value('SMTP_SECURE', env_value('MAIL_ENCRYPTION', env_value('MAIL_SCHEME', '')))));
+        if ($secure === 'null' || $secure === 'none') {
+            return '';
+        }
+
+        if ($secure === 'tls' || $secure === 'ssl') {
+            return $secure;
+        }
+
+        return '';
+    }
+}
+
+if (!function_exists('app_smtp_auth_enabled')) {
+    function app_smtp_auth_enabled(): bool
+    {
+        $value = env_value('SMTP_AUTH');
+        if ($value !== null) {
+            return $value === '1';
+        }
+
+        return app_smtp_username() !== '' || app_smtp_password() !== '';
+    }
+}
+
+if (!function_exists('app_smtp_username')) {
+    function app_smtp_username(): string
+    {
+        return trim((string)env_value('SMTP_USERNAME', env_value('MAIL_USERNAME', '')));
+    }
+}
+
+if (!function_exists('app_smtp_password')) {
+    function app_smtp_password(): string
+    {
+        return (string)env_value('SMTP_PASSWORD', env_value('MAIL_PASSWORD', ''));
+    }
+}
+
+if (!function_exists('app_smtp_timeout')) {
+    function app_smtp_timeout(): int
+    {
+        return max(5, (int)env_value('SMTP_TIMEOUT', '15'));
+    }
+}
+
+if (!function_exists('app_smtp_verify_peer')) {
+    function app_smtp_verify_peer(): bool
+    {
+        return env_value('SMTP_VERIFY_PEER', '1') === '1';
+    }
+}
+
+if (!function_exists('app_mail_button')) {
+    function app_mail_button(string $url, string $label): string
+    {
+        if (trim($url) === '') {
+            return '';
+        }
+
+        return '<div style="margin:24px 0;text-align:center;">'
+            . '<a href="' . app_mail_html_escape($url) . '" style="display:inline-block;padding:14px 24px;border-radius:12px;background:#2563eb;color:#ffffff;text-decoration:none;font-weight:700;">'
+            . app_mail_html_escape($label)
+            . '</a>'
+            . '</div>';
+    }
+}
+
+if (!function_exists('app_mail_payment_summary_rows')) {
+    function app_mail_payment_summary_rows(array $items): string
+    {
+        if ($items === []) {
+            return '';
+        }
+
+        $rows = '';
+        foreach ($items as $label => $value) {
+            $rows .= '<tr>'
+                . '<td style="padding:10px 12px;border:1px solid #e5e7eb;background:#f8fafc;font-weight:700;width:38%;">' . app_mail_html_escape((string)$label) . '</td>'
+                . '<td style="padding:10px 12px;border:1px solid #e5e7eb;">' . app_mail_html_escape((string)$value) . '</td>'
+                . '</tr>';
+        }
+
+        return '<table style="width:100%;border-collapse:collapse;border-spacing:0;">' . $rows . '</table>';
+    }
+}
+
+if (!function_exists('app_mail_wrap_layout')) {
+    function app_mail_wrap_layout(
+        string $title,
+        string $heading,
+        string $body,
+        string $summary = '',
+        string $button = '',
+        string $footer = '',
+        string $preheader = ''
+    ): string {
+        $safeTitle = app_mail_html_escape($title);
+        $safeHeading = app_mail_html_escape($heading);
+        $safePreheader = app_mail_html_escape($preheader);
+
+        return '<!DOCTYPE html>'
+            . '<html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">'
+            . '<title>' . $safeTitle . '</title></head>'
+            . '<body style="margin:0;padding:0;background:#eef2ff;font-family:Arial,Helvetica,sans-serif;color:#1f2937;">'
+            . ($safePreheader !== '' ? '<div style="display:none;max-height:0;overflow:hidden;opacity:0;">' . $safePreheader . '</div>' : '')
+            . '<div style="padding:32px 16px;">'
+            . '<div style="max-width:720px;margin:0 auto;background:#ffffff;border-radius:28px;padding:32px;border:1px solid #dbeafe;box-shadow:0 20px 45px rgba(15,23,42,0.08);">'
+            . '<div style="margin-bottom:24px;">'
+            . '<p style="margin:0 0 10px 0;font-size:12px;letter-spacing:0.16em;text-transform:uppercase;font-weight:700;color:#2563eb;">Anafinet</p>'
+            . '<h1 style="margin:0;font-size:28px;line-height:1.2;color:#0f172a;">' . $safeHeading . '</h1>'
+            . '</div>'
+            . '<div style="font-size:16px;line-height:1.7;color:#334155;">' . $body . '</div>'
+            . ($summary !== '' ? '<div style="margin-top:24px;">' . $summary . '</div>' : '')
+            . ($button !== '' ? $button : '')
+            . ($footer !== '' ? '<div style="margin-top:24px;font-size:14px;line-height:1.6;color:#64748b;">' . $footer . '</div>' : '')
+            . '</div>'
+            . '</div>'
+            . '</body></html>';
+    }
+}
+
+if (!function_exists('app_mail_normalize_plain_text')) {
+    function app_mail_normalize_plain_text(string $html): string
+    {
+        $text = str_replace(['<br>', '<br/>', '<br />', '</p>', '</div>', '</li>'], ["\n", "\n", "\n", "\n\n", "\n", "\n"], $html);
+        $text = strip_tags($text);
+        $text = html_entity_decode($text, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+        $text = preg_replace("/\n{3,}/", "\n\n", $text) ?? $text;
+        return trim($text);
+    }
+}
+
+if (!function_exists('app_mail_compose_message')) {
+    function app_mail_compose_message(
+        string $subject,
+        string $html,
+        string $plainText,
+        string $fromEmail,
+        string $fromName,
+        string $replyTo,
+        array $extraHeaders = []
+    ): array {
+        $boundary = 'anafinet_' . bin2hex(random_bytes(12));
+        $encodedSubject = app_mail_encode_header($subject);
+        $encodedFromName = $fromName !== '' ? app_mail_encode_header($fromName) : '';
+
+        $headers = [
+            'MIME-Version: 1.0',
+            'Date: ' . date(DATE_RFC2822),
+            'Message-ID: <' . uniqid('mail_', true) . '@' . preg_replace('/^.*@/', '', $fromEmail) . '>',
+            'Content-Type: multipart/alternative; boundary="' . $boundary . '"',
+            $encodedFromName !== '' ? 'From: ' . $encodedFromName . ' <' . $fromEmail . '>' : 'From: ' . $fromEmail,
+        ];
+
+        if ($replyTo !== '' && filter_var($replyTo, FILTER_VALIDATE_EMAIL)) {
+            $headers[] = 'Reply-To: ' . $replyTo;
+        }
+
+        foreach ($extraHeaders as $header) {
+            $header = trim((string)$header);
+            if ($header !== '') {
+                $headers[] = $header;
+            }
+        }
+
+        $body = '--' . $boundary . "\r\n"
+            . "Content-Type: text/plain; charset=UTF-8\r\n"
+            . "Content-Transfer-Encoding: 8bit\r\n\r\n"
+            . $plainText . "\r\n\r\n"
+            . '--' . $boundary . "\r\n"
+            . "Content-Type: text/html; charset=UTF-8\r\n"
+            . "Content-Transfer-Encoding: 8bit\r\n\r\n"
+            . $html . "\r\n\r\n"
+            . '--' . $boundary . "--\r\n";
+
+        return [
+            'subject' => $encodedSubject,
+            'headers' => $headers,
+            'body' => $body,
+        ];
+    }
+}
+
+if (!function_exists('app_mail_log_failure')) {
+    function app_mail_log_failure(string $message): void
+    {
+        app_mail_set_last_error($message);
+        error_log('Mail error: ' . $message);
+    }
+}
+
+if (!function_exists('app_send_native_mail')) {
+    function app_send_native_mail(
+        string $to,
+        string $subject,
+        string $html,
+        string $plainText,
+        string $fromEmail,
+        string $fromName,
+        string $replyTo
+    ): bool {
+        $message = app_mail_compose_message($subject, $html, $plainText, $fromEmail, $fromName, $replyTo, [
+            'X-Mailer: PHP/' . phpversion(),
+        ]);
+
+        $sent = @mail($to, $message['subject'], $message['body'], implode("\r\n", $message['headers']));
+        if ($sent) {
+            app_mail_set_last_error('');
+            return true;
+        }
+
+        $lastPhpError = error_get_last();
+        $details = is_array($lastPhpError) ? trim((string)($lastPhpError['message'] ?? '')) : '';
+        app_mail_log_failure($details !== '' ? $details : 'mail() devolvio false al intentar enviar el correo.');
+        return false;
+    }
+}
+
+if (!function_exists('app_smtp_read_response')) {
+    function app_smtp_read_response($socket): string
+    {
+        $response = '';
+        while (($line = fgets($socket, 515)) !== false) {
+            $response .= $line;
+            if (isset($line[3]) && $line[3] === ' ') {
+                break;
+            }
+        }
+
+        return $response;
+    }
+}
+
+if (!function_exists('app_smtp_expect_code')) {
+    function app_smtp_expect_code(string $response, array $expectedCodes, string $context): bool
+    {
+        $code = (int)substr(trim($response), 0, 3);
+        if (in_array($code, $expectedCodes, true)) {
+            return true;
+        }
+
+        app_mail_log_failure($context . ': ' . trim($response));
+        return false;
+    }
+}
+
+if (!function_exists('app_smtp_write_command')) {
+    function app_smtp_write_command($socket, string $command): bool
+    {
+        return fwrite($socket, $command) !== false;
+    }
+}
+
+if (!function_exists('app_send_smtp_email')) {
+    function app_send_smtp_email(
+        string $to,
+        string $subject,
+        string $html,
+        string $plainText,
+        string $fromEmail,
+        string $fromName,
+        string $replyTo
+    ): bool {
+        $host = app_smtp_host();
+        if ($host === '') {
+            app_mail_log_failure('MAIL_TRANSPORT=smtp pero SMTP_HOST/MAIL_HOST esta vacio.');
+            return false;
+        }
+
+        $secure = app_smtp_secure();
+        $remoteHost = $secure === 'ssl' ? 'ssl://' . $host : $host;
+        $contextOptions = [
+            'ssl' => [
+                'verify_peer' => app_smtp_verify_peer(),
+                'verify_peer_name' => app_smtp_verify_peer(),
+                'allow_self_signed' => !app_smtp_verify_peer(),
+            ],
+        ];
+
+        $socket = @stream_socket_client(
+            $remoteHost . ':' . app_smtp_port(),
+            $errorNumber,
+            $errorString,
+            app_smtp_timeout(),
+            STREAM_CLIENT_CONNECT,
+            stream_context_create($contextOptions)
+        );
+
+        if (!is_resource($socket)) {
+            app_mail_log_failure('No se pudo conectar al servidor SMTP: ' . $errorString . ' (' . $errorNumber . ')');
+            return false;
+        }
+
+        stream_set_timeout($socket, app_smtp_timeout());
+
+        $response = app_smtp_read_response($socket);
+        if (!app_smtp_expect_code($response, [220], 'El servidor SMTP no devolvio bienvenida valida')) {
+            fclose($socket);
+            return false;
+        }
+
+        $clientHost = parse_url(app_public_base_url(), PHP_URL_HOST);
+        if (!is_string($clientHost) || $clientHost === '') {
+            $clientHost = 'localhost';
+        }
+
+        if (!app_smtp_write_command($socket, 'EHLO ' . $clientHost . "\r\n")) {
+            fclose($socket);
+            app_mail_log_failure('No se pudo enviar el comando EHLO al servidor SMTP.');
+            return false;
+        }
+        $response = app_smtp_read_response($socket);
+        if (!app_smtp_expect_code($response, [250], 'El servidor SMTP rechazo EHLO')) {
+            fclose($socket);
+            return false;
+        }
+
+        if ($secure === 'tls') {
+            if (!app_smtp_write_command($socket, "STARTTLS\r\n")) {
+                fclose($socket);
+                app_mail_log_failure('No se pudo solicitar STARTTLS al servidor SMTP.');
+                return false;
+            }
+            $response = app_smtp_read_response($socket);
+            if (!app_smtp_expect_code($response, [220], 'El servidor SMTP rechazo STARTTLS')) {
+                fclose($socket);
+                return false;
             }
 
-            const closePopup = () => popup.classList.add('hidden');
-            document.getElementById('email-status-popup-close')?.addEventListener('click', closePopup);
-            document.getElementById('email-status-popup-accept')?.addEventListener('click', closePopup);
-            popup.addEventListener('click', (event) => {
-                if (event.target === popup) {
-                    closePopup();
-                }
-            });
-        }());
-    </script>
-    <?php endif; ?>
-</body>
-</html>
+            $cryptoEnabled = @stream_socket_enable_crypto($socket, true, STREAM_CRYPTO_METHOD_TLS_CLIENT);
+            if ($cryptoEnabled !== true) {
+                fclose($socket);
+                app_mail_log_failure('No se pudo habilitar TLS sobre la conexion SMTP.');
+                return false;
+            }
+
+            if (!app_smtp_write_command($socket, 'EHLO ' . $clientHost . "\r\n")) {
+                fclose($socket);
+                app_mail_log_failure('No se pudo reenviar EHLO despues de STARTTLS.');
+                return false;
+            }
+            $response = app_smtp_read_response($socket);
+            if (!app_smtp_expect_code($response, [250], 'El servidor SMTP rechazo EHLO despues de STARTTLS')) {
+                fclose($socket);
+                return false;
+            }
+        }
+
+        if (app_smtp_auth_enabled()) {
+            if (!app_smtp_write_command($socket, "AUTH LOGIN\r\n")) {
+                fclose($socket);
+                app_mail_log_failure('No se pudo iniciar autenticacion SMTP.');
+                return false;
+            }
+            $response = app_smtp_read_response($socket);
+            if (!app_smtp_expect_code($response, [334], 'El servidor SMTP rechazo AUTH LOGIN')) {
+                fclose($socket);
+                return false;
+            }
+
+            if (!app_smtp_write_command($socket, base64_encode(app_smtp_username()) . "\r\n")) {
+                fclose($socket);
+                app_mail_log_failure('No se pudo enviar el usuario SMTP.');
+                return false;
+            }
+            $response = app_smtp_read_response($socket);
+            if (!app_smtp_expect_code($response, [334], 'El servidor SMTP rechazo el usuario SMTP')) {
+                fclose($socket);
+                return false;
+            }
+
+            if (!app_smtp_write_command($socket, base64_encode(app_smtp_password()) . "\r\n")) {
+                fclose($socket);
+                app_mail_log_failure('No se pudo enviar la contrasena SMTP.');
+                return false;
+            }
+            $response = app_smtp_read_response($socket);
+            if (!app_smtp_expect_code($response, [235], 'El servidor SMTP rechazo la contrasena SMTP')) {
+                fclose($socket);
+                return false;
+            }
+        }
+
+        if (!app_smtp_write_command($socket, 'MAIL FROM:<' . $fromEmail . ">\r\n")) {
+            fclose($socket);
+            app_mail_log_failure('No se pudo enviar MAIL FROM al servidor SMTP.');
+            return false;
+        }
+        $response = app_smtp_read_response($socket);
+        if (!app_smtp_expect_code($response, [250], 'El servidor SMTP rechazo MAIL FROM')) {
+            fclose($socket);
+            return false;
+        }
+
+        if (!app_smtp_write_command($socket, 'RCPT TO:<' . $to . ">\r\n")) {
+            fclose($socket);
+            app_mail_log_failure('No se pudo enviar RCPT TO al servidor SMTP.');
+            return false;
+        }
+        $response = app_smtp_read_response($socket);
+        if (!app_smtp_expect_code($response, [250, 251], 'El servidor SMTP rechazo RCPT TO')) {
+            fclose($socket);
+            return false;
+        }
+
+        if (!app_smtp_write_command($socket, "DATA\r\n")) {
+            fclose($socket);
+            app_mail_log_failure('No se pudo iniciar DATA en el servidor SMTP.');
+            return false;
+        }
+        $response = app_smtp_read_response($socket);
+        if (!app_smtp_expect_code($response, [354], 'El servidor SMTP rechazo DATA')) {
+            fclose($socket);
+            return false;
+        }
+
+        $message = app_mail_compose_message($subject, $html, $plainText, $fromEmail, $fromName, $replyTo, [
+            'To: ' . $to,
+            'Subject: ' . app_mail_encode_header($subject),
+        ]);
+        $payload = implode("\r\n", $message['headers']) . "\r\n\r\n" . $message['body'];
+        $payload = preg_replace('/(?m)^\./', '..', $payload) ?? $payload;
+
+        if (!app_smtp_write_command($socket, $payload . "\r\n.\r\n")) {
+            fclose($socket);
+            app_mail_log_failure('No se pudo transmitir el contenido del correo al servidor SMTP.');
+            return false;
+        }
+        $response = app_smtp_read_response($socket);
+        if (!app_smtp_expect_code($response, [250], 'El servidor SMTP rechazo el contenido del mensaje')) {
+            fclose($socket);
+            return false;
+        }
+
+        app_smtp_write_command($socket, "QUIT\r\n");
+        fclose($socket);
+        app_mail_set_last_error('');
+        return true;
+    }
+}
+
+if (!function_exists('app_send_html_email')) {
+    function app_send_html_email(string $to, string $subject, string $html, ?string $plainText = null, array $options = []): bool
+    {
+        $to = trim($to);
+        if ($to === '' || !filter_var($to, FILTER_VALIDATE_EMAIL)) {
+            app_mail_log_failure('El destinatario del correo no es valido.');
+            return false;
+        }
+
+        $fromEmail = trim((string)($options['from_email'] ?? app_mail_from_email()));
+        if ($fromEmail === '' || !filter_var($fromEmail, FILTER_VALIDATE_EMAIL)) {
+            app_mail_log_failure('El remitente del correo no es valido.');
+            return false;
+        }
+
+        $fromName = trim((string)($options['from_name'] ?? app_mail_from_name()));
+        $replyTo = trim((string)($options['reply_to'] ?? ''));
+        if ($replyTo === '' || !filter_var($replyTo, FILTER_VALIDATE_EMAIL)) {
+            $replyTo = $fromEmail;
+        }
+
+        $plainText = $plainText !== null && trim($plainText) !== ''
+            ? trim($plainText)
+            : app_mail_normalize_plain_text($html);
+
+        if (app_mail_transport() === 'smtp') {
+            return app_send_smtp_email($to, $subject, $html, $plainText, $fromEmail, $fromName, $replyTo);
+        }
+
+        return app_send_native_mail($to, $subject, $html, $plainText, $fromEmail, $fromName, $replyTo);
+    }
+}

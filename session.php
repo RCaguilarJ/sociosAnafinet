@@ -9,6 +9,19 @@ if (!function_exists('app_session_driver')) {
     }
 }
 
+if (!function_exists('app_session_debug_meta')) {
+    function app_session_debug_meta(): array
+    {
+        return [
+            'driver' => app_session_driver(),
+            'save_path' => (string)session_save_path(),
+            'cookie_path' => function_exists('app_cookie_path') ? app_cookie_path() : '',
+            'cookie_secure' => function_exists('app_is_secure_request') && app_is_secure_request() ? '1' : '0',
+            'session_name' => (string)session_name(),
+        ];
+    }
+}
+
 if (!class_exists('DatabaseSessionHandler')) {
     class DatabaseSessionHandler implements SessionHandlerInterface
     {
@@ -158,6 +171,22 @@ if (!function_exists('app_start_session')) {
         }
         ini_set('session.gc_maxlifetime', (string)$ttl);
 
+        if (app_session_driver() === 'files') {
+            $savePath = trim((string)session_save_path());
+            if ($savePath === '') {
+                $savePath = (string)ini_get('session.save_path');
+            }
+
+            if ($savePath !== '') {
+                $normalizedSavePath = preg_split('/[;,]/', $savePath) ?: [$savePath];
+                $resolvedPath = trim((string)end($normalizedSavePath));
+                if ($resolvedPath !== '' && (!is_dir($resolvedPath) || !is_writable($resolvedPath))) {
+                    $GLOBALS['appSessionError'] = 'El directorio de sesiones no es escribible: ' . $resolvedPath;
+                    error_log('Session files driver is not writable: ' . $resolvedPath);
+                }
+            }
+        }
+
         if (app_session_driver() === 'database' && $pdo instanceof PDO) {
             try {
                 ensure_session_table($pdo);
@@ -172,7 +201,14 @@ if (!function_exists('app_start_session')) {
         }
 
         if (!session_start()) {
+            $GLOBALS['appSessionError'] = 'session_start() fallo usando driver ' . app_session_driver();
             error_log('Session start failed using driver: ' . app_session_driver());
+            return;
+        }
+
+        if (session_status() !== PHP_SESSION_ACTIVE) {
+            $GLOBALS['appSessionError'] = 'La sesion no quedo activa despues de session_start() usando driver ' . app_session_driver();
+            error_log('Session status is not active after session_start using driver: ' . app_session_driver());
         }
     }
 }
