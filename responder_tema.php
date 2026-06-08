@@ -42,12 +42,16 @@ try {
 
     $stmt = $pdo->prepare("INSERT INTO foro_respuestas (tema_id, usuario_id, respuesta) VALUES (?, ?, ?)");
     $stmt->execute([$temaId, $usuario_id, $contenido]);
+    $replyId = (int)$pdo->lastInsertId();
 
     $detalle = 'Respuesta en tema: ' . (string)$tema['titulo'];
     $stmtAct = $pdo->prepare("INSERT INTO actividad_usuario (usuario_id, tipo_accion, detalle) VALUES (?, 'foro_participacion', ?)");
     $stmtAct->execute([$usuario_id, $detalle]);
 
     $pdo->commit();
+    if ($replyId > 0 && function_exists('app_notify_forum_reply_created')) {
+        app_notify_forum_reply_created($pdo, $temaId, $replyId, $usuario_id, (string)$tema['titulo']);
+    }
     header("Location: tema_detalle.php?id={$temaId}&status=respuesta_creada#respuestas");
     exit();
 } catch (Throwable $e) {

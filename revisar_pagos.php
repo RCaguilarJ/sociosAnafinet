@@ -37,11 +37,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $mensaje = 'La acción solicitada no es válida.';
         $mensajeTipo = 'error';
     } else {
+        $statusStmt = $pdo->prepare("SELECT estatus FROM usuarios WHERE id = ? LIMIT 1");
+        $statusStmt->execute([$targetUserId]);
+        $previousStatus = (string)($statusStmt->fetchColumn() ?: '');
         $nuevoEstatus = $action === 'aprobar' ? 'Activo' : 'Pendiente de pago';
         $stmt = $pdo->prepare("UPDATE usuarios SET estatus = ? WHERE id = ?");
         $stmt->execute([$nuevoEstatus, $targetUserId]);
         if ($action === 'aprobar') {
-            $emailSent = app_send_manual_payment_approved_notification($pdo, $targetUserId);
+            app_apply_membership_cycle($pdo, $targetUserId, date('Y-m-d H:i:s'));
+            $emailSent = app_send_manual_payment_activation_notification_if_needed($pdo, $targetUserId, $previousStatus, 'Activo');
         }
         $mensaje = $action === 'aprobar'
             ? (($emailSent ?? false)

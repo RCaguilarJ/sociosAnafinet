@@ -27,6 +27,18 @@ if (isset($pdo)) {
 
 $memberIdentifier = app_member_identifier($pdo ?? null, $userId, $userState);
 $displayUserName = app_display_user_name((string)$userName, (string)$userRole);
+$notificationCount = 0;
+$recentNotifications = [];
+
+if (($pdo ?? null) instanceof PDO && $userId !== null && function_exists('app_get_unread_notifications_count')) {
+    try {
+        $notificationCount = app_get_unread_notifications_count($pdo, $userId);
+        $recentNotifications = app_get_recent_notifications($pdo, $userId, 4);
+    } catch (Throwable $e) {
+        $notificationCount = 0;
+        $recentNotifications = [];
+    }
+}
 
 $menuItems = [
     ['key' => 'dashboard', 'label' => 'Dashboard', 'href' => base_url('dashboard.php'), 'icon' => 'fa-house'],
@@ -65,7 +77,14 @@ function menu_link_classes(string $key, string $activePage): string
         <img src="<?php echo htmlspecialchars(base_url('logo.avif'), ENT_QUOTES, 'UTF-8'); ?>" alt="Logo Anafinet" class="h-8 w-auto">
         <span class="font-semibold text-gray-800">Anafinet</span>
     </div>
-    <div class="w-10 h-10"></div>
+    <a href="<?php echo htmlspecialchars(base_url('notificaciones.php'), ENT_QUOTES, 'UTF-8'); ?>" class="relative inline-flex items-center justify-center w-10 h-10 rounded-lg border border-gray-200 text-gray-700 hover:bg-gray-50" aria-label="Notificaciones">
+        <i class="fa-regular fa-bell"></i>
+        <?php if ($notificationCount > 0): ?>
+            <span class="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-red-500 text-white text-[10px] font-bold flex items-center justify-center">
+                <?php echo $notificationCount > 9 ? '9+' : (int)$notificationCount; ?>
+            </span>
+        <?php endif; ?>
+    </a>
 </header>
 
 <div id="menuOverlay" class="fixed inset-0 bg-black/40 z-40 hidden md:hidden"></div>
@@ -81,6 +100,32 @@ function menu_link_classes(string $key, string $activePage): string
                     <span class="rounded-full bg-slate-100 px-2 py-1 font-bold tracking-[0.12em] text-slate-600"><?php echo htmlspecialchars($memberIdentifier); ?></span>
                 <?php endif; ?>
             </div>
+            <div class="mt-4">
+                <a href="<?php echo htmlspecialchars(base_url('notificaciones.php'), ENT_QUOTES, 'UTF-8'); ?>" class="relative inline-flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition">
+                    <i class="fa-regular fa-bell"></i>
+                    <span>Notificaciones</span>
+                    <?php if ($notificationCount > 0): ?>
+                        <span class="inline-flex min-w-[20px] items-center justify-center rounded-full bg-red-500 px-1.5 py-0.5 text-[10px] font-bold text-white">
+                            <?php echo $notificationCount > 99 ? '99+' : (int)$notificationCount; ?>
+                        </span>
+                    <?php endif; ?>
+                </a>
+            </div>
+            <?php if (!empty($recentNotifications)): ?>
+                <div class="mt-4 space-y-2 text-left">
+                    <?php foreach ($recentNotifications as $notification): ?>
+                        <a href="<?php echo htmlspecialchars((string)($notification['url'] ?? base_url('notificaciones.php')), ENT_QUOTES, 'UTF-8'); ?>" class="block rounded-xl border <?php echo !empty($notification['is_read']) ? 'border-gray-200 bg-gray-50' : 'border-blue-200 bg-blue-50'; ?> px-3 py-3 text-xs text-gray-600 hover:shadow-sm transition">
+                            <div class="flex items-start justify-between gap-3">
+                                <span class="font-semibold text-gray-800"><?php echo htmlspecialchars((string)($notification['title'] ?? ''), ENT_QUOTES, 'UTF-8'); ?></span>
+                                <?php if (empty($notification['is_read'])): ?>
+                                    <span class="w-2 h-2 rounded-full bg-blue-600 mt-1.5"></span>
+                                <?php endif; ?>
+                            </div>
+                            <p class="mt-1 leading-5"><?php echo htmlspecialchars((string)($notification['message'] ?? ''), ENT_QUOTES, 'UTF-8'); ?></p>
+                        </a>
+                    <?php endforeach; ?>
+                </div>
+            <?php endif; ?>
         </div>
         <button id="menuClose" class="md:hidden ml-2 inline-flex items-center justify-center w-9 h-9 rounded-lg border border-gray-200 text-gray-700 hover:bg-gray-50" aria-label="Cerrar men&uacute;">
             <i class="fa-solid fa-xmark"></i>

@@ -98,6 +98,21 @@ function app_is_membership_active_status(string $status): bool
     return in_array($normalized, ['activo', 'afiliado', 'aprobado', 'confirmado', 'pagado'], true);
 }
 
+function app_membership_duration_days(): int
+{
+    return max(30, (int)env_value('MEMBERSHIP_DURATION_DAYS', '365'));
+}
+
+function app_membership_warning_days(): int
+{
+    return max(1, (int)env_value('MEMBERSHIP_RENEWAL_WARNING_DAYS', '30'));
+}
+
+function app_membership_renewal_pending_status(): string
+{
+    return 'Renovacion pendiente';
+}
+
 function app_is_membership_restricted_status(string $status): bool
 {
     $normalized = normalize_text_value($status);
@@ -109,7 +124,7 @@ function app_is_membership_restricted_status(string $status): bool
         return false;
     }
 
-    return in_array($normalized, ['pendientedepago', 'pagoreportado', 'pagoenproceso', 'inactivo', 'suspendido', 'bloqueado'], true);
+    return in_array($normalized, ['pendientedepago', 'pagoreportado', 'pagoenproceso', 'inactivo', 'suspendido', 'bloqueado', 'renovacionpendiente', 'vencido'], true);
 }
 
 function app_ensure_membership_payment_schema(PDO $pdo): void
@@ -173,6 +188,197 @@ function app_ensure_membership_payment_schema(PDO $pdo): void
     $initialized = true;
 }
 
+function app_ensure_membership_cycle_schema(PDO $pdo): void
+{
+    static $initialized = false;
+    if ($initialized) {
+        return;
+    }
+
+    $requiredColumns = [
+        'membership_started_at' => "ALTER TABLE usuarios ADD COLUMN membership_started_at DATETIME NULL AFTER pago_reportado_at",
+        'membership_expires_at' => "ALTER TABLE usuarios ADD COLUMN membership_expires_at DATETIME NULL AFTER membership_started_at",
+    ];
+
+    $columnExistsStmt = $pdo->prepare(
+        "SELECT 1
+         FROM information_schema.COLUMNS
+         WHERE TABLE_SCHEMA = DATABASE()
+           AND TABLE_NAME = 'usuarios'
+           AND COLUMN_NAME = ?
+         LIMIT 1"
+    );
+
+    foreach ($requiredColumns as $column => $alterSql) {
+        $columnExistsStmt->execute([$column]);
+        $exists = (bool)$columnExistsStmt->fetchColumn();
+        if (!$exists) {
+            $pdo->exec($alterSql);
+        }
+    }
+
+    app_ensure_membership_payment_schema($pdo);
+
+    $initialized = true;
+}
+
+function app_get_user_membership_dates(PDO $pdo, int $userId): ?array
+{
+    app_ensure_membership_cycle_schema($pdo);
+
+    $stmt = $pdo->prepare('SELECT membership_started_at, membership_expires_at FROM usuarios WHERE id = ? LIMIT 1');
+    $stmt->execute([$userId]);
+    $row = $stmt->fetch();
+
+    return is_array($row) ? $row : null;
+}
+
+function app_apply_membership_cycle(PDO $pdo, int $userId, ?string $paidAt = null): ?array
+{
+    app_ensure_membership_cycle_schema($pdo);
+
+    $dates = app_get_user_membership_dates($pdo, $userId);
+    if (!is_array($dates)) {
+        return null;
+    }
+
+    $effectiveTs = $paidAt !== null && trim($paidAt) !== '' ? strtotime($paidAt) : false;
+    if ($effectiveTs === false) {
+        $effectiveTs = time();
+    }
+
+    $baseTs = $effectiveTs;
+    $currentExpiry = trim((string)($dates['membership_expires_at'] ?? ''));
+    if ($currentExpiry !== '') {
+        $currentExpiryTs = strtotime($currentExpiry);
+        if ($currentExpiryTs !== false && $currentExpiryTs > $baseTs) {
+            $baseTs = $currentExpiryTs;
+        }
+    }
+
+    $startAt = date('Y-m-d H:i:s', $effectiveTs);
+    $expiresAt = date('Y-m-d H:i:s', strtotime('+' . app_membership_duration_days() . ' days', $baseTs));
+
+    $stmt = $pdo->prepare('UPDATE usuarios SET membership_started_at = ?, membership_expires_at = ?, estatus = ? WHERE id = ?');
+    $stmt->execute([$startAt, $expiresAt, 'Activo', $userId]);
+
+    return [
+        'membership_started_at' => $startAt,
+        'membership_expires_at' => $expiresAt,
+    ];
+}
+
+function app_apply_membership_cycle_for_reference(PDO $pdo, int $userId, string $externalReference, ?string $paidAt = null): ?array
+{
+    $cycle = app_apply_membership_cycle($pdo, $userId, $paidAt);
+    if (!is_array($cycle)) {
+        return null;
+    }
+
+    if (trim($externalReference) !== '') {
+        $stmt = $pdo->prepare('UPDATE pagos_membresia SET expires_at = ? WHERE external_reference = ?');
+        $stmt->execute([$cycle['membership_expires_at'], $externalReference]);
+    }
+
+    return $cycle;
+}
+
+function app_backfill_membership_cycle_from_payments(PDO $pdo, int $userId): void
+{
+    app_ensure_membership_cycle_schema($pdo);
+
+    $dates = app_get_user_membership_dates($pdo, $userId);
+    if (!is_array($dates)) {
+        return;
+    }
+
+    $expiresAt = trim((string)($dates['membership_expires_at'] ?? ''));
+    if ($expiresAt !== '') {
+        return;
+    }
+
+    $stmt = $pdo->prepare(
+        "SELECT external_reference, paid_at, created_at
+         FROM pagos_membresia
+         WHERE user_id = ? AND status = 'approved'
+         ORDER BY paid_at DESC, id DESC
+         LIMIT 1"
+    );
+    $stmt->execute([$userId]);
+    $payment = $stmt->fetch();
+
+    if (!is_array($payment)) {
+        return;
+    }
+
+    $baseDate = trim((string)($payment['paid_at'] ?? ''));
+    if ($baseDate === '') {
+        $baseDate = trim((string)($payment['created_at'] ?? ''));
+    }
+
+    app_apply_membership_cycle_for_reference($pdo, $userId, (string)($payment['external_reference'] ?? ''), $baseDate !== '' ? $baseDate : null);
+}
+
+function app_sync_membership_lifecycle(PDO $pdo, ?int $userId = null, int $limit = 150): void
+{
+    app_ensure_membership_cycle_schema($pdo);
+
+    $limit = max(1, min($limit, 300));
+    if ($userId !== null && $userId > 0) {
+        $stmt = $pdo->prepare(
+            "SELECT id, estatus, membership_expires_at
+             FROM usuarios
+             WHERE id = ?
+             LIMIT 1"
+        );
+        $stmt->execute([$userId]);
+    } else {
+        $stmt = $pdo->query(
+            "SELECT id, estatus, membership_expires_at
+             FROM usuarios
+             WHERE rol = 'Asociado'
+             ORDER BY id DESC
+             LIMIT " . $limit
+        );
+    }
+
+    $users = $stmt->fetchAll();
+    $now = time();
+    $renewalStatus = app_membership_renewal_pending_status();
+
+    foreach ($users as $user) {
+        $targetUserId = (int)($user['id'] ?? 0);
+        if ($targetUserId <= 0) {
+            continue;
+        }
+
+        app_backfill_membership_cycle_from_payments($pdo, $targetUserId);
+        $dates = app_get_user_membership_dates($pdo, $targetUserId);
+        if (!is_array($dates)) {
+            continue;
+        }
+
+        $expiresAt = trim((string)($dates['membership_expires_at'] ?? ''));
+        if ($expiresAt === '') {
+            continue;
+        }
+
+        $expiresTs = strtotime($expiresAt);
+        if ($expiresTs === false) {
+            continue;
+        }
+
+        $status = (string)($user['estatus'] ?? '');
+        $normalized = normalize_text_value($status);
+        $hasRenewalInProgress = in_array($normalized, ['pagoreportado', 'pagoenproceso'], true);
+
+        if ($expiresTs < $now && app_is_membership_active_status($status) && !$hasRenewalInProgress) {
+            $update = $pdo->prepare('UPDATE usuarios SET estatus = ? WHERE id = ?');
+            $update->execute([$renewalStatus, $targetUserId]);
+        }
+    }
+}
+
 function app_is_signup_membership_reference(string $externalReference): bool
 {
     return preg_match('/^membership_signup_/i', $externalReference) === 1;
@@ -210,6 +416,21 @@ function app_payment_money_label(float $amount, string $currency): string
     return number_format($amount, 2, '.', ',') . ' ' . strtoupper($currency);
 }
 
+function app_manual_payment_mail_options(): array
+{
+    $fromEmail = app_payment_mail_from_email();
+    $replyTo = app_payment_admin_email();
+    if (!filter_var($replyTo, FILTER_VALIDATE_EMAIL)) {
+        $replyTo = $fromEmail;
+    }
+
+    return [
+        'from_email' => $fromEmail,
+        'from_name' => app_payment_mail_from_name(),
+        'reply_to' => $replyTo,
+    ];
+}
+
 function app_send_manual_payment_received_notifications(PDO $pdo, int $userId, string $reference, string $proofUrl = ''): void
 {
     $user = app_fetch_membership_user($pdo, $userId);
@@ -226,6 +447,7 @@ function app_send_manual_payment_received_notifications(PDO $pdo, int $userId, s
     $adminPageUrl = $portalUrl !== '' ? $portalUrl . '/revisar_pagos.php' : '';
     $amountLabel = app_payment_money_label(app_membership_fee_amount(), app_membership_fee_currency());
     $reportedAtLabel = date('Y-m-d H:i:s');
+    $mailOptions = app_manual_payment_mail_options();
 
     if (filter_var($userEmail, FILTER_VALIDATE_EMAIL)) {
         $userSubject = 'Recibimos tu comprobante de pago en Anafinet';
@@ -262,7 +484,7 @@ function app_send_manual_payment_received_notifications(PDO $pdo, int $userId, s
             . "Revision: Validacion manual por tesoreria\n"
             . "Fecha de registro: {$reportedAtLabel}\n"
             . ($paymentPageUrl !== '' ? "Seguimiento: {$paymentPageUrl}\n" : '');
-        if (!app_send_html_email($userEmail, $userSubject, $userHtml, $userText)) {
+        if (!app_send_html_email($userEmail, $userSubject, $userHtml, $userText, $mailOptions)) {
             error_log('Manual payment received notification failed for user ' . $userId . ' (' . $userEmail . ')');
         }
     }
@@ -303,7 +525,7 @@ function app_send_manual_payment_received_notifications(PDO $pdo, int $userId, s
             . "Fecha de registro: {$reportedAtLabel}\n"
             . ($proofUrl !== '' ? "Comprobante: {$proofUrl}\n" : '')
             . ($adminPageUrl !== '' ? "Panel: {$adminPageUrl}\n" : '');
-        if (!app_send_html_email($adminEmail, $adminSubject, $adminHtml, $adminText)) {
+        if (!app_send_html_email($adminEmail, $adminSubject, $adminHtml, $adminText, $mailOptions)) {
             error_log('Manual payment received admin notification failed for user ' . $userId . ' to ' . $adminEmail);
         }
     }
@@ -328,6 +550,7 @@ function app_send_manual_payment_approved_notification(PDO $pdo, int $userId): b
     $dashboardUrl = $portalUrl !== '' ? $portalUrl . '/dashboard.php' : '';
     $approvedAtLabel = date('Y-m-d H:i:s');
     $amountLabel = app_payment_money_label(app_membership_fee_amount(), app_membership_fee_currency());
+    $mailOptions = app_manual_payment_mail_options();
 
     $subject = 'Tu comprobante fue aprobado y tu acceso ya esta activo';
     $introHtml = '<p style="margin:0 0 16px 0;">Hola ' . htmlspecialchars($userName, ENT_QUOTES, 'UTF-8') . '.</p>'
@@ -362,12 +585,21 @@ function app_send_manual_payment_approved_notification(PDO $pdo, int $userId): b
         . "Acceso: Portal completo habilitado\n"
         . "Fecha de aprobacion: {$approvedAtLabel}\n"
         . ($dashboardUrl !== '' ? "Panel: {$dashboardUrl}\n" : '');
-    $sent = app_send_html_email($userEmail, $subject, $html, $text);
+    $sent = app_send_html_email($userEmail, $subject, $html, $text, $mailOptions);
     if (!$sent) {
         error_log('Manual payment approved notification failed for user ' . $userId . ' (' . $userEmail . ')');
     }
 
     return $sent;
+}
+
+function app_send_manual_payment_activation_notification_if_needed(PDO $pdo, int $userId, string $previousStatus, string $newStatus): bool
+{
+    if (app_is_membership_active_status($previousStatus) || !app_is_membership_active_status($newStatus)) {
+        return true;
+    }
+
+    return app_send_manual_payment_approved_notification($pdo, $userId);
 }
 
 function app_send_membership_payment_notifications(PDO $pdo, string $externalReference): void
@@ -908,8 +1140,12 @@ function app_sync_paypal_order(PDO $pdo, int $userId, string $externalReference,
         $notificationContext,
     ]);
 
-    $userUpdate = $pdo->prepare('UPDATE usuarios SET estatus = ? WHERE id = ?');
-    $userUpdate->execute([$mappedStatus['user_status'], $userId]);
+    if ($mappedStatus['payment_status'] === 'approved') {
+        app_apply_membership_cycle_for_reference($pdo, $userId, $externalReference, $mappedStatus['paid_at']);
+    } else {
+        $userUpdate = $pdo->prepare('UPDATE usuarios SET estatus = ? WHERE id = ?');
+        $userUpdate->execute([$mappedStatus['user_status'], $userId]);
+    }
 
     if ($mappedStatus['payment_status'] === 'approved') {
         app_send_membership_payment_notifications($pdo, $externalReference);
@@ -1089,9 +1325,13 @@ function app_sync_mercadopago_payment(PDO $pdo, string $paymentId): ?array
         $notificationContext,
     ]);
 
-    $userStatus = $localStatus['user_status'];
-    $userUpdate = $pdo->prepare('UPDATE usuarios SET estatus = ? WHERE id = ?');
-    $userUpdate->execute([$userStatus, $userId]);
+    if ($localStatus['payment_status'] === 'approved') {
+        app_apply_membership_cycle_for_reference($pdo, $userId, $externalReference, $localStatus['paid_at']);
+    } else {
+        $userStatus = $localStatus['user_status'];
+        $userUpdate = $pdo->prepare('UPDATE usuarios SET estatus = ? WHERE id = ?');
+        $userUpdate->execute([$userStatus, $userId]);
+    }
 
     if ($localStatus['payment_status'] === 'approved') {
         app_send_membership_payment_notifications($pdo, $externalReference);

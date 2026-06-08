@@ -45,6 +45,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $asociado) {
     $email = trim($_POST['email'] ?? '');
     $rol = trim($_POST['rol'] ?? '');
     $estatus = trim($_POST['estatus'] ?? '');
+    $previousStatus = trim((string)($asociado['estatus'] ?? ''));
 
     if ($nombre === '' || $email === '' || $rol === '' || $estatus === '') {
         $mensaje = 'Todos los campos son obligatorios.';
@@ -55,8 +56,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $asociado) {
     } else {
         $stmt = $pdo->prepare("UPDATE usuarios SET nombre = ?, email = ?, rol = ?, estatus = ? WHERE id = ?");
         $stmt->execute([$nombre, $email, $rol, $estatus, $editId]);
-        $mensaje = 'Cambios guardados correctamente.';
-        $mensajeTipo = 'success';
+        $emailSent = app_send_manual_payment_activation_notification_if_needed($pdo, $editId, $previousStatus, $estatus);
+        $activatedByStatusChange = !app_is_membership_active_status($previousStatus) && app_is_membership_active_status($estatus);
+        if ($activatedByStatusChange && !$emailSent) {
+            $mensaje = 'Cambios guardados correctamente, pero no se pudo enviar el correo de activacion al usuario.';
+            $mensajeTipo = 'error';
+        } else {
+            $mensaje = 'Cambios guardados correctamente.';
+            $mensajeTipo = 'success';
+        }
         $stmt = $pdo->prepare("SELECT * FROM usuarios WHERE id = ? LIMIT 1");
         $stmt->execute([$editId]);
         $asociado = $stmt->fetch();
@@ -151,5 +159,4 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $asociado) {
     </main>
 </body>
 </html>
-
 

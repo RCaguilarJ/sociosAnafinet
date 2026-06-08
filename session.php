@@ -13,7 +13,7 @@ if (!class_exists('DatabaseSessionHandler')) {
             $this->ttl = (int)$ttl;
         }
 
-        public function open(string $path, string $name): bool
+        public function open($path, $name): bool
         {
             return true;
         }
@@ -23,7 +23,7 @@ if (!class_exists('DatabaseSessionHandler')) {
             return true;
         }
 
-        public function read(string $id): string
+        public function read($id): string
         {
             $stmt = $this->pdo->prepare('SELECT data, last_activity FROM app_sessions WHERE id = ? LIMIT 1');
             $stmt->execute([$id]);
@@ -42,7 +42,7 @@ if (!class_exists('DatabaseSessionHandler')) {
             return (string)($row['data'] ?? '');
         }
 
-        public function write(string $id, string $data): bool
+        public function write($id, $data): bool
         {
             $stmt = $this->pdo->prepare(
                 'INSERT INTO app_sessions (id, data, last_activity) VALUES (?, ?, ?)
@@ -52,13 +52,13 @@ if (!class_exists('DatabaseSessionHandler')) {
             return $stmt->execute([$id, $data, time()]);
         }
 
-        public function destroy(string $id): bool
+        public function destroy($id): bool
         {
             $stmt = $this->pdo->prepare('DELETE FROM app_sessions WHERE id = ?');
             return $stmt->execute([$id]);
         }
 
-        public function gc(int $max_lifetime): int
+        public function gc($max_lifetime): int
         {
             $threshold = time() - max($max_lifetime, $this->ttl);
             $stmt = $this->pdo->prepare('DELETE FROM app_sessions WHERE last_activity < ?');

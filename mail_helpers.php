@@ -34,6 +34,36 @@ function app_mail_from_name(): string
     return $configured !== '' ? $configured : 'Anafinet';
 }
 
+function app_payment_mail_from_email(): string
+{
+    $configured = trim((string)env_value('PAYMENT_MAIL_FROM_EMAIL', ''));
+    if ($configured !== '' && filter_var($configured, FILTER_VALIDATE_EMAIL)) {
+        return $configured;
+    }
+
+    $paymentAdmin = app_payment_admin_email();
+    if (filter_var($paymentAdmin, FILTER_VALIDATE_EMAIL)) {
+        return $paymentAdmin;
+    }
+
+    return app_mail_from_email();
+}
+
+function app_payment_mail_from_name(): string
+{
+    $configured = trim((string)env_value('PAYMENT_MAIL_FROM_NAME', ''));
+    if ($configured !== '') {
+        return $configured;
+    }
+
+    $paymentAdminName = trim((string)env_value('PAYMENT_ADMIN_NAME', ''));
+    if ($paymentAdminName !== '') {
+        return $paymentAdminName;
+    }
+
+    return 'Tesoreria Anafinet';
+}
+
 function app_mail_transport(): string
 {
     $transport = (string)env_value('MAIL_TRANSPORT', '');
@@ -170,14 +200,16 @@ function app_mail_message_id_domain(string $fromEmail): string
     return app_smtp_local_host();
 }
 
-function app_mail_build_headers(string $fromEmail, string $fromName, string $boundary): array
+function app_mail_build_headers(string $fromEmail, string $fromName, string $boundary, ?string $replyTo = null): array
 {
+    $replyTo = $replyTo !== null && filter_var($replyTo, FILTER_VALIDATE_EMAIL) ? $replyTo : $fromEmail;
+
     return [
         'MIME-Version: 1.0',
         'Date: ' . date(DATE_RFC2822),
         'Message-ID: <' . bin2hex(random_bytes(12)) . '@' . app_mail_message_id_domain($fromEmail) . '>',
         'From: ' . app_mail_encode_header($fromName) . ' <' . $fromEmail . '>',
-        'Reply-To: ' . $fromEmail,
+        'Reply-To: ' . $replyTo,
         'X-Mailer: Anafinet Mailer',
         'Content-Type: multipart/alternative; boundary="' . $boundary . '"',
     ];
@@ -263,7 +295,7 @@ function app_mail_smtp_normalize_message(string $message): string
     return str_replace("\n", "\r\n", $message);
 }
 
-function app_send_smtp_email(string $to, string $subject, array $headers, string $message, string $fromEmail): bool
+function app_send_smtp_email(string $to, string $subject, array $headers, string $message, string $envelopeFrom): bool
 {
     if (!function_exists('stream_socket_client')) {
         error_log('Email not sent via SMTP: stream_socket_client() no esta disponible.');
@@ -324,7 +356,7 @@ function app_send_smtp_email(string $to, string $subject, array $headers, string
             app_mail_smtp_expect($socket, [235], base64_encode($password));
         }
 
-        app_mail_smtp_expect($socket, [250], 'MAIL FROM:<' . $fromEmail . '>');
+        app_mail_smtp_expect($socket, [250], 'MAIL FROM:<' . $envelopeFrom . '>');
         app_mail_smtp_expect($socket, [250, 251], 'RCPT TO:<' . $to . '>');
         app_mail_smtp_expect($socket, [354], 'DATA');
 
@@ -344,6 +376,44 @@ function app_send_smtp_email(string $to, string $subject, array $headers, string
     } finally {
         fclose($socket);
     }
+}
+
+function app_mail_resolve_sender(array $options = []): array
+{
+    $defaultFromEmail = app_mail_from_email();
+    $defaultFromName = app_mail_from_name();
+
+    $fromEmail = trim((string)($options['from_email'] ?? $defaultFromEmail));
+    if (!filter_var($fromEmail, FILTER_VALIDATE_EMAIL)) {
+        $fromEmail = $defaultFromEmail;
+    }
+
+    $fromName = trim((string)($options['from_name'] ?? $defaultFromName));
+    if ($fromName === '') {
+        $fromName = $defaultFromName;
+    }
+
+    $replyTo = trim((string)($options['reply_to'] ?? $fromEmail));
+    if (!filter_var($replyTo, FILTER_VALIDATE_EMAIL)) {
+        $replyTo = $fromEmail;
+    }
+
+    $fallbackEnvelopeFrom = trim(app_smtp_username());
+    if (!filter_var($fallbackEnvelopeFrom, FILTER_VALIDATE_EMAIL)) {
+        $fallbackEnvelopeFrom = $fromEmail;
+    }
+
+    $envelopeFrom = trim((string)($options['envelope_from'] ?? $fallbackEnvelopeFrom));
+    if (!filter_var($envelopeFrom, FILTER_VALIDATE_EMAIL)) {
+        $envelopeFrom = $fallbackEnvelopeFrom;
+    }
+
+    return [
+        'from_email' => $fromEmail,
+        'from_name' => $fromName,
+        'reply_to' => $replyTo,
+        'envelope_from' => $envelopeFrom,
+    ];
 }
 
 function app_mail_html_escape(string $value): string
@@ -471,21 +541,20 @@ function app_mail_wrap_layout(
         . '</html>';
 }
 
-function app_send_html_email(string $to, string $subject, string $htmlBody, ?string $textBody = null): bool
+function app_send_html_email(string $to, string $subject, string $htmlBody, ?string $textBody = null, array $options = []): bool
 {
     if (!filter_var($to, FILTER_VALIDATE_EMAIL)) {
         return false;
     }
 
-    $fromEmail = app_mail_from_email();
-    $fromName = app_mail_from_name();
+    $sender = app_mail_resolve_sender($options);
     $boundary = 'anafinet_' . bin2hex(random_bytes(12));
     $textBody = $textBody ?? app_mail_html_to_text($htmlBody);
-    $headers = app_mail_build_headers($fromEmail, $fromName, $boundary);
+    $headers = app_mail_build_headers($sender['from_email'], $sender['from_name'], $boundary, $sender['reply_to']);
     $message = app_mail_build_message($htmlBody, $textBody, $boundary);
 
     if (app_mail_transport() === 'smtp') {
-        return app_send_smtp_email($to, $subject, $headers, $message, $fromEmail);
+        return app_send_smtp_email($to, $subject, $headers, $message, $sender['envelope_from']);
     }
 
     if (!function_exists('mail')) {

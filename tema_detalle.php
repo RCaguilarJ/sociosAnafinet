@@ -23,6 +23,11 @@ if (!$tema) {
     exit();
 }
 
+if (function_exists('app_mark_notifications_by_url')) {
+    app_mark_notifications_by_url($pdo, (int)($_SESSION['user_id'] ?? 0), base_url('tema_detalle.php?id=' . $temaId));
+    app_mark_notifications_by_url($pdo, (int)($_SESSION['user_id'] ?? 0), base_url('tema_detalle.php?id=' . $temaId . '#respuestas'));
+}
+
 $respPage = isset($_GET['rpage']) ? (int)$_GET['rpage'] : 1;
 $respPage = $respPage > 0 ? $respPage : 1;
 $respPerPage = 6;

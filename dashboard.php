@@ -122,6 +122,8 @@ try {
     $userStatus = $_SESSION['user_estatus'] ?? '';
     $masterAccess = current_user_has_master_access($pdo ?? null, (int)($_SESSION['user_id'] ?? 0));
     $displayUserName = app_display_user_name((string)($_SESSION['user_name'] ?? ''), (string)($_SESSION['user_rol'] ?? ''));
+    $membershipExpiresAt = '';
+    $membershipDaysRemaining = null;
 
     if ($pdo instanceof PDO) {
         try {
@@ -129,6 +131,19 @@ try {
             if ($dbStatus !== null) {
                 $userStatus = $dbStatus;
                 $_SESSION['user_estatus'] = $dbStatus;
+            }
+
+            if (function_exists('app_get_user_membership_dates')) {
+                $membershipDates = app_get_user_membership_dates($pdo, (int)($_SESSION['user_id'] ?? 0));
+                if (is_array($membershipDates)) {
+                    $membershipExpiresAt = trim((string)($membershipDates['membership_expires_at'] ?? ''));
+                    if ($membershipExpiresAt !== '') {
+                        $expiresTs = strtotime($membershipExpiresAt);
+                        if ($expiresTs !== false) {
+                            $membershipDaysRemaining = (int)ceil(($expiresTs - time()) / 86400);
+                        }
+                    }
+                }
             }
 
             $videos_count = (int)$pdo->query("SELECT COUNT(*) FROM contenidos WHERE tipo = 'video'")->fetchColumn();
@@ -183,6 +198,32 @@ try {
         <?php if ($dashboardStatsUnavailable): ?>
             <div class="mb-6 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
                 Algunas metricas del dashboard no estuvieron disponibles. Revisa la tabla <code>contenidos</code> y los permisos del usuario de base de datos en produccion.
+            </div>
+        <?php endif; ?>
+
+        <?php if (!$masterAccess && normalize_text_value((string)$userStatus) === 'renovacionpendiente'): ?>
+            <div class="mb-6 rounded-2xl border border-red-200 bg-red-50 px-5 py-4 text-sm text-red-900">
+                <div class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                    <div>
+                        <p class="font-bold">Tu membresia vencio y necesita renovacion.</p>
+                        <p class="mt-1 text-red-800">Las secciones restringidas permaneceran bloqueadas hasta que confirmes el nuevo pago.</p>
+                    </div>
+                    <a href="<?php echo BASE_URL; ?>/confirmar_pago.php" class="inline-flex items-center justify-center rounded-xl bg-[#5282B2] px-5 py-3 font-bold text-white hover:bg-blue-700 transition">
+                        Renovar membresia
+                    </a>
+                </div>
+            </div>
+        <?php elseif (!$masterAccess && $membershipDaysRemaining !== null && $membershipDaysRemaining >= 0 && function_exists('app_membership_warning_days') && $membershipDaysRemaining <= app_membership_warning_days()): ?>
+            <div class="mb-6 rounded-2xl border border-amber-200 bg-amber-50 px-5 py-4 text-sm text-amber-900">
+                <div class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                    <div>
+                        <p class="font-bold">Tu membresia esta por vencer.</p>
+                        <p class="mt-1 text-amber-800">Vence el <?php echo htmlspecialchars($membershipExpiresAt, ENT_QUOTES, 'UTF-8'); ?>. Renueva tu pago para evitar restricciones en el acceso.</p>
+                    </div>
+                    <a href="<?php echo BASE_URL; ?>/confirmar_pago.php" class="inline-flex items-center justify-center rounded-xl bg-[#5282B2] px-5 py-3 font-bold text-white hover:bg-blue-700 transition">
+                        Renovar ahora
+                    </a>
+                </div>
             </div>
         <?php endif; ?>
 

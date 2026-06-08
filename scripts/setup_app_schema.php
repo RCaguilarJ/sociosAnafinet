@@ -42,6 +42,8 @@ $statements = [
         comprobante_pago VARCHAR(255) NULL,
         referencia_pago VARCHAR(120) NULL,
         pago_reportado_at DATETIME NULL,
+        membership_started_at DATETIME NULL,
+        membership_expires_at DATETIME NULL,
         creado_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
         actualizado_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
         UNIQUE KEY uq_usuarios_email (email)
@@ -114,6 +116,24 @@ $statements = [
         KEY idx_actividad_usuario_usuario (usuario_id),
         KEY idx_actividad_usuario_tipo (tipo_accion),
         CONSTRAINT fk_actividad_usuario FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci",
+
+    "CREATE TABLE IF NOT EXISTS app_notifications (
+        id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+        user_id INT NOT NULL,
+        type VARCHAR(60) NOT NULL,
+        title VARCHAR(190) NOT NULL,
+        message TEXT NOT NULL,
+        url VARCHAR(255) NULL,
+        dedupe_key VARCHAR(191) NULL,
+        meta_json LONGTEXT NULL,
+        is_read TINYINT(1) NOT NULL DEFAULT 0,
+        read_at DATETIME NULL,
+        created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        KEY idx_app_notifications_user (user_id),
+        KEY idx_app_notifications_user_read (user_id, is_read, created_at),
+        UNIQUE KEY uq_app_notifications_user_dedupe (user_id, dedupe_key),
+        CONSTRAINT fk_app_notifications_user FOREIGN KEY (user_id) REFERENCES usuarios(id) ON DELETE CASCADE
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci",
 ];
 

@@ -242,10 +242,21 @@ function user_has_profile_only_access(?PDO $pdo, ?int $userId, ?string $role = n
     return is_pending_payment_status($status);
 }
 
-function render_membership_required_page(string $activePage, string $pageTitle = 'Función bloqueada'): void
+function render_membership_required_page(string $activePage, string $pageTitle = 'Funcion bloqueada'): void
 {
     http_response_code(403);
     require_once __DIR__ . '/config.php';
+
+    $currentStatus = (string)($_SESSION['user_estatus'] ?? '');
+    $isRenewalPending = normalize_text_value($currentStatus) === 'renovacionpendiente';
+    $badgeLabel = $isRenewalPending ? 'Renovacion requerida' : 'Acceso restringido';
+    $headline = $isRenewalPending
+        ? 'Renueva tu membresia para recuperar el acceso'
+        : 'Pague membresia para habilitar esta funcion';
+    $message = $isRenewalPending
+        ? 'Tu vigencia ya vencio. Para volver a entrar a las secciones restringidas, registra tu renovacion y espera la validacion del pago.'
+        : 'Esta seccion se habilitara cuando tu pago quede registrado. Mientras tanto, puedes continuar en tu perfil y confirmar tu pago con comprobante.';
+    $actionLabel = $isRenewalPending ? 'Renovar membresia' : 'Confirmar pago';
 
     ?>
     <!DOCTYPE html>
@@ -268,14 +279,14 @@ function render_membership_required_page(string $activePage, string $pageTitle =
                             <i class="fa-solid fa-lock text-xl"></i>
                         </div>
                         <div class="min-w-0">
-                            <p class="text-sm font-bold uppercase tracking-[0.18em] text-amber-700">Acceso restringido</p>
-                            <h1 class="mt-2 text-3xl font-bold text-slate-900">Pague membresía para habilitar esta función</h1>
+                            <p class="text-sm font-bold uppercase tracking-[0.18em] text-amber-700"><?php echo htmlspecialchars($badgeLabel, ENT_QUOTES, 'UTF-8'); ?></p>
+                            <h1 class="mt-2 text-3xl font-bold text-slate-900"><?php echo htmlspecialchars($headline, ENT_QUOTES, 'UTF-8'); ?></h1>
                             <p class="mt-3 max-w-2xl text-sm leading-7 text-slate-700">
-                                Esta sección se habilitará cuando tu pago quede registrado. Mientras tanto, puedes continuar en tu perfil y confirmar tu pago con comprobante.
+                                <?php echo htmlspecialchars($message, ENT_QUOTES, 'UTF-8'); ?>
                             </p>
                             <div class="mt-6 flex flex-col gap-3 sm:flex-row">
                                 <a href="<?php echo BASE_URL; ?>/confirmar_pago.php" class="inline-flex items-center justify-center rounded-2xl bg-[#5282B2] px-6 py-4 font-bold text-white hover:bg-blue-700 transition">
-                                    Confirmar pago
+                                    <?php echo htmlspecialchars($actionLabel, ENT_QUOTES, 'UTF-8'); ?>
                                 </a>
                                 <a href="javascript:history.back()" class="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-6 py-4 font-bold text-slate-700 hover:bg-slate-50 transition">
                                     Volver
@@ -292,7 +303,7 @@ function render_membership_required_page(string $activePage, string $pageTitle =
     exit();
 }
 
-function require_full_portal_access(?PDO $pdo, string $activePage = 'dashboard', string $pageTitle = 'Función bloqueada'): void
+function require_full_portal_access(?PDO $pdo, string $activePage = 'dashboard', string $pageTitle = 'Funcion bloqueada'): void
 {
     if (!isset($_SESSION['user_id'])) {
         header('Location: ' . BASE_URL . '/index.php');
@@ -400,7 +411,7 @@ function ensure_user_payment_columns(PDO $pdo): void
 
     foreach ($requiredColumns as $column => $alterSql) {
         $columnExistsStmt->execute([$column]);
-        $exists = (bool) $columnExistsStmt->fetchColumn();
+        $exists = (bool)$columnExistsStmt->fetchColumn();
         if (!$exists) {
             $pdo->exec($alterSql);
         }

@@ -40,6 +40,10 @@ if (function_exists('mb_substr')) {
 try {
     $stmt = $pdo->prepare("INSERT INTO foro_temas (usuario_id, titulo, categoria, contenido) VALUES (?, ?, ?, ?)");
     if ($stmt->execute([$usuario_id, $titulo, $categoria, $contenido])) {
+        $topicId = (int)$pdo->lastInsertId();
+        if ($topicId > 0 && function_exists('app_notify_forum_topic_created')) {
+            app_notify_forum_topic_created($pdo, $topicId, $usuario_id, $titulo, $categoria);
+        }
         header("Location: foro.php?status=tema_creado");
         exit();
     }

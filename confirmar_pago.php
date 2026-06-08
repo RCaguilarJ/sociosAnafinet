@@ -19,6 +19,10 @@ $userStatus = (string)($_SESSION['user_estatus'] ?? '');
 $mensaje = '';
 $mensajeTipo = 'success';
 
+if (function_exists('app_mark_notifications_by_url')) {
+    app_mark_notifications_by_url($pdo, $userId, base_url('confirmar_pago.php'));
+}
+
 $flashMessage = (string)($_SESSION['payment_flash_message'] ?? '');
 $flashType = (string)($_SESSION['payment_flash_type'] ?? 'info');
 $flashSource = (string)($_SESSION['payment_flash_source'] ?? '');
