@@ -21,6 +21,7 @@ if (!($pdo instanceof PDO) && $allowDemoLogin) {
         $_SESSION['user_name'] = 'Asociado Demo';
         $_SESSION['user_rol'] = 'Asociado';
         $_SESSION['demo_mode'] = true;
+        session_write_close();
 
         header('Location: dashboard.php');
         exit();
@@ -69,6 +70,7 @@ try {
     $_SESSION['user_email'] = $user['email'] ?? '';
     $_SESSION['user_estatus'] = $user['estatus'] ?? '';
     $_SESSION['master_access'] = app_email_is_master((string)($_SESSION['user_email'] ?? ''));
+    session_write_close();
 
     header('Location: dashboard.php');
     exit();

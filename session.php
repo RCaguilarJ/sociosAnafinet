@@ -25,9 +25,14 @@ if (!class_exists('DatabaseSessionHandler')) {
 
         public function read($id): string
         {
-            $stmt = $this->pdo->prepare('SELECT data, last_activity FROM app_sessions WHERE id = ? LIMIT 1');
-            $stmt->execute([$id]);
-            $row = $stmt->fetch();
+            try {
+                $stmt = $this->pdo->prepare('SELECT data, last_activity FROM app_sessions WHERE id = ? LIMIT 1');
+                $stmt->execute([$id]);
+                $row = $stmt->fetch();
+            } catch (Throwable $e) {
+                error_log('Session read failed for session id ' . (string)$id . ': ' . $e->getMessage());
+                return '';
+            }
 
             if (!$row) {
                 return '';
@@ -44,25 +49,46 @@ if (!class_exists('DatabaseSessionHandler')) {
 
         public function write($id, $data): bool
         {
-            $stmt = $this->pdo->prepare(
-                'INSERT INTO app_sessions (id, data, last_activity) VALUES (?, ?, ?)
-                 ON DUPLICATE KEY UPDATE data = VALUES(data), last_activity = VALUES(last_activity)'
-            );
+            try {
+                $stmt = $this->pdo->prepare(
+                    'INSERT INTO app_sessions (id, data, last_activity) VALUES (?, ?, ?)
+                     ON DUPLICATE KEY UPDATE data = VALUES(data), last_activity = VALUES(last_activity)'
+                );
+                $result = $stmt->execute([$id, $data, time()]);
+            } catch (Throwable $e) {
+                error_log('Session write failed for session id ' . (string)$id . ': ' . $e->getMessage());
+                return false;
+            }
 
-            return $stmt->execute([$id, $data, time()]);
+            if (!$result) {
+                $errorInfo = method_exists($stmt, 'errorInfo') ? $stmt->errorInfo() : [];
+                error_log('Session write failed for session id ' . (string)$id . ': ' . json_encode($errorInfo, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
+            }
+
+            return $result;
         }
 
         public function destroy($id): bool
         {
-            $stmt = $this->pdo->prepare('DELETE FROM app_sessions WHERE id = ?');
-            return $stmt->execute([$id]);
+            try {
+                $stmt = $this->pdo->prepare('DELETE FROM app_sessions WHERE id = ?');
+                return $stmt->execute([$id]);
+            } catch (Throwable $e) {
+                error_log('Session destroy failed for session id ' . (string)$id . ': ' . $e->getMessage());
+                return false;
+            }
         }
 
         public function gc($max_lifetime): int
         {
             $threshold = time() - max($max_lifetime, $this->ttl);
-            $stmt = $this->pdo->prepare('DELETE FROM app_sessions WHERE last_activity < ?');
-            $stmt->execute([$threshold]);
+            try {
+                $stmt = $this->pdo->prepare('DELETE FROM app_sessions WHERE last_activity < ?');
+                $stmt->execute([$threshold]);
+            } catch (Throwable $e) {
+                error_log('Session GC failed: ' . $e->getMessage());
+                return 0;
+            }
 
             return (int)$stmt->rowCount();
         }
@@ -130,8 +156,10 @@ if (!function_exists('app_start_session')) {
                 session_set_save_handler(new DatabaseSessionHandler($pdo, $ttl), true);
             } catch (Exception $e) {
                 $GLOBALS['appSessionError'] = $e->getMessage();
+                error_log('Session save handler setup failed: ' . $e->getMessage());
             } catch (Error $e) {
                 $GLOBALS['appSessionError'] = $e->getMessage();
+                error_log('Session save handler setup failed: ' . $e->getMessage());
             }
         }
 
