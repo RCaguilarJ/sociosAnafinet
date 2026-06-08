@@ -2,6 +2,63 @@
 require_once __DIR__ . '/bootstrap.php';
 require_once 'role_helpers.php';
 
+if (!function_exists('app_mail_html_escape')) {
+    function app_mail_html_escape(string $text): string
+    {
+        return htmlspecialchars($text, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+    }
+}
+
+if (!function_exists('app_mail_button')) {
+    function app_mail_button(string $url, string $label): string
+    {
+        return '<div style="text-align:center;margin:30px 0;"><a href="'.htmlspecialchars($url, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'" style="display:inline-block;padding:14px 24px;background-color:#2563eb;color:#ffffff;text-decoration:none;border-radius:10px;font-weight:bold;">'.htmlspecialchars($label, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'</a></div>';
+    }
+}
+
+if (!function_exists('app_mail_wrap_layout')) {
+    function app_mail_wrap_layout(string $title, string $heading, string $body, string $summary = '', string $button = '', string $footer = '', string $preheader = ''): string
+    {
+        return '<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>'.htmlspecialchars($title, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'</title><style>body{margin:0;padding:0;font-family:Arial,sans-serif;background:#f4f6f9;color:#1f2937;} .email-body{max-width:680px;margin:0 auto;padding:24px;background:#ffffff;border-radius:24px;} .email-hero{margin-bottom:24px;} .button{display:inline-block;padding:14px 24px;background:#2563eb;color:#ffffff;text-decoration:none;border-radius:12px;font-weight:bold;}</style></head><body><div class="email-body"><div class="email-hero"><h1>'.htmlspecialchars($heading, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'</h1></div><div>'.$body.'</div>'.($summary !== '' ? '<div style="margin:24px 0;">'.$summary.'</div>' : '').($button !== '' ? '<div>'.$button.'</div>' : '').'<p style="margin-top:24px;color:#6b7280;">'.htmlspecialchars($footer, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'</p></div></body></html>';
+    }
+}
+
+if (!function_exists('app_send_html_email')) {
+    function app_send_html_email(string $to, string $subject, string $html, ?string $text = null, array $options = []): bool
+    {
+        $fromEmail = $options['from_email'] ?? 'no-reply@' . ($_SERVER['HTTP_HOST'] ?? 'localhost');
+        $fromName = $options['from_name'] ?? '';
+        $replyTo = $options['reply_to'] ?? '';
+
+        $headers = [
+            'MIME-Version: 1.0',
+            'Content-type: text/html; charset=UTF-8',
+        ];
+
+        if ($fromName !== '') {
+            $headers[] = 'From: ' . mb_encode_mimeheader($fromName, 'UTF-8') . ' <' . $fromEmail . '>';
+        } else {
+            $headers[] = 'From: ' . $fromEmail;
+        }
+
+        if ($replyTo !== '') {
+            $headers[] = 'Reply-To: ' . $replyTo;
+        }
+
+        $headers[] = 'X-Mailer: PHP/' . phpversion();
+
+        $encodedSubject = mb_encode_mimeheader($subject, 'UTF-8');
+        return @mail($to, $encodedSubject, $html, implode("\r\n", $headers));
+    }
+}
+
+if (!function_exists('app_mail_last_error')) {
+    function app_mail_last_error(): string
+    {
+        return '';
+    }
+}
+
 if (!isset($_SESSION['user_id'])) {
     header("Location: index.php");
     exit();
