@@ -1,6 +1,5 @@
 <?php
 require_once dirname(__DIR__) . '/bootstrap.php';
-require_once dirname(__DIR__) . '/mail_helpers.php'; // Cargamos las funciones de correo[cite: 3]
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     header('Location: ' . BASE_URL . '/afiliacion/index.php?paso=1');
@@ -8,14 +7,12 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 }
 
 $paso = isset($_GET['paso']) ? (int) $_GET['paso'] : 1;
-
-// Agregamos el paso 4 a la lista de pasos permitidos
 if (!in_array($paso, [1, 2, 4], true)) {
     header('Location: ' . BASE_URL . '/afiliacion/index.php?paso=1');
     exit();
 }
 
-$email_com_valido = function (string $email): bool {
+$emailComValido = static function (string $email): bool {
     $email = trim($email);
     if ($email === '' || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
         return false;
@@ -29,128 +26,156 @@ if (!isset($_SESSION['afiliacion'])) {
     $_SESSION['afiliacion'] = [];
 }
 
-$_SESSION['afiliacion']["paso$paso"] = $_POST;
+$_SESSION['afiliacion']["paso{$paso}"] = $_POST;
 
-// --- PROCESAR PASO 1 ---[cite: 2]
 if ($paso === 1) {
-    $email = $_POST['email'] ?? '';
-    if (!$email_com_valido($email)) {
-        $_SESSION['afiliacion_error'] = 'El correo debe ser válido y terminar en .com.';
+    $email = (string)($_POST['email'] ?? '');
+    if (!$emailComValido($email)) {
+        $_SESSION['afiliacion_error'] = 'El correo debe ser valido y terminar en .com.';
         header('Location: ' . BASE_URL . '/afiliacion/index.php?paso=1');
         exit();
     }
-    unset($_SESSION['afiliacion_error']);
-    
-    $siguiente = $paso + 1;
-    header('Location: ' . BASE_URL . '/afiliacion/index.php?paso=' . $siguiente);
+
+    unset($_SESSION['afiliacion_error'], $_SESSION['afiliacion_error_general']);
+    header('Location: ' . BASE_URL . '/afiliacion/index.php?paso=2');
     exit();
 }
 
-// --- PROCESAR PASO 2 ---
 if ($paso === 2) {
+    unset($_SESSION['afiliacion_error'], $_SESSION['afiliacion_error_general']);
     header('Location: ' . BASE_URL . '/afiliacion/index.php?paso=4');
     exit();
 }
 
-// --- PROCESAR PASO 4 (Subida de Pago Manual y Envío de Correos) ---
-if ($paso === 4) {
-    // 1. Validar que se haya adjuntado un archivo sin errores
-    if (!isset($_FILES['comprobante']) || $_FILES['comprobante']['error'] !== UPLOAD_ERR_OK) {
-        $_SESSION['afiliacion_error'] = 'Es obligatorio subir un archivo válido de comprobante.';
+if (!isset($_SESSION['afiliacion']['paso1'], $_SESSION['afiliacion']['paso2'])) {
+    $_SESSION['afiliacion_error_general'] = 'Completa primero tus datos personales y de contacto.';
+    header('Location: ' . BASE_URL . '/afiliacion/index.php?paso=1');
+    exit();
+}
+
+if (!($pdo instanceof PDO)) {
+    $_SESSION['afiliacion_error_general'] = 'El registro no esta disponible temporalmente porque no hay conexion con la base de datos.';
+    header('Location: ' . BASE_URL . '/afiliacion/index.php?paso=4');
+    exit();
+}
+
+$paso1 = $_SESSION['afiliacion']['paso1'];
+$paso2 = $_SESSION['afiliacion']['paso2'];
+$referenciaPago = trim((string)($_POST['referencia_pago'] ?? ''));
+$comprobante = $_FILES['comprobante'] ?? [];
+
+$crearUsuarioAfiliacion = static function (PDO $pdo, array $paso1, array $paso2): array {
+    $email = trim((string)($paso1['email'] ?? ''));
+    $stmtExisting = $pdo->prepare('SELECT id FROM usuarios WHERE email = ? LIMIT 1');
+    $stmtExisting->execute([$email]);
+    if ($stmtExisting->fetch()) {
+        throw new RuntimeException('duplicate_email');
+    }
+
+    $rolSolicitado = trim((string)($paso1['rol_solicitado'] ?? 'Asociado'));
+    $passwordTemp = password_hash((string)($paso1['rfc'] ?? ''), PASSWORD_BCRYPT);
+    $estatusInicial = 'Pendiente de pago';
+
+    $sql = "INSERT INTO usuarios (
+        nombre, email, password, rfc, curp, telefono,
+        calle, numero, colonia, cp, ciudad, estado,
+        empresa, puesto, especialidad, cedula_profesional,
+        rol, rol_solicitado, estatus
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Asociado', ?, ?)";
+
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute([
+        (string)($paso1['nombre'] ?? ''),
+        $email,
+        $passwordTemp,
+        (string)($paso1['rfc'] ?? ''),
+        (string)($paso1['curp'] ?? ''),
+        (string)($paso1['telefono'] ?? ''),
+        (string)($paso2['calle'] ?? ''),
+        (string)($paso2['numero'] ?? ''),
+        (string)($paso2['colonia'] ?? ''),
+        (string)($paso2['cp'] ?? ''),
+        (string)($paso2['ciudad'] ?? ''),
+        (string)($paso2['estado'] ?? ''),
+        '',
+        '',
+        '',
+        '',
+        $rolSolicitado,
+        $estatusInicial,
+    ]);
+
+    return [
+        'id' => (int)$pdo->lastInsertId(),
+        'nombre' => (string)($paso1['nombre'] ?? 'Asociado'),
+        'email' => $email,
+    ];
+};
+
+try {
+    ensure_user_payment_columns($pdo);
+    app_ensure_membership_payment_schema($pdo);
+
+    $createdUserId = 0;
+    $user = $crearUsuarioAfiliacion($pdo, $paso1, $paso2);
+    $userId = (int)$user['id'];
+    $createdUserId = $userId;
+
+    $storeResult = app_store_manual_payment_report($pdo, $userId, $referenciaPago, is_array($comprobante) ? $comprobante : []);
+    if (!($storeResult['ok'] ?? false)) {
+        $pdo->prepare('DELETE FROM usuarios WHERE id = ?')->execute([$userId]);
+        $_SESSION['afiliacion_error'] = (string)($storeResult['message'] ?? 'No fue posible guardar el comprobante.');
         header('Location: ' . BASE_URL . '/afiliacion/index.php?paso=4');
         exit();
     }
 
-    $fileTmpPath = $_FILES['comprobante']['tmp_name'];
-    $fileName = $_FILES['comprobante']['name'];
-    $fileExtension = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
-    
-    // Extensiones aceptadas
-    $allowedExtensions = ['pdf', 'jpg', 'jpeg', 'png'];
-    if (!in_array($fileExtension, $allowedExtensions, true)) {
-        $_SESSION['afiliacion_error'] = 'Formato no permitido. Solo se aceptan archivos PDF, JPG o PNG.';
-        header('Location: ' . BASE_URL . '/afiliacion/index.php?paso=4');
+    app_send_manual_payment_received_notifications(
+        $pdo,
+        $userId,
+        $referenciaPago,
+        (string)($storeResult['proof_url'] ?? '')
+    );
+
+    unset($_SESSION['afiliacion'], $_SESSION['afiliacion_error'], $_SESSION['afiliacion_error_general']);
+
+    session_regenerate_id(true);
+    $_SESSION['user_id'] = $userId;
+    $_SESSION['user_name'] = (string)$user['nombre'];
+    $_SESSION['user_email'] = (string)$user['email'];
+    $_SESSION['user_rol'] = 'Asociado';
+    $_SESSION['user_estatus'] = (string)($storeResult['status'] ?? 'Pago reportado');
+    $_SESSION['payment_flash_message'] = (string)($storeResult['message'] ?? 'Tu confirmacion manual fue guardada correctamente.');
+    $_SESSION['payment_flash_type'] = 'success';
+    $_SESSION['payment_flash_source'] = 'manual_confirmation';
+
+    header('Location: ' . BASE_URL . '/confirmar_pago.php?registro=1');
+    exit();
+} catch (PDOException $e) {
+    if (($createdUserId ?? 0) > 0) {
+        $pdo->prepare('DELETE FROM usuarios WHERE id = ?')->execute([(int)$createdUserId]);
+    }
+
+    if ((string)$e->getCode() === '23000') {
+        $_SESSION['afiliacion_error'] = 'El correo capturado ya esta registrado. Inicia sesion o utiliza otro correo para continuar.';
+        header('Location: ' . BASE_URL . '/afiliacion/index.php?paso=1');
         exit();
     }
 
-    // Definir ruta física del directorio de cargas
-    $uploadDir = dirname(__DIR__) . '/uploads/comprobantes/';
-    if (!is_dir($uploadDir)) {
-        mkdir($uploadDir, 0755, true);
+    $_SESSION['afiliacion_error_general'] = 'No fue posible completar tu registro en este momento.';
+    header('Location: ' . BASE_URL . '/afiliacion/index.php?paso=4');
+    exit();
+} catch (Throwable $e) {
+    if (($createdUserId ?? 0) > 0) {
+        $pdo->prepare('DELETE FROM usuarios WHERE id = ?')->execute([(int)$createdUserId]);
     }
 
-    // Renombrar el archivo de forma única por seguridad
-    $newFileName = 'comprobante_' . time() . '_' . bin2hex(random_bytes(4)) . '.' . $fileExtension;
-    $destPath = $uploadDir . $newFileName;
-
-    if (move_uploaded_file($fileTmpPath, $destPath)) {
-        // Recuperar la información guardada en la sesión[cite: 2]
-        $nombreUsuario = $_SESSION['afiliacion']['paso1']['nombre'] ?? 'Usuario Registrado';
-        $emailUsuario  = $_SESSION['afiliacion']['paso1']['email'] ?? '';
-
-        // Actualizar el estatus en la base de datos si el ID de usuario ya existe en sesión[cite: 5]
-        if (isset($pdo) && !empty($_SESSION['user_id'])) {
-            $stmt = $pdo->prepare("UPDATE usuarios SET estatus = 'Pago reportado' WHERE id = ?");
-            $stmt->execute([$_SESSION['user_id']]);
-        }
-
-        // --- FLUJO DE CORREOS AUTOMÁTICOS ---[cite: 3]
-
-        // Correo A: Notificación interna a tesoreria@anafinet.mx[cite: 3]
-        $introTesoreria = "<p>Se ha recibido un nuevo comprobante de pago manual en el sistema de afiliaciones.</p>";
-        $summaryTesoreria = app_mail_payment_summary_rows([
-            'Socio/Usuario' => $nombreUsuario,
-            'Email de Contacto' => $emailUsuario,
-            'Nombre del Archivo' => $newFileName,
-            'Estatus Inicial' => 'Pago reportado (Validación Pendiente)'
-        ]);
-        
-        $htmlTesoreria = app_mail_wrap_layout(
-            'Aviso de Administración',
-            'Nuevo Comprobante Recibido',
-            $introTesoreria,
-            $summaryTesoreria,
-            '', // Sin botón de acción
-            'Por favor, ingresa al panel maestro para auditar el documento.'
-        );
-        
-        app_send_html_email(
-            'tesoreria@anafinet.mx',
-            'NOTIFICACIÓN: Pago manual registrado por ' . $nombreUsuario,
-            $htmlTesoreria,
-            null,
-            ['from_email' => 'noreply@anafinet.mx', 'from_name' => 'Notificaciones Anafinet']
-        );
-
-        // Correo B: Notificación de confirmación al Socio desde noreply@anafinet.mx[cite: 3]
-        if ($emailUsuario !== '') {
-            $introSocio = "<p>Estimado/a <strong>" . app_mail_html_escape($nombreUsuario) . "</strong>,</p>"
-                        . "<p>Tu comprobante de pago ha sido cargado con éxito en nuestros servidores. En este momento se encuentra en fila de revisión.</p>";
-            
-            $htmlSocio = app_mail_wrap_layout(
-                'Procesando Solicitud',
-                'Hemos recibido tu comprobante',
-                $introSocio,
-                '', // Sin resumen de pago
-                '', // Sin botón
-                'Nuestro equipo de validación (Master) verificará el documento. Te notificaremos vía correo en cuanto tu cuenta sea activada.'
-            );
-
-            app_send_html_email(
-                $emailUsuario,
-                'Tu pago está siendo procesado - Anafinet',
-                $htmlSocio,
-                null,
-                ['from_email' => 'noreply@anafinet.mx', 'from_name' => 'Anafinet']
-            );
-        }
-
-        unset($_SESSION['afiliacion_error']);
-        header('Location: ' . BASE_URL . '/afiliacion/solicitud_en_proceso.php');
-        exit();
-    } else {
-        $_SESSION['afiliacion_error'] = 'Error crítico al intentar guardar el archivo en el servidor.';
-        header('Location: ' . BASE_URL . '/afiliacion/index.php?paso=4');
+    if ($e->getMessage() === 'duplicate_email') {
+        $_SESSION['afiliacion_error'] = 'El correo capturado ya esta registrado. Inicia sesion o utiliza otro correo para continuar.';
+        header('Location: ' . BASE_URL . '/afiliacion/index.php?paso=1');
         exit();
     }
+
+    $_SESSION['afiliacion_error_general'] = 'No fue posible guardar la confirmacion manual en este momento.';
+    header('Location: ' . BASE_URL . '/afiliacion/index.php?paso=4');
+    exit();
 }

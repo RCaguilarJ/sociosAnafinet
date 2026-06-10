@@ -1,197 +1,208 @@
 <?php
-// Verificaciones de pasarelas del .env (para el modo de demostración visual)
-$mpHabilitado = function_exists('app_mercadopago_enabled') ? app_mercadopago_enabled() : false;
-$ppHabilitado = function_exists('app_paypal_enabled') ? app_paypal_enabled() : false;
+$datos = $_SESSION['afiliacion']['paso4'] ?? [];
+$mensajeError = $_SESSION['afiliacion_error'] ?? ($_SESSION['afiliacion_error_general'] ?? '');
+if ($mensajeError !== '') {
+    unset($_SESSION['afiliacion_error'], $_SESSION['afiliacion_error_general']);
+}
 
-$montoTotal = "1,500.00";
-$conceptoPago = "Membresía Anafinet · Cuota de Afiliación";
+$panelInicial = ($mensajeError !== '' || !empty($datos['referencia_pago'])) ? 'manual' : 'mercadopago';
 ?>
 
-<style>
-    .tab-active {
-        background-color: #ffffff !important;
-        color: #009EE3 !important;
-        border-bottom: 3px solid #009EE3 !important;
-    }
-    .tab-active.paypal-theme {
-        color: #003087 !important;
-        border-bottom: 3px solid #003087 !important;
-    }
-</style>
+<div class="animate-fadeIn">
+    <h2 class="text-2xl font-bold text-slate-800">Metodo de Pago</h2>
+    <p class="mt-1 mb-6 text-sm text-slate-500">Paso 3 de 3: conserva la maqueta visual de Mercado Pago y PayPal, y ademas permite cargar el comprobante manual para revision interna.</p>
 
-<div class="text-left">
-    <h2 class="text-2xl font-bold text-slate-800">Método de Pago</h2>
-    <p class="text-sm text-slate-500 mt-1 mb-6">Paso 3 de 3: completa el pago de tu afiliación. Al aprobarse, tu cuenta se crea automáticamente y se enlaza con la membresía.</p>
+    <?php if ($mensajeError !== ''): ?>
+        <div class="mb-6 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+            <?php echo htmlspecialchars($mensajeError, ENT_QUOTES, 'UTF-8'); ?>
+        </div>
+    <?php endif; ?>
 
-    <!-- Tarjeta Principal del Formulario Integrado -->
-    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden max-w-xl mx-auto">
-        
-        <!-- Resumen del Monto -->
-        <div class="bg-slate-50 border-b border-slate-200 p-6 flex justify-between items-center">
-            <div>
-                <span class="text-xs font-bold text-slate-400 uppercase tracking-wider block">CUOTA DE AFILIACION</span>
-                <div class="text-2xl font-black text-slate-900 mt-1">
-                    $<?= $montoTotal ?> <span class="text-base font-semibold text-slate-500">MXN</span>
+    <div class="overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-sm">
+        <div class="border-b border-slate-200 bg-slate-50 p-6">
+            <div class="flex items-center justify-between gap-4">
+                <div>
+                    <p class="text-xs font-bold uppercase tracking-[0.18em] text-slate-400">Cuota de afiliacion</p>
+                    <h3 class="mt-2 text-3xl font-bold text-slate-900">$1,500.00 MXN</h3>
+                    <p class="mt-2 text-sm text-slate-500">Afiliacion Anafinet · Cuota de ingreso</p>
                 </div>
-                <p class="text-xs text-slate-500 mt-0.5"><?= $conceptoPago ?></p>
+                <span class="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-700">Pago seguro</span>
             </div>
-            <span class="px-3 py-1 text-xs font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-full">
-                Pago seguro
-            </span>
         </div>
 
-        <!-- Selector de Métodos (Pestañas) -->
-        <div class="flex border-b border-slate-200 bg-slate-50">
-            <button type="button" id="tab-mp" onclick="switchStepPayment('mp')" class="flex-1 py-3 text-sm font-bold flex items-center justify-center gap-2 border-r border-slate-200 text-slate-400 transition-all tab-active">
-                <svg class="w-6 h-5" viewBox="0 0 50 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <rect width="50" height="32" rx="5" fill="#009EE3"/>
-                    <path d="M8 22l4-10 3 5.5 2.5-3.5 4 8" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
-                    <circle cx="34" cy="16" r="5" fill="white"/>
-                </svg>
+        <div class="grid grid-cols-1 border-b border-slate-200 bg-slate-50 sm:grid-cols-3">
+            <button type="button" data-payment-tab="mercadopago" class="payment-tab border-b border-slate-200 px-4 py-4 text-sm font-bold text-slate-500 transition sm:border-b-0 sm:border-r">
                 Mercado Pago
             </button>
-            <button type="button" id="tab-paypal" onclick="switchStepPayment('paypal')" class="flex-1 py-3 text-sm font-bold flex items-center justify-center gap-2 text-slate-400 transition-all">
-                <svg class="w-6 h-5" viewBox="0 0 50 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <rect width="50" height="32" rx="5" fill="#003087"/>
-                    <path d="M14 7h8c4 0 6.5 2 6 5.5C27.5 17 25 19 21.5 19h-3.5l-1.5 6H12L14 7z" fill="#009CDE"/>
-                </svg>
+            <button type="button" data-payment-tab="paypal" class="payment-tab border-b border-slate-200 px-4 py-4 text-sm font-bold text-slate-500 transition sm:border-b-0 sm:border-r">
                 PayPal
+            </button>
+            <button type="button" data-payment-tab="manual" class="payment-tab px-4 py-4 text-sm font-bold text-slate-500 transition">
+                Comprobante Manual
             </button>
         </div>
 
-        <!-- Checkbox de Autorización Obligatorio del Registro -->
-        <div class="p-6 bg-slate-50 border-b border-slate-100">
-            <label class="flex items-start gap-3 cursor-pointer select-none">
-                <input type="checkbox" id="auth-check" class="mt-1 rounded border-slate-300 text-blue-600 focus:ring-blue-500">
-                <span class="text-xs text-slate-600 leading-relaxed">
-                    Acepto completar mi registro y autorizo que el estado de mi cuenta se actualice con base en la respuesta de la pasarela seleccionada.
-                </span>
-            </label>
-        </div>
-
-        <!-- PANEL 1: MERCADO PAGO -->
-        <div id="panel-mp" class="step-payment-panel p-6 block">
-            <?php if (!$mpHabilitado): ?>
-                <div class="mb-4 p-2.5 bg-amber-50 border border-amber-200 rounded-xl flex items-center justify-between">
-                    <span class="text-xs font-semibold text-amber-800">Modo Demostración Ilustrativa</span>
-                    <span class="px-2 py-0.5 text-[10px] uppercase font-bold bg-amber-200 text-amber-900 rounded-full">Muestra</span>
+        <div class="p-6">
+            <section data-payment-panel="mercadopago" class="payment-panel hidden">
+                <div class="mb-5 flex items-center justify-between rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+                    <span class="font-semibold">Maqueta visual</span>
+                    <span class="rounded-full bg-amber-200 px-2.5 py-1 text-[11px] font-bold uppercase text-amber-900">No procesa pago</span>
                 </div>
-            <?php endif; ?>
 
-            <div class="flex gap-2 mb-4 opacity-75">
-                <span class="px-2 py-0.5 text-[10px] font-bold border border-slate-200 rounded bg-slate-100 text-slate-600">VISA</span>
-                <span class="px-2 py-0.5 text-[10px] font-bold border border-slate-200 rounded bg-slate-100 text-slate-600">MC</span>
-                <span class="px-2 py-0.5 text-[10px] font-bold border border-slate-200 rounded bg-slate-100 text-slate-600">AMEX</span>
-                <span class="px-2 py-0.5 text-[10px] font-bold border border-slate-200 rounded bg-emerald-50 text-emerald-700 border-emerald-200">OXXO</span>
-            </div>
+                <div class="mb-5 flex gap-2 opacity-80">
+                    <span class="rounded border border-slate-200 bg-slate-100 px-2 py-1 text-[10px] font-bold text-slate-600">VISA</span>
+                    <span class="rounded border border-slate-200 bg-slate-100 px-2 py-1 text-[10px] font-bold text-slate-600">MC</span>
+                    <span class="rounded border border-slate-200 bg-slate-100 px-2 py-1 text-[10px] font-bold text-slate-600">AMEX</span>
+                    <span class="rounded border border-emerald-200 bg-emerald-50 px-2 py-1 text-[10px] font-bold text-emerald-700">SPEI</span>
+                </div>
 
-            <form action="procesar_paso.php" method="POST" id="form-mp" class="space-y-4" onsubmit="return validateAuth(event)">
-                <input type="hidden" name="metodo_pago" value="mercadopago">
-                
-                <div>
-                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Número de Tarjeta</label>
-                    <input type="text" placeholder="0000 0000 0000 0000" oninput="formatCardNum(this)" maxlength="19" class="w-full px-4 py-2 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all" required <?= !$mpHabilitado ? 'disabled value="4556 7812 9011 4452"' : '' ?>>
-                </div>
-                <div>
-                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Nombre del Titular</label>
-                    <input type="text" placeholder="Como aparece en el plástico" class="w-full px-4 py-2 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all" required <?= !$mpHabilitado ? 'disabled value="JUAN PÉREZ LOZANO"' : '' ?>>
-                </div>
-                <div class="grid grid-cols-2 gap-4">
+                <div class="space-y-4">
                     <div>
-                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Expiración</label>
-                        <input type="text" placeholder="MM/AA" oninput="formatExp(this)" maxlength="5" class="w-full px-4 py-2 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all" required <?= !$mpHabilitado ? 'disabled value="12/29"' : '' ?>>
+                        <label class="mb-2 block text-xs font-bold uppercase tracking-[0.16em] text-slate-500">Numero de tarjeta</label>
+                        <input type="text" value="4556 7812 9011 4452" disabled class="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 text-sm text-slate-500">
                     </div>
                     <div>
-                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">CVV</label>
-                        <input type="password" placeholder="•••" maxlength="4" class="w-full px-4 py-2 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all" required <?= !$mpHabilitado ? 'disabled value="123"' : '' ?>>
+                        <label class="mb-2 block text-xs font-bold uppercase tracking-[0.16em] text-slate-500">Nombre del titular</label>
+                        <input type="text" value="JUAN PEREZ LOZANO" disabled class="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 text-sm text-slate-500">
                     </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="mb-2 block text-xs font-bold uppercase tracking-[0.16em] text-slate-500">Expiracion</label>
+                            <input type="text" value="12/29" disabled class="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 text-sm text-slate-500">
+                        </div>
+                        <div>
+                            <label class="mb-2 block text-xs font-bold uppercase tracking-[0.16em] text-slate-500">CVV</label>
+                            <input type="text" value="123" disabled class="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 text-sm text-slate-500">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="mb-2 block text-xs font-bold uppercase tracking-[0.16em] text-slate-500">Plazos</label>
+                        <select disabled class="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 text-sm text-slate-500">
+                            <option>1 solo pago de $1,500.00</option>
+                            <option>3 mensualidades de $500.00 sin intereses</option>
+                            <option>6 mensualidades de $250.00 sin intereses</option>
+                        </select>
+                    </div>
+                    <button type="button" disabled class="w-full cursor-not-allowed rounded-2xl bg-[#009EE3] px-4 py-4 text-sm font-bold text-white opacity-60">
+                        Pagar con Mercado Pago
+                    </button>
                 </div>
-                <div>
-                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Plazos <span class="ml-1 text-[10px] bg-emerald-100 text-emerald-700 font-bold px-1.5 py-0.5 rounded-full">MSI</span></label>
-                    <select class="w-full px-4 py-2 rounded-xl border border-slate-200 text-sm bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all" <?= !$mpHabilitado ? 'disabled' : '' ?>>
-                        <option>1 Solo pago de $1,500.00</option>
-                        <option>3 Mensualidades de $500.00 sin intereses</option>
-                        <option>6 Mensualidades de $250.00 sin intereses</option>
-                    </select>
-                </div>
+            </section>
 
-                <button type="submit" class="w-full py-3 bg-[#009EE3] text-white font-bold rounded-xl transition-all shadow-md shadow-blue-100 flex items-center justify-center gap-2" <?= !$mpHabilitado ? 'disabled opacity-60 cursor-not-allowed' : '' ?>>
-                    Pagar con Mercado Pago
-                </button>
-            </form>
-        </div>
-
-        <!-- PANEL 2: PAYPAL -->
-        <div id="panel-paypal" class="step-payment-panel p-6 hidden">
-            <?php if (!$ppHabilitado): ?>
-                <div class="mb-4 p-2.5 bg-amber-50 border border-amber-200 rounded-xl flex items-center justify-between">
-                    <span class="text-xs font-semibold text-amber-800">Modo Demostración Ilustrativa</span>
-                    <span class="px-2 py-0.5 text-[10px] uppercase font-bold bg-amber-200 text-amber-900 rounded-full">Muestra</span>
-                </div>
-            <?php endif; ?>
-
-            <div class="bg-slate-50 border border-slate-200 rounded-xl p-5 text-center mb-4">
-                <div class="flex justify-center mb-2">
-                    <span class="text-xl font-black italic text-[#003087]">Pay<span class="text-[#009CDE]">Pal</span></span>
-                </div>
-                <p class="text-xs text-slate-500 leading-relaxed">Serás redirigido a la ventana segura de PayPal para finalizar tu transacción. Tu cuenta quedará vinculada al instante.</p>
-            </div>
-
-            <form action="procesar_paso.php" method="POST" id="form-paypal" onsubmit="return validateAuth(event)">
-                <input type="hidden" name="metodo_pago" value="paypal">
-                
-                <div class="field mb-4">
-                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Correo de tu Cuenta PayPal</label>
-                    <input type="email" placeholder="correo@ejemplo.com" class="w-full px-4 py-2 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all" <?= !$ppHabilitado ? 'disabled' : '' ?>>
+            <section data-payment-panel="paypal" class="payment-panel hidden">
+                <div class="mb-5 flex items-center justify-between rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+                    <span class="font-semibold">Maqueta visual</span>
+                    <span class="rounded-full bg-amber-200 px-2.5 py-1 text-[11px] font-bold uppercase text-amber-900">No procesa pago</span>
                 </div>
 
-                <?php if ($ppHabilitado): ?>
-                    <div id="paypal-button-container" class="w-full"></div>
-                <?php else: ?>
-                    <button type="submit" class="w-full py-3 bg-[#003087] text-white font-bold rounded-xl opacity-60 cursor-not-allowed flex items-center justify-center gap-2" disabled>
+                <div class="mb-5 rounded-2xl border border-slate-200 bg-slate-50 p-5 text-center">
+                    <div class="text-2xl font-black italic text-[#003087]">Pay<span class="text-[#009CDE]">Pal</span></div>
+                    <p class="mt-3 text-sm leading-6 text-slate-500">Esta es la maqueta de la experiencia de pago con PayPal. El flujo visual se conserva, pero la validacion efectiva en este paso sigue siendo manual.</p>
+                </div>
+
+                <div class="space-y-4">
+                    <div>
+                        <label class="mb-2 block text-xs font-bold uppercase tracking-[0.16em] text-slate-500">Correo de la cuenta PayPal</label>
+                        <input type="email" value="correo@ejemplo.com" disabled class="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 text-sm text-slate-500">
+                    </div>
+                    <button type="button" disabled class="w-full cursor-not-allowed rounded-2xl bg-[#003087] px-4 py-4 text-sm font-bold text-white opacity-60">
                         Continuar con PayPal
                     </button>
-                <?php endif; ?>
-            </form>
-        </div>
+                </div>
+            </section>
 
+            <section data-payment-panel="manual" class="payment-panel hidden">
+                <div class="mb-5 rounded-2xl border border-blue-100 bg-blue-50/70 p-5 text-sm leading-6 text-blue-900">
+                    <p class="font-semibold text-blue-950">Comprobacion manual con revision interna</p>
+                    <p class="mt-2">Cuando envies tu referencia y el archivo del comprobante, el sistema dejara tu solicitud en estado <strong>Pago reportado</strong> para revision. El usuario master configurado y/o tesoreria podran corroborarlo desde el panel interno.</p>
+                </div>
+
+                <form action="<?php echo BASE_URL; ?>/afiliacion/procesar_paso.php?paso=4" method="POST" enctype="multipart/form-data" class="space-y-6">
+                    <div class="rounded-3xl border border-slate-200 bg-slate-50 p-5">
+                        <label for="referencia_pago" class="mb-2 block text-xs font-bold uppercase tracking-[0.18em] text-slate-500">Referencia o folio</label>
+                        <input
+                            id="referencia_pago"
+                            type="text"
+                            name="referencia_pago"
+                            required
+                            value="<?php echo htmlspecialchars((string)($datos['referencia_pago'] ?? ''), ENT_QUOTES, 'UTF-8'); ?>"
+                            placeholder="Ej. SPEI 548219 / Deposito membresia junio"
+                            class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-4 text-base outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
+                        >
+                        <p class="mt-3 text-xs text-slate-500">Captura el folio bancario, la referencia SPEI o una descripcion clara del pago.</p>
+                    </div>
+
+                    <div class="rounded-3xl border border-slate-200 bg-slate-50 p-5">
+                        <label for="comprobante" class="mb-2 block text-xs font-bold uppercase tracking-[0.18em] text-slate-500">Comprobante de pago</label>
+                        <label for="comprobante" class="flex cursor-pointer flex-col items-center justify-center rounded-[1.75rem] border border-dashed border-slate-300 bg-white px-6 py-10 text-center transition hover:border-blue-300 hover:bg-blue-50/40">
+                            <span class="inline-flex h-14 w-14 items-center justify-center rounded-full bg-blue-50 text-blue-600">
+                                <i class="fa-solid fa-cloud-arrow-up text-xl"></i>
+                            </span>
+                            <span class="mt-4 text-base font-semibold text-slate-800">Haz clic para seleccionar el archivo</span>
+                            <span class="mt-2 text-sm text-slate-500">Acepta PDF, JPG, JPEG, PNG o WebP de hasta 5 MB.</span>
+                            <span id="comprobanteNombre" class="mt-4 rounded-full bg-slate-100 px-4 py-2 text-xs font-semibold text-slate-600">Ningun archivo seleccionado</span>
+                        </label>
+                        <input id="comprobante" type="file" name="comprobante" required accept=".pdf,.jpg,.jpeg,.png,.webp" class="sr-only">
+                    </div>
+
+                    <div class="rounded-3xl border border-amber-100 bg-amber-50 px-4 py-4 text-sm leading-6 text-amber-900">
+                        <p class="font-semibold text-amber-950">Antes de enviar</p>
+                        <ul class="mt-2 space-y-1">
+                            <li>Verifica que el archivo sea legible.</li>
+                            <li>El correo de confirmacion llegara al email capturado en tu registro.</li>
+                            <li>Una vez validado el pago, tu acceso completo quedara habilitado.</li>
+                        </ul>
+                    </div>
+
+                    <div class="flex flex-col gap-4 pt-2 md:flex-row">
+                        <a href="<?php echo BASE_URL; ?>/afiliacion/index.php?paso=2" class="flex-1 py-4 text-center font-bold text-gray-500 transition-all hover:text-gray-700">
+                            Anterior
+                        </a>
+                        <button type="submit" class="flex-[2] rounded-2xl bg-[#5282B2] py-4 font-bold text-white shadow-lg shadow-blue-200 transition-all hover:-translate-y-0.5 hover:bg-blue-700">
+                            Enviar comprobante
+                        </button>
+                    </div>
+                </form>
+            </section>
+        </div>
     </div>
 </div>
 
 <script>
-    function switchStepPayment(method) {
-        document.querySelectorAll('.step-payment-panel').forEach(p => p.classList.replace('block', 'hidden'));
-        document.getElementById('tab-mp').classList.remove('tab-active');
-        document.getElementById('tab-paypal').classList.remove('tab-active', 'paypal-theme');
+    document.addEventListener('DOMContentLoaded', function () {
+        const tabs = document.querySelectorAll('[data-payment-tab]');
+        const panels = document.querySelectorAll('[data-payment-panel]');
+        const input = document.getElementById('comprobante');
+        const label = document.getElementById('comprobanteNombre');
+        const initialTab = <?php echo json_encode($panelInicial, JSON_UNESCAPED_SLASHES); ?>;
 
-        document.getElementById('panel-' + method).classList.replace('hidden', 'block');
-        const activeTab = document.getElementById('tab-' + method);
-        
-        if (method === 'paypal') {
-            activeTab.classList.add('tab-active', 'paypal-theme');
-        } else {
-            activeTab.classList.add('tab-active');
+        const activateTab = function (target) {
+            tabs.forEach(function (tab) {
+                const isActive = tab.getAttribute('data-payment-tab') === target;
+                tab.classList.toggle('bg-white', isActive);
+                tab.classList.toggle('text-slate-900', isActive);
+                tab.classList.toggle('text-slate-500', !isActive);
+                tab.classList.toggle('shadow-sm', isActive);
+            });
+
+            panels.forEach(function (panel) {
+                panel.classList.toggle('hidden', panel.getAttribute('data-payment-panel') !== target);
+            });
+        };
+
+        tabs.forEach(function (tab) {
+            tab.addEventListener('click', function () {
+                activateTab(tab.getAttribute('data-payment-tab'));
+            });
+        });
+
+        activateTab(initialTab);
+
+        if (input && label) {
+            input.addEventListener('change', function () {
+                const file = input.files && input.files[0];
+                label.textContent = file ? file.name : 'Ningun archivo seleccionado';
+            });
         }
-    }
-
-    function validateAuth(e) {
-        const isChecked = document.getElementById('auth-check').checked;
-        if (!isChecked) {
-            e.preventDefault();
-            alert('Por favor, autoriza la actualización de tu cuenta marcando la casilla de aceptación.');
-            return false;
-        }
-        return true;
-    }
-
-    function formatCardNum(el) {
-        let v = el.value.replace(/\D/g, '').substring(0, 16);
-        el.value = v.replace(/(.{4})/g, '$1 ').trim();
-    }
-
-    function formatExp(el) {
-        let v = el.value.replace(/\D/g, '').substring(0, 4);
-        if (v.length >= 3) v = v.substring(0,2) + '/' + v.substring(2);
-        el.value = v;
-    }
+    });
 </script>

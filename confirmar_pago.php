@@ -83,81 +83,24 @@ function process_manual_payment_report(PDO $pdo, int $userId): array
     $reference = trim((string)($_POST['referencia_pago'] ?? ''));
     $file = $_FILES['comprobante'] ?? null;
 
-    if ($reference === '') {
-        return ['Escribe la referencia o folio del pago.', 'error'];
-    }
-
-    if (!$file || ($file['error'] ?? UPLOAD_ERR_NO_FILE) === UPLOAD_ERR_NO_FILE) {
-        return ['Adjunta el comprobante del pago.', 'error'];
-    }
-
-    if (($file['error'] ?? UPLOAD_ERR_OK) !== UPLOAD_ERR_OK) {
-        return ['No fue posible subir el comprobante.', 'error'];
-    }
-
-    $allowedExtensions = ['pdf', 'jpg', 'jpeg', 'png', 'webp'];
-    $allowedMimes = [
-        'application/pdf',
-        'image/jpeg',
-        'image/png',
-        'image/webp',
-    ];
-
-    $extension = strtolower(pathinfo((string)($file['name'] ?? ''), PATHINFO_EXTENSION));
-    if (!in_array($extension, $allowedExtensions, true)) {
-        return ['El comprobante debe ser PDF, JPG, PNG o WebP.', 'error'];
-    }
-
-    if ((int)($file['size'] ?? 0) > 5 * 1024 * 1024) {
-        return ['El comprobante excede el maximo permitido de 5MB.', 'error'];
-    }
-
-    if (class_exists('finfo')) {
-        $finfo = new finfo(FILEINFO_MIME_TYPE);
-        $mime = (string)$finfo->file((string)$file['tmp_name']);
-        if ($mime !== '' && !in_array($mime, $allowedMimes, true)) {
-            return ['El archivo adjunto no tiene un formato valido.', 'error'];
+    try {
+        $result = app_store_manual_payment_report($pdo, $userId, $reference, is_array($file) ? $file : []);
+        if (!($result['ok'] ?? false)) {
+            return [(string)($result['message'] ?? 'No fue posible guardar el comprobante.'), 'error'];
         }
+
+        $_SESSION['user_estatus'] = (string)($result['status'] ?? $_SESSION['user_estatus'] ?? '');
+        app_send_manual_payment_received_notifications(
+            $pdo,
+            $userId,
+            $reference,
+            (string)($result['proof_url'] ?? '')
+        );
+
+        return [(string)($result['message'] ?? 'Tu confirmacion manual fue guardada correctamente.'), 'success'];
+    } catch (Throwable $e) {
+        return ['No fue posible guardar el comprobante en este momento.', 'error'];
     }
-
-    $directory = app_ensure_storage_directory('comprobantes_pago');
-    if (!is_dir($directory) || !is_writable($directory)) {
-        return ['La carpeta de comprobantes no tiene permisos de escritura.', 'error'];
-    }
-
-    $filename = 'comprobante_pago_' . $userId . '_' . time() . '_' . bin2hex(random_bytes(4)) . '.' . $extension;
-    $destination = app_storage_path('comprobantes_pago', $filename);
-
-    if (!move_uploaded_file((string)$file['tmp_name'], $destination)) {
-        return ['No fue posible guardar el comprobante.', 'error'];
-    }
-
-    $stmtCurrent = $pdo->prepare('SELECT comprobante_pago, estatus FROM usuarios WHERE id = ? LIMIT 1');
-    $stmtCurrent->execute([$userId]);
-    $currentUser = $stmtCurrent->fetch();
-    $oldFile = is_array($currentUser) ? trim((string)($currentUser['comprobante_pago'] ?? '')) : '';
-    $currentStatus = is_array($currentUser) ? (string)($currentUser['estatus'] ?? '') : '';
-    $newStatus = app_is_membership_active_status($currentStatus) ? $currentStatus : 'Pago reportado';
-
-    $stmt = $pdo->prepare(
-        'UPDATE usuarios
-         SET comprobante_pago = ?, referencia_pago = ?, pago_reportado_at = NOW(), estatus = ?
-         WHERE id = ?'
-    );
-    $stmt->execute([$filename, $reference, $newStatus, $userId]);
-
-    if ($oldFile !== '' && $oldFile !== $filename) {
-        $oldPath = app_storage_path('comprobantes_pago', $oldFile);
-        if (is_file($oldPath)) {
-            @unlink($oldPath);
-        }
-    }
-
-    $_SESSION['user_estatus'] = $newStatus;
-    $proofUrl = uploaded_file_url('comprobantes_pago', $filename, true);
-    app_send_manual_payment_received_notifications($pdo, $userId, $reference, is_string($proofUrl) ? $proofUrl : '');
-
-    return ['Tu confirmacion manual fue guardada correctamente. Tesoreria revisara el comprobante.', 'success'];
 }
 
 $provider = strtolower(trim((string)($_GET['provider'] ?? '')));

@@ -2,13 +2,20 @@
 require_once dirname(__DIR__) . '/bootstrap.php';
 
 $paso = isset($_GET['paso']) ? (int) $_GET['paso'] : 1;
-$paso = max(1, min($paso, 3));
+if (!in_array($paso, [1, 2, 4], true)) {
+    $paso = 1;
+}
 
 $titulos = [
-    1 => 'Información Personal',
-    2 => 'Dirección de Contacto',
-    3 => 'Método de Pago',
+    1 => 'Informacion Personal',
+    2 => 'Direccion de Contacto',
+    4 => 'Metodo de Pago',
 ];
+
+$ordenPasos = [1, 2, 4];
+$indicePaso = array_search($paso, $ordenPasos, true);
+$pasoVisual = $indicePaso === false ? 1 : $indicePaso + 1;
+$totalPasos = count($ordenPasos);
 ?>
 
 <!DOCTYPE html>
@@ -18,7 +25,7 @@ $titulos = [
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <title>Afiliación Anafinet - <?php echo $titulos[$paso] ?? 'Solicitud'; ?></title>
+    <title>Afiliacion Anafinet - <?php echo $titulos[$paso] ?? 'Solicitud'; ?></title>
 </head>
 <body class="bg-slate-100 min-h-screen">
 
@@ -27,14 +34,14 @@ $titulos = [
 
         <div class="mb-8">
             <div class="flex justify-between mb-2">
-                <?php foreach ($titulos as $num => $txt): ?>
-                    <span class="text-[10px] font-bold uppercase <?php echo $paso >= $num ? 'text-blue-600' : 'text-gray-400'; ?>">
-                        Paso <?php echo $num; ?>
+                <?php foreach ($ordenPasos as $index => $numeroPaso): ?>
+                    <span class="text-[10px] font-bold uppercase <?php echo $pasoVisual >= ($index + 1) ? 'text-blue-600' : 'text-gray-400'; ?>">
+                        Paso <?php echo $index + 1; ?>
                     </span>
                 <?php endforeach; ?>
             </div>
             <div class="w-full bg-gray-200 h-1.5 rounded-full">
-                <div class="bg-blue-600 h-1.5 rounded-full transition-all duration-500" style="width: <?php echo ($paso / 3) * 100; ?>%"></div>
+                <div class="bg-blue-600 h-1.5 rounded-full transition-all duration-500" style="width: <?php echo ($pasoVisual / $totalPasos) * 100; ?>%"></div>
             </div>
         </div>
 
@@ -47,7 +54,7 @@ $titulos = [
                 case 2:
                     include 'paso2_direccion.php';
                     break;
-                case 3:
+                case 4:
                     include 'paso4_pago.php';
                     break;
                 default:
@@ -57,7 +64,7 @@ $titulos = [
             ?>
         </div>
 
-        <p class="text-center text-gray-400 text-xs mt-8">© 2026 Anafinet A.C. - Todos los derechos reservados.</p>
+        <p class="text-center text-gray-400 text-xs mt-8">(c) 2026 Anafinet A.C. - Todos los derechos reservados.</p>
     </div>
 
     <script>

@@ -431,6 +431,96 @@ function app_manual_payment_mail_options(): array
     ];
 }
 
+function app_store_manual_payment_report(PDO $pdo, int $userId, string $reference, array $file): array
+{
+    $reference = trim($reference);
+    if ($reference === '') {
+        return ['ok' => false, 'message' => 'Escribe la referencia o folio del pago.'];
+    }
+
+    if (($file['error'] ?? UPLOAD_ERR_NO_FILE) === UPLOAD_ERR_NO_FILE) {
+        return ['ok' => false, 'message' => 'Adjunta el comprobante del pago.'];
+    }
+
+    if (($file['error'] ?? UPLOAD_ERR_OK) !== UPLOAD_ERR_OK) {
+        return ['ok' => false, 'message' => 'No fue posible subir el comprobante.'];
+    }
+
+    $allowedExtensions = ['pdf', 'jpg', 'jpeg', 'png', 'webp'];
+    $allowedMimes = [
+        'application/pdf',
+        'image/jpeg',
+        'image/png',
+        'image/webp',
+    ];
+
+    $extension = strtolower(pathinfo((string)($file['name'] ?? ''), PATHINFO_EXTENSION));
+    if (!in_array($extension, $allowedExtensions, true)) {
+        return ['ok' => false, 'message' => 'El comprobante debe ser PDF, JPG, PNG o WebP.'];
+    }
+
+    if ((int)($file['size'] ?? 0) > 5 * 1024 * 1024) {
+        return ['ok' => false, 'message' => 'El comprobante excede el maximo permitido de 5MB.'];
+    }
+
+    if (class_exists('finfo')) {
+        $finfo = new finfo(FILEINFO_MIME_TYPE);
+        $mime = (string)$finfo->file((string)($file['tmp_name'] ?? ''));
+        if ($mime !== '' && !in_array($mime, $allowedMimes, true)) {
+            return ['ok' => false, 'message' => 'El archivo adjunto no tiene un formato valido.'];
+        }
+    }
+
+    $directory = app_ensure_storage_directory('comprobantes_pago');
+    if (!is_dir($directory) || !is_writable($directory)) {
+        return ['ok' => false, 'message' => 'La carpeta de comprobantes no tiene permisos de escritura.'];
+    }
+
+    $filename = 'comprobante_pago_' . $userId . '_' . time() . '_' . bin2hex(random_bytes(4)) . '.' . $extension;
+    $destination = app_storage_path('comprobantes_pago', $filename);
+
+    if (!move_uploaded_file((string)($file['tmp_name'] ?? ''), $destination)) {
+        return ['ok' => false, 'message' => 'No fue posible guardar el comprobante.'];
+    }
+
+    try {
+        $stmtCurrent = $pdo->prepare('SELECT comprobante_pago, estatus FROM usuarios WHERE id = ? LIMIT 1');
+        $stmtCurrent->execute([$userId]);
+        $currentUser = $stmtCurrent->fetch();
+        $oldFile = is_array($currentUser) ? trim((string)($currentUser['comprobante_pago'] ?? '')) : '';
+        $currentStatus = is_array($currentUser) ? (string)($currentUser['estatus'] ?? '') : '';
+        $newStatus = app_is_membership_active_status($currentStatus) ? $currentStatus : 'Pago reportado';
+
+        $stmt = $pdo->prepare(
+            'UPDATE usuarios
+             SET comprobante_pago = ?, referencia_pago = ?, pago_reportado_at = NOW(), estatus = ?
+             WHERE id = ?'
+        );
+        $stmt->execute([$filename, $reference, $newStatus, $userId]);
+
+        if ($oldFile !== '' && $oldFile !== $filename) {
+            $oldPath = app_storage_path('comprobantes_pago', $oldFile);
+            if (is_file($oldPath)) {
+                @unlink($oldPath);
+            }
+        }
+
+        return [
+            'ok' => true,
+            'message' => 'Tu confirmacion manual fue guardada correctamente. Tesoreria revisara el comprobante.',
+            'status' => $newStatus,
+            'filename' => $filename,
+            'proof_url' => uploaded_file_url('comprobantes_pago', $filename, true),
+        ];
+    } catch (Throwable $e) {
+        if (is_file($destination)) {
+            @unlink($destination);
+        }
+
+        throw $e;
+    }
+}
+
 function app_send_manual_payment_received_notifications(PDO $pdo, int $userId, string $reference, string $proofUrl = ''): void
 {
     $user = app_fetch_membership_user($pdo, $userId);

@@ -15,8 +15,9 @@ if (isset($pdo)) {
         $userRole = $dbRole;
     }
 }
+$masterAccess = current_user_has_master_access($pdo ?? null, $userId);
 
-if (!is_admin_role($userRole)) {
+if (!is_admin_role($userRole) && !$masterAccess) {
     header("Location: dashboard.php");
     exit();
 }
@@ -31,8 +32,6 @@ $filtro = trim($_GET['filtro'] ?? 'pendientes');
 $emailPopupMessage = '';
 $emailPopupTitle = 'Correo enviado correctamente';
 $emailPopupType = 'success';
-$masterAccess = current_user_has_master_access($pdo ?? null, $userId);
-
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $targetUserId = (int) ($_POST['user_id'] ?? 0);
     $action = trim($_POST['action'] ?? '');

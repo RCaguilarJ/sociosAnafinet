@@ -8,6 +8,7 @@ $userRole = $_SESSION['user_rol'] ?? '';
 $userStatus = $_SESSION['user_estatus'] ?? '';
 $userId = isset($_SESSION['user_id']) ? (int)$_SESSION['user_id'] : null;
 $userState = '';
+$masterAccess = false;
 
 if (isset($pdo)) {
     $dbRole = fetch_user_role($pdo, $userId);
@@ -23,6 +24,7 @@ if (isset($pdo)) {
     if ($dbState !== null) {
         $userState = $dbState;
     }
+    $masterAccess = current_user_has_master_access($pdo, $userId);
 }
 
 $memberIdentifier = app_member_identifier($pdo ?? null, $userId, $userState);
@@ -53,8 +55,11 @@ $menuItems = [
 
 $menuItems[] = ['key' => 'confirmar_pago', 'label' => 'Confirmar Pago', 'href' => base_url('confirmar_pago.php'), 'icon' => 'fa-credit-card'];
 
-if (is_admin_role($userRole)) {
+if (is_admin_role($userRole) || $masterAccess) {
     $menuItems[] = ['key' => 'revisar_pagos', 'label' => 'Revisar Pagos', 'href' => base_url('revisar_pagos.php'), 'icon' => 'fa-receipt'];
+}
+
+if (is_admin_role($userRole)) {
     $menuItems[] = ['key' => 'subir_documentos', 'label' => 'Subir Documentos', 'href' => base_url('subir_archivo.php'), 'icon' => 'fa-cloud-arrow-up'];
     $menuItems[] = ['key' => 'links_admin', 'label' => 'Administrar Links', 'href' => base_url('links_interes_admin.php'), 'icon' => 'fa-pen-to-square'];
 }

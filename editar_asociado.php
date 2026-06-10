@@ -16,8 +16,9 @@ if (isset($pdo)) {
     }
 }
 $isAdmin = is_admin_role($userRole);
+$masterAccess = current_user_has_master_access($pdo ?? null, $userId);
 
-if (!$isAdmin) {
+if (!$isAdmin && !$masterAccess) {
     header("Location: dashboard.php");
     exit();
 }
@@ -31,8 +32,6 @@ $mensajeTipo = 'success';
 $emailPopupMessage = '';
 $emailPopupTitle = 'Correo enviado correctamente';
 $emailPopupType = 'success';
-$masterAccess = current_user_has_master_access($pdo ?? null, $userId);
-
 if ($editId > 0) {
     $stmt = $pdo->prepare("SELECT * FROM usuarios WHERE id = ? LIMIT 1");
     $stmt->execute([$editId]);
