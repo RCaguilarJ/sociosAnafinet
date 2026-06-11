@@ -25,6 +25,72 @@ if (!$isAdmin && !$masterAccess) {
 
 require_database_connection($pdo ?? null, 'asociados', 'Editar Asociado');
 
+if (!function_exists('app_delete_user_completely')) {
+    function app_delete_user_completely(PDO $pdo, int $userId): array
+    {
+        $stmt = $pdo->prepare('SELECT id, nombre, email, rol, foto_perfil, comprobante_pago FROM usuarios WHERE id = ? LIMIT 1');
+        $stmt->execute([$userId]);
+        $user = $stmt->fetch();
+        if (!is_array($user)) {
+            throw new RuntimeException('No se encontro el usuario solicitado.');
+        }
+
+        $photoFile = trim((string)($user['foto_perfil'] ?? ''));
+        $proofFile = trim((string)($user['comprobante_pago'] ?? ''));
+        $pathsToDelete = [];
+
+        if ($photoFile !== '') {
+            $photoPath = app_resolve_storage_path('perfiles', $photoFile);
+            if ($photoPath !== null) {
+                $pathsToDelete[] = $photoPath;
+            }
+        }
+
+        if ($proofFile !== '') {
+            $proofPath = app_resolve_storage_path('comprobantes_pago', $proofFile);
+            if ($proofPath !== null) {
+                $pathsToDelete[] = $proofPath;
+            }
+        }
+
+        $pdo->beginTransaction();
+        try {
+            app_ensure_membership_payment_schema($pdo);
+            ensure_session_table($pdo);
+
+            $deletePayments = $pdo->prepare('DELETE FROM pagos_membresia WHERE user_id = ?');
+            $deletePayments->execute([$userId]);
+
+            $deleteUser = $pdo->prepare('DELETE FROM usuarios WHERE id = ? LIMIT 1');
+            $deleteUser->execute([$userId]);
+
+            if ($deleteUser->rowCount() !== 1) {
+                throw new RuntimeException('No fue posible eliminar el asociado.');
+            }
+
+            $pdo->commit();
+        } catch (Throwable $e) {
+            if ($pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
+            throw $e;
+        }
+
+        foreach ($pathsToDelete as $path) {
+            if (is_file($path)) {
+                @unlink($path);
+            }
+        }
+
+        return [
+            'id' => (int)$user['id'],
+            'nombre' => (string)($user['nombre'] ?? ''),
+            'email' => (string)($user['email'] ?? ''),
+            'rol' => (string)($user['rol'] ?? ''),
+        ];
+    }
+}
+
 $editId = isset($_GET['id']) ? (int)$_GET['id'] : 0;
 $asociado = null;
 $mensaje = '';
@@ -44,6 +110,32 @@ if (!$asociado) {
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && $asociado) {
+    $action = trim((string)($_POST['action'] ?? 'update'));
+
+    if ($action === 'delete') {
+        $targetRole = trim((string)($asociado['rol'] ?? ''));
+        if ($editId === (int)$userId) {
+            $mensaje = 'No puedes eliminar tu propia cuenta desde esta pantalla.';
+            $mensajeTipo = 'error';
+        } elseif (is_admin_role($targetRole)) {
+            $mensaje = 'Desde esta pantalla solo se permite eliminar asociados.';
+            $mensajeTipo = 'error';
+        } else {
+            try {
+                $deletedUser = app_delete_user_completely($pdo, $editId);
+                $_SESSION['asociados_flash_message'] = 'El asociado ' . $deletedUser['nombre'] . ' fue eliminado por completo. El correo ' . $deletedUser['email'] . ' ya puede volver a registrarse.';
+                $_SESSION['asociados_flash_type'] = 'success';
+                header('Location: ' . BASE_URL . '/lista_asociados.php');
+                exit();
+            } catch (Throwable $e) {
+                $mensaje = 'No fue posible eliminar al asociado por completo.';
+                if (app_is_local_request() || app_session_debug_enabled()) {
+                    $mensaje .= ' Detalle: ' . $e->getMessage();
+                }
+                $mensajeTipo = 'error';
+            }
+        }
+    } else {
     $nombre = trim($_POST['nombre'] ?? '');
     $email = trim($_POST['email'] ?? '');
     $rol = trim($_POST['rol'] ?? '');
@@ -124,6 +216,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $asociado) {
         $stmt->execute([$editId]);
         $asociado = $stmt->fetch();
     }
+    }
 }
 ?>
 <!DOCTYPE html>
@@ -183,6 +276,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $asociado) {
 
             <?php if ($asociado): ?>
             <form method="POST" class="space-y-5">
+                <input type="hidden" name="action" value="update">
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">Nombre</label>
                     <input type="text" name="nombre" required value="<?php echo htmlspecialchars((string)($asociado['nombre'] ?? '')); ?>"
@@ -232,6 +326,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $asociado) {
                     Guardar Cambios
                 </button>
             </form>
+            <div class="mt-8 border-t border-gray-100 pt-6">
+                <div class="rounded-2xl border border-red-100 bg-red-50 p-4">
+                    <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                        <div>
+                            <h2 class="text-sm font-bold uppercase tracking-[0.18em] text-red-700">Zona delicada</h2>
+                            <p class="mt-2 text-sm leading-6 text-red-900">
+                                Eliminar al asociado borra su registro, historial de pagos, actividad vinculada y archivos asociados. Despues podra volver a solicitar su afiliacion con el mismo correo.
+                            </p>
+                        </div>
+                        <form method="POST" onsubmit="return confirm('Se eliminara por completo este asociado y su correo quedara libre para un nuevo registro. ¿Deseas continuar?');" class="shrink-0">
+                            <input type="hidden" name="action" value="delete">
+                            <button
+                                type="submit"
+                                class="inline-flex w-full items-center justify-center rounded-xl bg-red-600 px-5 py-3 text-sm font-bold text-white shadow-lg shadow-red-100 transition hover:bg-red-700 sm:w-auto"
+                                <?php echo ($editId === (int)$userId || is_admin_role((string)($asociado['rol'] ?? ''))) ? 'disabled' : ''; ?>
+                            >
+                                Eliminar asociado por completo
+                            </button>
+                        </form>
+                    </div>
+                    <?php if ($editId === (int)$userId): ?>
+                        <p class="mt-3 text-xs font-semibold text-red-700">No puedes eliminar tu propia cuenta desde esta pantalla.</p>
+                    <?php elseif (is_admin_role((string)($asociado['rol'] ?? ''))): ?>
+                        <p class="mt-3 text-xs font-semibold text-red-700">La eliminacion completa desde esta vista esta reservada para usuarios con rol de asociado.</p>
+                    <?php endif; ?>
+                </div>
+            </div>
             <?php endif; ?>
         </div>
     </main>

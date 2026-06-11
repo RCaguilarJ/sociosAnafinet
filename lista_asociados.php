@@ -24,6 +24,9 @@ $estado_filtro = $_GET['estado'] ?? '';
 $page = isset($_GET['p']) ? (int)$_GET['p'] : (isset($_GET['page']) ? (int)$_GET['page'] : 1);
 $page = $page > 0 ? $page : 1;
 $perPage = 12;
+$flashMessage = trim((string)($_SESSION['asociados_flash_message'] ?? ''));
+$flashType = trim((string)($_SESSION['asociados_flash_type'] ?? 'success'));
+unset($_SESSION['asociados_flash_message'], $_SESSION['asociados_flash_type']);
 
 $asociados = [];
 $estados = [];
@@ -101,6 +104,12 @@ $total_despachos = $pdo->query("SELECT COUNT(DISTINCT empresa) FROM usuarios WHE
             <h1 class="text-2xl font-bold text-gray-800">Lista de Asociados</h1>
             <p class="text-sm text-gray-500">Directorio de profesionales fiscales miembros de ANAFINET</p>
         </header>
+
+        <?php if ($flashMessage !== ''): ?>
+            <div class="mb-6 rounded-2xl border px-4 py-3 text-sm font-medium <?php echo $flashType === 'error' ? 'border-red-200 bg-red-50 text-red-700' : 'border-emerald-200 bg-emerald-50 text-emerald-700'; ?>">
+                <?php echo htmlspecialchars($flashMessage, ENT_QUOTES, 'UTF-8'); ?>
+            </div>
+        <?php endif; ?>
 
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
             <div class="bg-[#5282B2] p-4 rounded-xl text-white flex justify-between items-center">
