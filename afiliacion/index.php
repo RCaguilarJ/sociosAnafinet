@@ -117,14 +117,6 @@ $totalPasos = count($ordenPasos);
             };
 
             const syncCustomRules = function (field) {
-                if (field.type === 'email' && field.name === 'email') {
-                    const value = field.value.trim().toLowerCase();
-                    if (value !== '' && !value.endsWith('.com')) {
-                        field.setCustomValidity('Ingresa un correo electronico valido que termine en .com.');
-                        return false;
-                    }
-                }
-
                 field.setCustomValidity('');
                 return true;
             };

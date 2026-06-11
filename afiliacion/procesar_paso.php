@@ -12,16 +12,6 @@ if (!in_array($paso, [1, 2, 4], true)) {
     exit();
 }
 
-$emailComValido = static function (string $email): bool {
-    $email = trim($email);
-    if ($email === '' || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
-        return false;
-    }
-
-    $emailLower = function_exists('mb_strtolower') ? mb_strtolower($email, 'UTF-8') : strtolower($email);
-    return substr($emailLower, -4) === '.com';
-};
-
 if (!isset($_SESSION['afiliacion'])) {
     $_SESSION['afiliacion'] = [];
 }
@@ -30,8 +20,8 @@ $_SESSION['afiliacion']["paso{$paso}"] = $_POST;
 
 if ($paso === 1) {
     $email = (string)($_POST['email'] ?? '');
-    if (!$emailComValido($email)) {
-        $_SESSION['afiliacion_error'] = 'El correo debe ser valido y terminar en .com.';
+    if (!app_is_valid_email($email)) {
+        $_SESSION['afiliacion_error'] = 'Ingresa un correo electronico valido.';
         header('Location: ' . BASE_URL . '/afiliacion/index.php?paso=1');
         exit();
     }

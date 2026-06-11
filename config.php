@@ -110,6 +110,36 @@ if (!function_exists('env_value')) {
     }
 }
 
+if (!function_exists('app_is_valid_email')) {
+    function app_is_valid_email(string $email): bool
+    {
+        $email = trim($email);
+        if ($email === '' || substr_count($email, '@') !== 1) {
+            return false;
+        }
+
+        if (filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            return true;
+        }
+
+        [$localPart, $domainPart] = explode('@', $email, 2);
+        if ($localPart === '' || $domainPart === '') {
+            return false;
+        }
+
+        if (!function_exists('idn_to_ascii')) {
+            return false;
+        }
+
+        $asciiDomain = idn_to_ascii($domainPart, IDNA_DEFAULT);
+        if (!is_string($asciiDomain) || $asciiDomain === '') {
+            return false;
+        }
+
+        return filter_var($localPart . '@' . $asciiDomain, FILTER_VALIDATE_EMAIL) !== false;
+    }
+}
+
 if (!function_exists('app_ascii_transliterate')) {
     function app_ascii_transliterate(string $value): string
     {

@@ -160,7 +160,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($nombreNuevo === '' || $emailNuevo === '') {
             $profileMsg = 'Nombre y email son obligatorios.';
             $profileType = 'error';
-        } elseif (!filter_var($emailNuevo, FILTER_VALIDATE_EMAIL)) {
+        } elseif (!app_is_valid_email($emailNuevo)) {
             $profileMsg = 'El email no es v&aacute;lido.';
             $profileType = 'error';
         } else {

@@ -145,7 +145,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $asociado) {
     if ($nombre === '' || $email === '' || $rol === '' || $estatus === '') {
         $mensaje = 'Todos los campos son obligatorios.';
         $mensajeTipo = 'error';
-    } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+    } elseif (!app_is_valid_email($email)) {
         $mensaje = 'El email no es v&aacute;lido.';
         $mensajeTipo = 'error';
     } else {
