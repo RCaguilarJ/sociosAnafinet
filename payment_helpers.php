@@ -22,7 +22,7 @@ function app_public_base_url(): string
 
 function app_membership_fee_amount(): float
 {
-    return (float)env_value('MEMBERSHIP_FEE_AMOUNT', '1500.00');
+    return (float)env_value('MEMBERSHIP_FEE_AMOUNT', '1000.00');
 }
 
 function app_membership_fee_currency(): string
@@ -33,6 +33,24 @@ function app_membership_fee_currency(): string
 function app_membership_fee_label(): string
 {
     return (string)env_value('MEMBERSHIP_FEE_LABEL', 'Membresia Anafinet');
+}
+
+function app_payment_env_has_real_value(string $value): bool
+{
+    $normalized = trim($value);
+    if ($normalized === '') {
+        return false;
+    }
+
+    if (stripos($normalized, 'REEMPLAZA_AQUI') === 0) {
+        return false;
+    }
+
+    if (stripos($normalized, 'CAMBIA_ESTE') === 0 || stripos($normalized, 'CAMBIA_ESTA') === 0) {
+        return false;
+    }
+
+    return true;
 }
 
 function app_paypal_client_id(): string
@@ -52,7 +70,9 @@ function app_paypal_use_sandbox(): bool
 
 function app_paypal_enabled(): bool
 {
-    return app_paypal_client_id() !== '' && app_paypal_client_secret() !== '' && app_public_base_url() !== '';
+    return app_payment_env_has_real_value(app_paypal_client_id())
+        && app_payment_env_has_real_value(app_paypal_client_secret())
+        && app_public_base_url() !== '';
 }
 
 function app_paypal_api_base_url(): string
@@ -84,12 +104,45 @@ function app_mercadopago_use_sandbox(): bool
 
 function app_mercadopago_enabled(): bool
 {
-    return app_mercadopago_access_token() !== '' && app_public_base_url() !== '';
+    return app_payment_env_has_real_value(app_mercadopago_access_token()) && app_public_base_url() !== '';
 }
 
 function app_mercadopago_api_url(string $path): string
 {
     return 'https://api.mercadopago.com' . $path;
+}
+
+function app_clip_api_key(): string
+{
+    return (string)env_value('CLIP_API_KEY', '');
+}
+
+function app_clip_secret_key(): string
+{
+    return (string)env_value('CLIP_SECRET_KEY', '');
+}
+
+function app_clip_enabled(): bool
+{
+    return app_payment_env_has_real_value(app_clip_api_key())
+        && app_payment_env_has_real_value(app_clip_secret_key())
+        && app_public_base_url() !== '';
+}
+
+function app_clip_api_base_url(): string
+{
+    return 'https://api.payclip.com/v2';
+}
+
+function app_clip_authorization_token(): string
+{
+    $apiKey = app_clip_api_key();
+    $secretKey = app_clip_secret_key();
+    if (!app_payment_env_has_real_value($apiKey) || !app_payment_env_has_real_value($secretKey)) {
+        throw new RuntimeException('Clip no esta configurado en este ambiente.');
+    }
+
+    return 'Basic ' . base64_encode($apiKey . ':' . $secretKey);
 }
 
 function app_is_membership_active_status(string $status): bool
@@ -381,7 +434,7 @@ function app_sync_membership_lifecycle(PDO $pdo, ?int $userId = null, int $limit
 
 function app_is_signup_membership_reference(string $externalReference): bool
 {
-    return preg_match('/^membership_signup_/i', $externalReference) === 1;
+    return preg_match('/^(membership_signup_|clip_signup_)/i', $externalReference) === 1;
 }
 
 function app_membership_payment_context(string $externalReference): string
@@ -401,6 +454,9 @@ function app_fetch_membership_user(PDO $pdo, int $userId): ?array
 function app_payment_provider_label(string $provider): string
 {
     $provider = strtolower(trim($provider));
+    if ($provider === 'clip') {
+        return 'Clip';
+    }
     if ($provider === 'mercadopago') {
         return 'Mercado Pago';
     }
@@ -919,10 +975,20 @@ function app_membership_signup_reference(): string
     return 'membership_signup_' . time() . '_' . bin2hex(random_bytes(6));
 }
 
+function app_clip_membership_payment_reference(int $userId): string
+{
+    return 'clip_user_' . $userId . '_' . time() . '_' . bin2hex(random_bytes(3));
+}
+
+function app_clip_membership_signup_reference(): string
+{
+    return 'clip_signup_' . time() . '_' . bin2hex(random_bytes(4));
+}
+
 function app_http_json_request(string $method, string $url, array $headers = [], ?array $body = null): array
 {
     if (!function_exists('curl_init')) {
-        throw new RuntimeException('La extension cURL es requerida para integrar Mercado Pago.');
+        throw new RuntimeException('La extension cURL es requerida para integrar pasarelas de pago.');
     }
 
     $ch = curl_init($url);
@@ -1060,6 +1126,65 @@ function app_create_mercadopago_preference(PDO $pdo, array $user, string $extern
 
     if ($response['status'] < 200 || $response['status'] >= 300 || !is_array($response['body'])) {
         throw new RuntimeException('Mercado Pago no devolvio una preferencia valida.');
+    }
+
+    return $response['body'];
+}
+
+function app_create_clip_checkout_link(PDO $pdo, array $user, string $externalReference, array $options = []): array
+{
+    app_ensure_membership_payment_schema($pdo);
+
+    $baseUrl = app_public_base_url();
+    if ($baseUrl === '') {
+        throw new RuntimeException('Define PUBLIC_APP_URL para generar URLs publicas de pago.');
+    }
+
+    $redirectionUrl = $options['redirection_url'] ?? [
+        'success' => $baseUrl . '/confirmar_pago.php?provider=clip&clip_return=success&external_reference=' . rawurlencode($externalReference),
+        'error' => $baseUrl . '/confirmar_pago.php?provider=clip&clip_return=error&external_reference=' . rawurlencode($externalReference),
+        'default' => $baseUrl . '/confirmar_pago.php?provider=clip&clip_return=default&external_reference=' . rawurlencode($externalReference),
+    ];
+
+    $payload = [
+        'amount' => app_membership_fee_amount(),
+        'currency' => app_membership_fee_currency(),
+        'purchase_description' => app_membership_fee_label(),
+        'redirection_url' => $redirectionUrl,
+        'metadata' => [
+            'external_reference' => $externalReference,
+            'customer_info' => [
+                'name' => (string)($user['nombre'] ?? ''),
+                'email' => (string)($user['email'] ?? ''),
+                'phone' => isset($user['telefono']) && trim((string)$user['telefono']) !== ''
+                    ? (int)preg_replace('/\D+/', '', (string)$user['telefono'])
+                    : null,
+            ],
+        ],
+        'override_settings' => [
+            'locale' => 'es-MX',
+            'merchant_info' => [
+                'show_contact_info' => true,
+            ],
+        ],
+        'custom_payment_options' => [
+            'payment_method_types' => ['credit', 'debit'],
+        ],
+    ];
+
+    if (isset($payload['metadata']['customer_info']['phone']) && !$payload['metadata']['customer_info']['phone']) {
+        unset($payload['metadata']['customer_info']['phone']);
+    }
+
+    $response = app_http_json_request(
+        'POST',
+        app_clip_api_base_url() . '/checkout',
+        ['Authorization: ' . app_clip_authorization_token()],
+        $payload
+    );
+
+    if ($response['status'] < 200 || $response['status'] >= 300 || !is_array($response['body'])) {
+        throw new RuntimeException('Clip no devolvio un link de pago valido.');
     }
 
     return $response['body'];
@@ -1316,11 +1441,130 @@ function app_get_latest_membership_payment_for_user(PDO $pdo, int $userId, strin
 
 function app_parse_membership_reference_user_id(string $externalReference): ?int
 {
-    if (preg_match('/^membership_user_(\d+)_/i', $externalReference, $matches) !== 1) {
+    if (preg_match('/^(membership_user|clip_user)_(\d+)_/i', $externalReference, $matches) !== 1) {
         return null;
     }
 
-    return (int)$matches[1];
+    return (int)$matches[2];
+}
+
+function app_map_clip_status_to_membership(array $paymentLink): array
+{
+    $status = strtoupper((string)($paymentLink['status'] ?? ''));
+    $statusDetail = (string)($paymentLink['last_status_message'] ?? $status);
+
+    if ($status === 'CHECKOUT_COMPLETED') {
+        return [
+            'payment_status' => 'approved',
+            'user_status' => 'Activo',
+            'paid_at' => !empty($paymentLink['modified_at']) ? date('Y-m-d H:i:s', strtotime((string)$paymentLink['modified_at'])) : date('Y-m-d H:i:s'),
+            'status_detail' => $statusDetail,
+        ];
+    }
+
+    if ($status === 'CHECKOUT_PENDING') {
+        return [
+            'payment_status' => 'processing',
+            'user_status' => 'Pago en proceso',
+            'paid_at' => null,
+            'status_detail' => $statusDetail,
+        ];
+    }
+
+    if ($status === 'CHECKOUT_CREATED') {
+        return [
+            'payment_status' => 'checkout_created',
+            'user_status' => 'Pendiente de pago',
+            'paid_at' => null,
+            'status_detail' => $statusDetail,
+        ];
+    }
+
+    return [
+        'payment_status' => 'failed',
+        'user_status' => 'Pendiente de pago',
+        'paid_at' => null,
+        'status_detail' => $statusDetail !== '' ? $statusDetail : ($status !== '' ? $status : 'UNKNOWN'),
+    ];
+}
+
+function app_sync_clip_payment_request(PDO $pdo, int $userId, string $externalReference, string $paymentRequestId): ?array
+{
+    app_ensure_membership_payment_schema($pdo);
+
+    $response = app_http_json_request(
+        'GET',
+        app_clip_api_base_url() . '/checkout/' . rawurlencode($paymentRequestId),
+        ['Authorization: ' . app_clip_authorization_token()]
+    );
+
+    if ($response['status'] < 200 || $response['status'] >= 300 || !is_array($response['body'])) {
+        return null;
+    }
+
+    $paymentLink = $response['body'];
+    $metadata = is_array($paymentLink['metadata'] ?? null) ? $paymentLink['metadata'] : [];
+    if ($externalReference === '') {
+        $externalReference = (string)($metadata['external_reference'] ?? '');
+    }
+    if ($externalReference === '') {
+        return null;
+    }
+
+    $mappedStatus = app_map_clip_status_to_membership($paymentLink);
+    $receiptNo = trim((string)($paymentLink['receipt_no'] ?? ''));
+    $notificationContext = app_membership_payment_context($externalReference);
+
+    $stmt = $pdo->prepare(
+        'INSERT INTO pagos_membresia (
+            user_id, provider, external_reference, provider_order_id, provider_payment_id,
+            amount, currency, status, status_detail, checkout_url, raw_payload, paid_at, notification_context
+         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+         ON DUPLICATE KEY UPDATE
+            provider_order_id = VALUES(provider_order_id),
+            provider_payment_id = VALUES(provider_payment_id),
+            amount = VALUES(amount),
+            currency = VALUES(currency),
+            status = VALUES(status),
+            status_detail = VALUES(status_detail),
+            checkout_url = VALUES(checkout_url),
+            raw_payload = VALUES(raw_payload),
+            paid_at = VALUES(paid_at),
+            notification_context = COALESCE(notification_context, VALUES(notification_context))'
+    );
+
+    $stmt->execute([
+        $userId,
+        'clip',
+        $externalReference,
+        $paymentRequestId,
+        $receiptNo !== '' ? $receiptNo : null,
+        (float)($paymentLink['amount'] ?? app_membership_fee_amount()),
+        (string)($paymentLink['currency'] ?? app_membership_fee_currency()),
+        $mappedStatus['payment_status'],
+        $mappedStatus['status_detail'],
+        (string)($paymentLink['payment_request_url'] ?? ''),
+        json_encode($paymentLink, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
+        $mappedStatus['paid_at'],
+        $notificationContext,
+    ]);
+
+    if ($mappedStatus['payment_status'] === 'approved') {
+        app_apply_membership_cycle_for_reference($pdo, $userId, $externalReference, $mappedStatus['paid_at']);
+        app_send_membership_payment_notifications($pdo, $externalReference);
+    } else {
+        $userUpdate = $pdo->prepare('UPDATE usuarios SET estatus = ? WHERE id = ?');
+        $userUpdate->execute([$mappedStatus['user_status'], $userId]);
+    }
+
+    return [
+        'external_reference' => $externalReference,
+        'payment_request_id' => $paymentRequestId,
+        'receipt_no' => $receiptNo,
+        'payment_status' => $mappedStatus['payment_status'],
+        'user_status' => $mappedStatus['user_status'],
+        'raw' => $paymentLink,
+    ];
 }
 
 function app_map_mercadopago_status_to_membership(array $payment): array

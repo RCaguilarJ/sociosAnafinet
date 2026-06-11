@@ -5,12 +5,18 @@ if ($mensajeError !== '') {
     unset($_SESSION['afiliacion_error'], $_SESSION['afiliacion_error_general']);
 }
 
-$panelInicial = ($mensajeError !== '' || !empty($datos['referencia_pago'])) ? 'manual' : 'mercadopago';
+$clipHabilitado = function_exists('app_clip_enabled') ? app_clip_enabled() : false;
+$montoPagoFloat = function_exists('app_membership_fee_amount') ? app_membership_fee_amount() : 1000.00;
+$montoTotal = number_format($montoPagoFloat, 2, '.', ',');
+$conceptoPago = function_exists('app_membership_fee_label')
+    ? app_membership_fee_label()
+    : 'Membresia Anafinet';
+$panelInicial = ($mensajeError !== '' || !empty($datos['referencia_pago'])) ? 'manual' : 'clip';
 ?>
 
 <div class="animate-fadeIn">
     <h2 class="text-2xl font-bold text-slate-800">Metodo de Pago</h2>
-    <p class="mt-1 mb-6 text-sm text-slate-500">Paso 3 de 3: conserva la maqueta visual de Mercado Pago y PayPal, y ademas permite cargar el comprobante manual para revision interna.</p>
+    <p class="mt-1 mb-6 text-sm text-slate-500">Paso 3 de 3: el pago en linea ahora se genera con Clip y la comprobacion manual permanece disponible para revision interna.</p>
 
     <?php if ($mensajeError !== ''): ?>
         <div class="mb-6 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
@@ -23,19 +29,16 @@ $panelInicial = ($mensajeError !== '' || !empty($datos['referencia_pago'])) ? 'm
             <div class="flex items-center justify-between gap-4">
                 <div>
                     <p class="text-xs font-bold uppercase tracking-[0.18em] text-slate-400">Cuota de afiliacion</p>
-                    <h3 class="mt-2 text-3xl font-bold text-slate-900">$1,500.00 MXN</h3>
-                    <p class="mt-2 text-sm text-slate-500">Afiliacion Anafinet · Cuota de ingreso</p>
+                    <h3 class="mt-2 text-3xl font-bold text-slate-900">$<?php echo htmlspecialchars($montoTotal, ENT_QUOTES, 'UTF-8'); ?> MXN</h3>
+                    <p class="mt-2 text-sm text-slate-500"><?php echo htmlspecialchars($conceptoPago, ENT_QUOTES, 'UTF-8'); ?> · Cuota anual</p>
                 </div>
                 <span class="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-700">Pago seguro</span>
             </div>
         </div>
 
-        <div class="grid grid-cols-1 border-b border-slate-200 bg-slate-50 sm:grid-cols-3">
-            <button type="button" data-payment-tab="mercadopago" class="payment-tab border-b border-slate-200 px-4 py-4 text-sm font-bold text-slate-500 transition sm:border-b-0 sm:border-r">
-                Mercado Pago
-            </button>
-            <button type="button" data-payment-tab="paypal" class="payment-tab border-b border-slate-200 px-4 py-4 text-sm font-bold text-slate-500 transition sm:border-b-0 sm:border-r">
-                PayPal
+        <div class="grid grid-cols-1 border-b border-slate-200 bg-slate-50 sm:grid-cols-2">
+            <button type="button" data-payment-tab="clip" class="payment-tab border-b border-slate-200 px-4 py-4 text-sm font-bold text-slate-500 transition sm:border-b-0 sm:border-r">
+                Clip
             </button>
             <button type="button" data-payment-tab="manual" class="payment-tab px-4 py-4 text-sm font-bold text-slate-500 transition">
                 Comprobante Manual
@@ -43,71 +46,68 @@ $panelInicial = ($mensajeError !== '' || !empty($datos['referencia_pago'])) ? 'm
         </div>
 
         <div class="p-6">
-            <section data-payment-panel="mercadopago" class="payment-panel hidden">
-                <div class="mb-5 flex items-center justify-between rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
-                    <span class="font-semibold">Maqueta visual</span>
-                    <span class="rounded-full bg-amber-200 px-2.5 py-1 text-[11px] font-bold uppercase text-amber-900">No procesa pago</span>
+            <section data-payment-panel="clip" class="payment-panel hidden">
+                <?php /* Mercado Pago y PayPal quedaron intencionalmente fuera del frontend de afiliacion. */ ?>
+                <div class="mb-5 rounded-2xl border border-violet-100 bg-violet-50/80 p-5 text-sm leading-6 text-violet-900">
+                    <p class="font-semibold text-violet-950">Checkout en linea con Clip</p>
+                    <p class="mt-2">Genera un link de pago seguro para completar tu afiliacion. Cuando Clip confirme la operacion, el sistema actualizara tu estatus y te llevara a tu portal.</p>
                 </div>
 
-                <div class="mb-5 flex gap-2 opacity-80">
-                    <span class="rounded border border-slate-200 bg-slate-100 px-2 py-1 text-[10px] font-bold text-slate-600">VISA</span>
-                    <span class="rounded border border-slate-200 bg-slate-100 px-2 py-1 text-[10px] font-bold text-slate-600">MC</span>
-                    <span class="rounded border border-slate-200 bg-slate-100 px-2 py-1 text-[10px] font-bold text-slate-600">AMEX</span>
-                    <span class="rounded border border-emerald-200 bg-emerald-50 px-2 py-1 text-[10px] font-bold text-emerald-700">SPEI</span>
-                </div>
+                <div class="rounded-[2rem] border border-slate-200 bg-slate-50 p-5">
+                    <div class="grid gap-5 md:grid-cols-[1.15fr_0.85fr] md:items-start">
+                        <div class="space-y-4">
+                            <div class="flex flex-wrap gap-2">
+                                <span class="rounded-full bg-violet-100 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.18em] text-violet-800">Clip</span>
+                                <span class="rounded-full bg-white px-3 py-1 text-[11px] font-bold uppercase tracking-[0.18em] text-slate-500 ring-1 ring-slate-200">Tarjeta</span>
+                                <span class="rounded-full bg-white px-3 py-1 text-[11px] font-bold uppercase tracking-[0.18em] text-slate-500 ring-1 ring-slate-200">Debito</span>
+                                <span class="rounded-full bg-white px-3 py-1 text-[11px] font-bold uppercase tracking-[0.18em] text-slate-500 ring-1 ring-slate-200">Credito</span>
+                            </div>
 
-                <div class="space-y-4">
-                    <div>
-                        <label class="mb-2 block text-xs font-bold uppercase tracking-[0.16em] text-slate-500">Numero de tarjeta</label>
-                        <input type="text" value="4556 7812 9011 4452" disabled class="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 text-sm text-slate-500">
-                    </div>
-                    <div>
-                        <label class="mb-2 block text-xs font-bold uppercase tracking-[0.16em] text-slate-500">Nombre del titular</label>
-                        <input type="text" value="JUAN PEREZ LOZANO" disabled class="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 text-sm text-slate-500">
-                    </div>
-                    <div class="grid grid-cols-2 gap-4">
-                        <div>
-                            <label class="mb-2 block text-xs font-bold uppercase tracking-[0.16em] text-slate-500">Expiracion</label>
-                            <input type="text" value="12/29" disabled class="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 text-sm text-slate-500">
+                            <div>
+                                <p class="text-xs font-bold uppercase tracking-[0.18em] text-slate-400">Flujo activo</p>
+                                <h3 class="mt-2 text-3xl font-bold text-slate-900">Pagar con Clip</h3>
+                                <p class="mt-3 text-sm leading-7 text-slate-600">
+                                    El sistema creara tu usuario en estado pendiente y abrira el checkout de Clip para que completes el pago.
+                                </p>
+                            </div>
+
+                            <div class="grid grid-cols-1 gap-4 xl:grid-cols-2">
+                                <div class="rounded-3xl border border-slate-200 bg-white p-4">
+                                    <p class="text-xs font-bold uppercase tracking-[0.18em] text-slate-400">Importe</p>
+                                    <div class="mt-3 min-w-0">
+                                        <span class="block overflow-hidden text-ellipsis whitespace-nowrap text-[clamp(1.6rem,4vw,2.1rem)] font-black leading-none tracking-[-0.04em] text-slate-900 tabular-nums">$<?php echo htmlspecialchars($montoTotal, ENT_QUOTES, 'UTF-8'); ?></span>
+                                        <span class="mt-2 block text-sm font-bold uppercase tracking-[0.16em] text-slate-500">MXN</span>
+                                    </div>
+                                </div>
+                                <div class="rounded-3xl border border-slate-200 bg-white p-4">
+                                    <p class="text-xs font-bold uppercase tracking-[0.18em] text-slate-400">Vigencia</p>
+                                    <p class="mt-3 text-sm font-semibold text-slate-900">Membresia anual</p>
+                                </div>
+                            </div>
                         </div>
-                        <div>
-                            <label class="mb-2 block text-xs font-bold uppercase tracking-[0.16em] text-slate-500">CVV</label>
-                            <input type="text" value="123" disabled class="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 text-sm text-slate-500">
+
+                        <div class="rounded-[1.75rem] border border-slate-200 bg-white p-5 shadow-sm">
+                            <p class="text-xs font-bold uppercase tracking-[0.18em] text-slate-400">Resumen</p>
+                            <div class="mt-3 text-4xl font-black leading-none text-slate-900">$<?php echo htmlspecialchars($montoTotal, ENT_QUOTES, 'UTF-8'); ?></div>
+                            <p class="mt-3 text-sm leading-7 text-slate-600">Cuota anual de la membresia. El link de pago se genera al continuar.</p>
+
+                            <?php if (!$clipHabilitado): ?>
+                                <div class="mt-5 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-semibold text-amber-800">
+                                    Clip aun no esta configurado en este ambiente.
+                                </div>
+                            <?php endif; ?>
+
+                            <form action="<?php echo BASE_URL; ?>/afiliacion/clip_create_payment.php" method="POST" class="mt-5">
+                                <button
+                                    type="submit"
+                                    class="w-full rounded-2xl bg-[#5b3df5] px-4 py-4 text-sm font-bold text-white shadow-lg shadow-indigo-100 transition hover:bg-indigo-700 <?php echo !$clipHabilitado ? 'cursor-not-allowed opacity-60' : ''; ?>"
+                                    <?php echo !$clipHabilitado ? 'disabled' : ''; ?>
+                                >
+                                    Pagar con Clip
+                                </button>
+                            </form>
                         </div>
                     </div>
-                    <div>
-                        <label class="mb-2 block text-xs font-bold uppercase tracking-[0.16em] text-slate-500">Plazos</label>
-                        <select disabled class="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 text-sm text-slate-500">
-                            <option>1 solo pago de $1,500.00</option>
-                            <option>3 mensualidades de $500.00 sin intereses</option>
-                            <option>6 mensualidades de $250.00 sin intereses</option>
-                        </select>
-                    </div>
-                    <button type="button" disabled class="w-full cursor-not-allowed rounded-2xl bg-[#009EE3] px-4 py-4 text-sm font-bold text-white opacity-60">
-                        Pagar con Mercado Pago
-                    </button>
-                </div>
-            </section>
-
-            <section data-payment-panel="paypal" class="payment-panel hidden">
-                <div class="mb-5 flex items-center justify-between rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
-                    <span class="font-semibold">Maqueta visual</span>
-                    <span class="rounded-full bg-amber-200 px-2.5 py-1 text-[11px] font-bold uppercase text-amber-900">No procesa pago</span>
-                </div>
-
-                <div class="mb-5 rounded-2xl border border-slate-200 bg-slate-50 p-5 text-center">
-                    <div class="text-2xl font-black italic text-[#003087]">Pay<span class="text-[#009CDE]">Pal</span></div>
-                    <p class="mt-3 text-sm leading-6 text-slate-500">Esta es la maqueta de la experiencia de pago con PayPal. El flujo visual se conserva, pero la validacion efectiva en este paso sigue siendo manual.</p>
-                </div>
-
-                <div class="space-y-4">
-                    <div>
-                        <label class="mb-2 block text-xs font-bold uppercase tracking-[0.16em] text-slate-500">Correo de la cuenta PayPal</label>
-                        <input type="email" value="correo@ejemplo.com" disabled class="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 text-sm text-slate-500">
-                    </div>
-                    <button type="button" disabled class="w-full cursor-not-allowed rounded-2xl bg-[#003087] px-4 py-4 text-sm font-bold text-white opacity-60">
-                        Continuar con PayPal
-                    </button>
                 </div>
             </section>
 
