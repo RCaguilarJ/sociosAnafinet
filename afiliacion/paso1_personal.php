@@ -7,8 +7,8 @@ if ($mensajeError !== '') {
 ?>
 
 <div class="animate-fadeIn">
-    <h2 class="text-2xl font-bold text-gray-800 mb-2">InformaciÃ³n Personal</h2>
-    <p class="text-gray-500 text-sm mb-8">Paso 1 de 3: Comencemos con tus datos bÃ¡sicos para el registro de afiliaciÃ³n.</p>
+    <h2 class="text-2xl font-bold text-gray-800 mb-2">Información Personal</h2>
+    <p class="text-gray-500 text-sm mb-8">Paso 1 de 3: Comencemos con tus datos básicos para el registro de afiliación.</p>
 
     <?php if ($mensajeError !== ''): ?>
         <div class="mb-6 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
@@ -22,7 +22,7 @@ if ($mensajeError !== '') {
             <input type="text" name="nombre" required
                    value="<?php echo $datos['nombre'] ?? ''; ?>"
                    class="w-full p-4 bg-slate-50 border border-transparent rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all"
-                   placeholder="Ej. Juan PÃ©rez GarcÃ­a">
+                   placeholder="Ej. Juan Pérez García">
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -45,7 +45,7 @@ if ($mensajeError !== '') {
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
             <div>
-                <label class="block text-xs font-bold text-gray-400 uppercase mb-2 ml-1">Correo ElectrÃ³nico</label>
+                <label class="block text-xs font-bold text-gray-400 uppercase mb-2 ml-1">Correo Electrónico</label>
                 <input type="email" name="email" required
                        value="<?php echo $datos['email'] ?? ''; ?>"
                        class="w-full p-4 bg-slate-50 border border-transparent rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all"
@@ -53,11 +53,11 @@ if ($mensajeError !== '') {
             </div>
 
             <div>
-                <label class="block text-xs font-bold text-gray-400 uppercase mb-2 ml-1">TelÃ©fono</label>
+                <label class="block text-xs font-bold text-gray-400 uppercase mb-2 ml-1">Teléfono</label>
                 <input type="tel" name="telefono" required
                        value="<?php echo $datos['telefono'] ?? ''; ?>"
                        class="w-full p-4 bg-slate-50 border border-transparent rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all"
-                       placeholder="10 dÃ­gitos">
+                       placeholder="10 dígitos">
             </div>
         </div>
 
@@ -68,7 +68,7 @@ if ($mensajeError !== '') {
             </button>
 
             <a href="<?php echo BASE_URL; ?>/index.php" class="block text-center mt-4 text-sm text-gray-400 hover:text-gray-600 transition">
-                Ya tengo cuenta, quiero iniciar sesiÃ³n
+                Ya tengo cuenta, quiero iniciar sesión
             </a>
         </div>
     </form>

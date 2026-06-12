@@ -140,11 +140,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $asociado) {
 
     if ($action === 'delete') {
         $targetRole = trim((string)($asociado['rol'] ?? ''));
+        $targetStatus = trim((string)($asociado['estatus'] ?? ''));
         if ($editId === (int)$userId) {
             $mensaje = 'No puedes eliminar tu propia cuenta desde esta pantalla.';
             $mensajeTipo = 'error';
         } elseif (is_admin_role($targetRole)) {
             $mensaje = 'Desde esta pantalla solo se permite eliminar asociados.';
+            $mensajeTipo = 'error';
+        } elseif ($targetRole !== '' || strcasecmp($targetStatus, 'Suspendido') !== 0) {
+            $mensaje = 'Para eliminar al afiliado primero deja el rol vacio y cambia el estatus a Suspendido.';
             $mensajeTipo = 'error';
         } else {
             try {
@@ -168,7 +172,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $asociado) {
     $estatus = trim($_POST['estatus'] ?? '');
     $previousStatus = trim((string)($asociado['estatus'] ?? ''));
 
-    if ($nombre === '' || $email === '' || $rol === '' || $estatus === '') {
+    if ($nombre === '' || $email === '' || $estatus === '') {
         $mensaje = 'Todos los campos son obligatorios.';
         $mensajeTipo = 'error';
     } elseif (!app_is_valid_email($email)) {
@@ -315,7 +319,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $asociado) {
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">Rol</label>
-                    <input type="text" name="rol" required value="<?php echo htmlspecialchars((string)($asociado['rol'] ?? '')); ?>"
+                    <input type="text" name="rol" value="<?php echo htmlspecialchars((string)($asociado['rol'] ?? '')); ?>"
                            class="w-full p-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none">
                 </div>
                 <div>
@@ -353,6 +357,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $asociado) {
                 </button>
             </form>
             <div class="mt-8 border-t border-gray-100 pt-6">
+                <?php
+                $deleteRoleValue = trim((string)($asociado['rol'] ?? ''));
+                $deleteStatusValue = trim((string)($asociado['estatus'] ?? ''));
+                $canDeleteAffiliate = $editId !== (int)$userId
+                    && !is_admin_role($deleteRoleValue)
+                    && $deleteRoleValue === ''
+                    && strcasecmp($deleteStatusValue, 'Suspendido') === 0;
+                ?>
                 <div class="overflow-hidden rounded-[1.75rem] border border-red-200 bg-gradient-to-br from-red-50 via-rose-50 to-white shadow-sm">
                     <div class="border-b border-red-100 bg-red-100/70 px-5 py-4">
                         <div class="flex items-center gap-3">
@@ -373,25 +385,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $asociado) {
                             </p>
                         </div>
 
-                        <div class="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-medium leading-6 text-amber-900">
-                            Antes de continuar confirma que ya no necesitas conservar el expediente actual del asociado.
+                        <div class="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-4 text-sm font-medium leading-6 text-amber-900">
+                            Primero borra el rol del usuario, cambia el estatus a <strong>Suspendido</strong> y guarda los cambios. Cuando ambos requisitos se cumplan, se activara el boton rojo para eliminar afiliado.
                         </div>
 
                         <form method="POST" onsubmit="return confirm('Se eliminara por completo este asociado y su correo quedara libre para un nuevo registro. ¿Deseas continuar?');" class="shrink-0">
                             <input type="hidden" name="action" value="delete">
                             <button
                                 type="submit"
-                                class="inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-red-600 px-5 py-4 text-sm font-bold text-white shadow-lg shadow-red-200 transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-60"
-                                <?php echo ($editId === (int)$userId || is_admin_role((string)($asociado['rol'] ?? ''))) ? 'disabled' : ''; ?>
+                                class="inline-flex w-full items-center justify-center rounded-2xl px-5 py-4 text-sm font-bold text-white shadow-lg transition <?php echo $canDeleteAffiliate ? 'bg-red-600 shadow-red-200 hover:bg-red-700' : 'bg-red-300 shadow-red-100 cursor-not-allowed'; ?>"
+                                <?php echo $canDeleteAffiliate ? '' : 'disabled'; ?>
                             >
-                                <i class="fa-solid fa-trash-can"></i>
-                                Eliminar asociado por completo
+                                Eliminar afiliado
                             </button>
                         </form>
                         <?php if ($editId === (int)$userId): ?>
                             <p class="text-xs font-semibold text-red-700">No puedes eliminar tu propia cuenta desde esta pantalla.</p>
                         <?php elseif (is_admin_role((string)($asociado['rol'] ?? ''))): ?>
                             <p class="text-xs font-semibold text-red-700">La eliminacion completa desde esta vista esta reservada para usuarios con rol de asociado.</p>
+                        <?php elseif (!$canDeleteAffiliate): ?>
+                            <p class="text-xs font-semibold text-red-700">El boton se habilita solo cuando el rol esta vacio y el estatus esta en Suspendido.</p>
                         <?php endif; ?>
                     </div>
                 </div>
