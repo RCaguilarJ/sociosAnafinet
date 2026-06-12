@@ -381,7 +381,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $asociado) {
                         <?php endif; ?>
                     </select>
                 </div>
-                <button type="submit" class="w-full bg-blue-600 text-white py-3 rounded-xl font-bold shadow-lg hover:bg-blue-700 transition">
+                <button type="submit" class="w-full bg-blue-600 py-3 rounded-xl font-bold shadow-lg hover:bg-blue-700 transition" style="color:#ffffff;">
                     Guardar Cambios
                 </button>
             </form>
@@ -424,8 +424,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $asociado) {
                             <input type="hidden" name="action" value="delete">
                             <button
                                 type="submit"
-                                class="inline-flex w-full items-center justify-center rounded-2xl bg-red-600 px-5 py-4 text-sm font-bold text-white shadow-lg shadow-red-200 transition hover:bg-red-700"
-                                style="<?php echo $canDeleteAffiliate ? '' : 'opacity:.55;cursor:not-allowed;'; ?>"
+                                class="inline-flex w-full items-center justify-center rounded-2xl px-5 py-4 text-sm font-bold shadow-lg transition"
+                                style="background:#dc2626;color:#ffffff;border:1px solid #b91c1c;box-shadow:0 10px 20px rgba(220,38,38,.18);<?php echo $canDeleteAffiliate ? '' : 'opacity:.55;cursor:not-allowed;'; ?>"
                                 <?php echo $canDeleteAffiliate ? '' : 'disabled'; ?>
                             >
                                 Eliminar afiliado
