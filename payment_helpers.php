@@ -1121,6 +1121,19 @@ function app_http_json_request(string $method, string $url, array $headers = [],
     $responseBody = curl_exec($ch);
     $statusCode = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
     $curlError = curl_error($ch);
+
+    if (stripos($url, app_clip_api_base_url()) === 0) {
+        $clipLogContext = [
+            'method' => strtoupper($method),
+            'url' => $url,
+            'http_status' => $statusCode,
+            'request_payload' => $payload,
+            'response_payload' => $responseBody === false ? null : $responseBody,
+            'curl_error' => $curlError !== '' ? $curlError : null,
+        ];
+        error_log('CLIP_API_DEBUG ' . json_encode($clipLogContext, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
+    }
+
     curl_close($ch);
 
     if ($responseBody === false) {
@@ -1245,8 +1258,13 @@ function app_create_clip_checkout_link(PDO $pdo, array $user, string $externalRe
         'default' => $baseUrl . '/confirmar_pago.php?provider=clip&clip_return=default&external_reference=' . rawurlencode($externalReference),
     ];
 
+    $amount = round(app_membership_fee_amount(), 2);
+    if (!is_finite($amount) || $amount <= 0) {
+        throw new RuntimeException('El monto configurado para Clip no es valido.');
+    }
+
     $payload = [
-        'amount' => app_membership_fee_amount(),
+        'amount' => $amount,
         'currency' => app_membership_fee_currency(),
         'purchase_description' => app_membership_fee_label(),
         'redirection_url' => $redirectionUrl,

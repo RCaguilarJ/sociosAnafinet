@@ -393,7 +393,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $asociado) {
                             <input type="hidden" name="action" value="delete">
                             <button
                                 type="submit"
-                                class="inline-flex w-full items-center justify-center rounded-2xl px-5 py-4 text-sm font-bold text-white shadow-lg transition <?php echo $canDeleteAffiliate ? 'bg-red-600 shadow-red-200 hover:bg-red-700' : 'bg-red-300 shadow-red-100 cursor-not-allowed'; ?>"
+                                class="inline-flex w-full items-center justify-center rounded-2xl bg-red-600 px-5 py-4 text-sm font-bold text-white shadow-lg shadow-red-200 transition hover:bg-red-700"
+                                style="<?php echo $canDeleteAffiliate ? '' : 'opacity:.55;cursor:not-allowed;'; ?>"
                                 <?php echo $canDeleteAffiliate ? '' : 'disabled'; ?>
                             >
                                 Eliminar afiliado
