@@ -102,11 +102,12 @@ $crearUsuarioAfiliacion = static function (PDO $pdo, array $paso1, array $paso2)
     ];
 };
 
+$createdUserId = 0;
+
 try {
     ensure_user_payment_columns($pdo);
     app_ensure_membership_payment_schema($pdo);
 
-    $createdUserId = 0;
     $user = $crearUsuarioAfiliacion($pdo, $paso1, $paso2);
     $userId = (int)$user['id'];
     $createdUserId = $userId;
