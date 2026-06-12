@@ -3,10 +3,10 @@ $datos = $_SESSION['afiliacion']['paso2'] ?? [];
 ?>
 
 <div class="animate-fadeIn">
-    <h2 class="text-2xl font-bold text-gray-800 mb-2">Dirección de Contacto</h2>
-    <p class="text-gray-500 text-sm mb-8">Paso 2 de 3: Indica dónde se ubica tu despacho o domicilio fiscal.</p>
+    <h2 class="text-2xl font-bold text-gray-800 mb-2">DirecciÃ³n de Contacto</h2>
+    <p class="text-gray-500 text-sm mb-8">Paso 2 de 3: Indica dÃ³nde se ubica tu despacho o domicilio fiscal.</p>
     <div class="mb-6 rounded-2xl border border-blue-100 bg-blue-50 px-4 py-3 text-sm text-blue-700">
-        Todos los campos de esta sección son opcionales. Si no cuentas con esta información ahora, puedes continuar.
+        Todos los campos de esta secciÃ³n son opcionales. Si no cuentas con esta informaciÃ³n ahora, puedes continuar.
     </div>
 
     <form action="<?php echo BASE_URL; ?>/afiliacion/procesar_paso.php?paso=2" method="POST" class="space-y-5">
@@ -19,7 +19,7 @@ $datos = $_SESSION['afiliacion']['paso2'] ?? [];
                        placeholder="Nombre de la vialidad">
             </div>
             <div>
-                <label class="block text-xs font-bold text-gray-400 uppercase mb-2 ml-1">Número <span class="font-medium normal-case text-gray-400">(opcional)</span></label>
+                <label class="block text-xs font-bold text-gray-400 uppercase mb-2 ml-1">NÃºmero <span class="font-medium normal-case text-gray-400">(opcional)</span></label>
                 <input type="text" name="numero"
                        value="<?php echo $datos['numero'] ?? ''; ?>"
                        class="w-full p-4 bg-slate-50 border border-transparent rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all"
@@ -40,7 +40,7 @@ $datos = $_SESSION['afiliacion']['paso2'] ?? [];
                 <input type="text" name="cp" maxlength="5"
                        value="<?php echo $datos['cp'] ?? ''; ?>"
                        class="w-full p-4 bg-slate-50 border border-transparent rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all"
-                       placeholder="5 dígitos">
+                       placeholder="5 dÃ­gitos">
             </div>
         </div>
 
@@ -58,7 +58,7 @@ $datos = $_SESSION['afiliacion']['paso2'] ?? [];
                         class="w-full p-4 bg-slate-50 border border-transparent rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all appearance-none">
                     <option value="">Selecciona un estado</option>
                     <?php
-                    $estados = ['Aguascalientes', 'Baja California', 'Baja California Sur', 'Campeche', 'Chiapas', 'Chihuahua', 'CDMX', 'Coahuila', 'Colima', 'Durango', 'Guanajuato', 'Guerrero', 'Hidalgo', 'Jalisco', 'México', 'Michoacán', 'Morelos', 'Nayarit', 'Nuevo León', 'Oaxaca', 'Puebla', 'Querétaro', 'Quintana Roo', 'San Luis Potosí', 'Sinaloa', 'Sonora', 'Tabasco', 'Tamaulipas', 'Tlaxcala', 'Veracruz', 'Yucatán', 'Zacatecas'];
+                    $estados = ['Aguascalientes', 'Baja California', 'Baja California Sur', 'Campeche', 'Chiapas', 'Chihuahua', 'CDMX', 'Coahuila', 'Colima', 'Durango', 'Guanajuato', 'Guerrero', 'Hidalgo', 'Jalisco', 'MÃ©xico', 'MichoacÃ¡n', 'Morelos', 'Nayarit', 'Nuevo LeÃ³n', 'Oaxaca', 'Puebla', 'QuerÃ©taro', 'Quintana Roo', 'San Luis PotosÃ­', 'Sinaloa', 'Sonora', 'Tabasco', 'Tamaulipas', 'Tlaxcala', 'Veracruz', 'YucatÃ¡n', 'Zacatecas'];
                     foreach ($estados as $e) {
                         $selected = ($datos['estado'] ?? '') === $e ? 'selected' : '';
                         echo "<option value='" . htmlspecialchars($e, ENT_QUOTES, 'UTF-8') . "' $selected>" . htmlspecialchars($e, ENT_QUOTES, 'UTF-8') . "</option>";
@@ -74,9 +74,8 @@ $datos = $_SESSION['afiliacion']['paso2'] ?? [];
                 Anterior
             </a>
             <button type="submit"
-                    class="flex-[2] bg-[#5282B2] text-white py-4 rounded-2xl font-bold shadow-lg shadow-blue-200 hover:bg-blue-700 hover:-translate-y-0.5 transition-all flex items-center justify-center space-x-2">
-                <span>Siguiente: Pago</span>
-                <i class="fa-solid fa-arrow-right text-sm"></i>
+                    class="flex-[2] bg-[#5282B2] text-white py-4 rounded-2xl font-bold shadow-lg shadow-blue-200 hover:bg-blue-700 hover:-translate-y-0.5 transition-all flex items-center justify-center">
+                <span>Siguiente</span>
             </button>
         </div>
     </form>
