@@ -20,9 +20,108 @@ function app_public_base_url(): string
     return $scheme . '://' . $host . rtrim(BASE_URL, '/');
 }
 
+function app_ensure_payment_settings_schema(PDO $pdo): void
+{
+    static $initialized = false;
+    if ($initialized) {
+        return;
+    }
+
+    $pdo->exec(
+        "CREATE TABLE IF NOT EXISTS app_settings (
+            setting_key VARCHAR(120) NOT NULL PRIMARY KEY,
+            setting_value TEXT NOT NULL,
+            updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci"
+    );
+
+    $initialized = true;
+}
+
+function &app_payment_settings_runtime_cache(): array
+{
+    static $cache = [
+        'loaded' => false,
+        'values' => [],
+    ];
+
+    return $cache;
+}
+
+function app_payment_settings(): array
+{
+    global $pdo;
+
+    if (!($pdo instanceof PDO)) {
+        return [];
+    }
+
+    $cache =& app_payment_settings_runtime_cache();
+    if ($cache['loaded']) {
+        return $cache['values'];
+    }
+
+    app_ensure_payment_settings_schema($pdo);
+
+    $stmt = $pdo->query("SELECT setting_key, setting_value FROM app_settings");
+    $settings = [];
+    foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $row) {
+        $key = (string)($row['setting_key'] ?? '');
+        if ($key === '') {
+            continue;
+        }
+
+        $settings[$key] = (string)($row['setting_value'] ?? '');
+    }
+
+    $cache['loaded'] = true;
+    $cache['values'] = $settings;
+
+    return $cache['values'];
+}
+
+function app_payment_setting_value(string $key, ?string $default = null): ?string
+{
+    $settings = app_payment_settings();
+    if (!array_key_exists($key, $settings)) {
+        return $default;
+    }
+
+    $value = trim((string)$settings[$key]);
+    return $value === '' ? $default : $value;
+}
+
+function app_set_payment_setting(PDO $pdo, string $key, string $value): void
+{
+    app_ensure_payment_settings_schema($pdo);
+
+    $stmt = $pdo->prepare(
+        "INSERT INTO app_settings (setting_key, setting_value)
+         VALUES (?, ?)
+         ON DUPLICATE KEY UPDATE setting_value = VALUES(setting_value)"
+    );
+    $stmt->execute([$key, $value]);
+
+    $cache =& app_payment_settings_runtime_cache();
+    $cache['loaded'] = true;
+    $cache['values'][$key] = $value;
+}
+
 function app_membership_fee_amount(): float
 {
-    return (float)env_value('MEMBERSHIP_FEE_AMOUNT', '1000.00');
+    $defaultAmount = (float)env_value('MEMBERSHIP_FEE_AMOUNT', '1000.00');
+    $configuredAmount = app_payment_setting_value('membership_fee_amount');
+    if ($configuredAmount === null) {
+        return $defaultAmount;
+    }
+
+    $normalizedAmount = str_replace(',', '.', $configuredAmount);
+    if (!is_numeric($normalizedAmount)) {
+        return $defaultAmount;
+    }
+
+    $amount = (float)$normalizedAmount;
+    return $amount > 0 ? $amount : $defaultAmount;
 }
 
 function app_membership_fee_currency(): string

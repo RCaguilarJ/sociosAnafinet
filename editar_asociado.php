@@ -57,15 +57,41 @@ if (!function_exists('app_delete_user_completely')) {
         try {
             app_ensure_membership_payment_schema($pdo);
             ensure_session_table($pdo);
+            if (function_exists('app_ensure_payment_settings_schema')) {
+                app_ensure_payment_settings_schema($pdo);
+            }
 
-            $deletePayments = $pdo->prepare('DELETE FROM pagos_membresia WHERE user_id = ?');
-            $deletePayments->execute([$userId]);
+            $deleteStatements = [
+                'DELETE FROM app_notifications WHERE user_id = ?',
+                'DELETE FROM actividad_usuario WHERE usuario_id = ?',
+                'DELETE FROM foro_likes WHERE usuario_id = ?',
+                'DELETE FROM foro_respuestas WHERE usuario_id = ?',
+                'DELETE FROM foro_likes WHERE tema_id IN (SELECT id FROM foro_temas WHERE usuario_id = ?)',
+                'DELETE FROM foro_respuestas WHERE tema_id IN (SELECT id FROM foro_temas WHERE usuario_id = ?)',
+                'DELETE FROM foro_temas WHERE usuario_id = ?',
+                'DELETE FROM pagos_membresia WHERE user_id = ?',
+            ];
+
+            foreach ($deleteStatements as $sql) {
+                try {
+                    $deleteStmt = $pdo->prepare($sql);
+                    $deleteStmt->execute([$userId]);
+                } catch (Throwable $e) {
+                    // Some legacy installations may not have every related table yet.
+                }
+            }
 
             $deleteUser = $pdo->prepare('DELETE FROM usuarios WHERE id = ? LIMIT 1');
             $deleteUser->execute([$userId]);
 
             if ($deleteUser->rowCount() !== 1) {
                 throw new RuntimeException('No fue posible eliminar el asociado.');
+            }
+
+            $verifyStmt = $pdo->prepare('SELECT 1 FROM usuarios WHERE id = ? LIMIT 1');
+            $verifyStmt->execute([$userId]);
+            if ((bool)$verifyStmt->fetchColumn()) {
+                throw new RuntimeException('El registro sigue presente despues del borrado.');
             }
 
             $pdo->commit();

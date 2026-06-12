@@ -8,7 +8,7 @@ if (!isset($_SESSION['user_id'])) {
 }
 
 $userRole = $_SESSION['user_rol'] ?? '';
-$userId = isset($_SESSION['user_id']) ? (int) $_SESSION['user_id'] : null;
+$userId = isset($_SESSION['user_id']) ? (int)$_SESSION['user_id'] : null;
 if (isset($pdo)) {
     $dbRole = fetch_user_role($pdo, $userId);
     if ($dbRole !== null) {
@@ -25,6 +25,7 @@ if (!is_admin_role($userRole) && !$masterAccess) {
 require_database_connection($pdo ?? null, 'revisar_pagos', 'Revisar Pagos');
 
 ensure_user_payment_columns($pdo);
+app_ensure_payment_settings_schema($pdo);
 
 $mensaje = '';
 $mensajeTipo = 'success';
@@ -32,45 +33,71 @@ $filtro = trim($_GET['filtro'] ?? 'pendientes');
 $emailPopupMessage = '';
 $emailPopupTitle = 'Correo enviado correctamente';
 $emailPopupType = 'success';
+$membershipFeeAmount = app_membership_fee_amount();
+$membershipFeeCurrency = app_membership_fee_currency();
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $targetUserId = (int) ($_POST['user_id'] ?? 0);
     $action = trim($_POST['action'] ?? '');
 
-    if ($targetUserId <= 0 || ($action !== 'aprobar' && $action !== 'revertir')) {
-        $mensaje = 'La acción solicitada no es válida.';
-        $mensajeTipo = 'error';
-    } else {
-        $statusStmt = $pdo->prepare("SELECT estatus FROM usuarios WHERE id = ? LIMIT 1");
-        $statusStmt->execute([$targetUserId]);
-        $previousStatus = (string)($statusStmt->fetchColumn() ?: '');
-        $userDetailStmt = $pdo->prepare("SELECT email FROM usuarios WHERE id = ? LIMIT 1");
-        $userDetailStmt->execute([$targetUserId]);
-        $targetUserEmail = trim((string)($userDetailStmt->fetchColumn() ?: ''));
-        $nuevoEstatus = $action === 'aprobar' ? 'Activo' : 'Pendiente de pago';
-        $stmt = $pdo->prepare("UPDATE usuarios SET estatus = ? WHERE id = ?");
-        $stmt->execute([$nuevoEstatus, $targetUserId]);
-        if ($action === 'aprobar') {
-            app_apply_membership_cycle($pdo, $targetUserId, date('Y-m-d H:i:s'));
-            $emailSent = app_send_manual_payment_activation_notification_if_needed($pdo, $targetUserId, $previousStatus, 'Activo');
-            if (($emailSent ?? false) && $masterAccess) {
-                $emailPopupMessage = 'Se envio correctamente el correo de confirmacion de acceso al foro a '
-                    . ($targetUserEmail !== '' ? $targetUserEmail : 'este usuario')
-                    . '.';
-            }
-            if (!($emailSent ?? false) && $masterAccess) {
-                $emailPopupTitle = 'No se envio el correo';
-                $emailPopupType = 'error';
-                $emailPopupMessage = app_mail_last_error() !== ''
-                    ? app_mail_last_error()
-                    : 'El sistema no devolvio detalle adicional sobre el fallo del correo.';
-            }
+    if ($action === 'actualizar_monto') {
+        $amountInput = trim((string)($_POST['membership_fee_amount'] ?? ''));
+        $normalizedAmount = str_replace(',', '.', $amountInput);
+
+        if ($normalizedAmount === '' || !is_numeric($normalizedAmount) || (float)$normalizedAmount <= 0) {
+            $mensaje = 'Ingresa un monto valido mayor a cero.';
+            $mensajeTipo = 'error';
+        } else {
+            $storedAmount = number_format((float)$normalizedAmount, 2, '.', '');
+            app_set_payment_setting($pdo, 'membership_fee_amount', $storedAmount);
+            $membershipFeeAmount = app_membership_fee_amount();
+            $mensaje = 'El monto de afiliacion se actualizo correctamente.';
+            $mensajeTipo = 'success';
         }
-        $mensaje = $action === 'aprobar'
-            ? (($emailSent ?? false)
-                ? 'Pago aprobado y cuenta marcada como Activo.'
-                : 'Pago aprobado y cuenta marcada como Activo, pero el correo de confirmacion al usuario no pudo enviarse. Revisa la configuracion de correo del servidor.')
-            : 'El usuario fue regresado a Pendiente de pago.';
-        $mensajeTipo = $action === 'aprobar' && !($emailSent ?? true) ? 'error' : 'success';
+    } else {
+        $targetUserId = (int)($_POST['user_id'] ?? 0);
+
+        if ($targetUserId <= 0 || ($action !== 'aprobar' && $action !== 'revertir')) {
+            $mensaje = 'La accion solicitada no es valida.';
+            $mensajeTipo = 'error';
+        } else {
+            $statusStmt = $pdo->prepare("SELECT estatus FROM usuarios WHERE id = ? LIMIT 1");
+            $statusStmt->execute([$targetUserId]);
+            $previousStatus = (string)($statusStmt->fetchColumn() ?: '');
+
+            $userDetailStmt = $pdo->prepare("SELECT email FROM usuarios WHERE id = ? LIMIT 1");
+            $userDetailStmt->execute([$targetUserId]);
+            $targetUserEmail = trim((string)($userDetailStmt->fetchColumn() ?: ''));
+
+            $nuevoEstatus = $action === 'aprobar' ? 'Activo' : 'Pendiente de pago';
+            $stmt = $pdo->prepare("UPDATE usuarios SET estatus = ? WHERE id = ?");
+            $stmt->execute([$nuevoEstatus, $targetUserId]);
+
+            if ($action === 'aprobar') {
+                app_apply_membership_cycle($pdo, $targetUserId, date('Y-m-d H:i:s'));
+                $emailSent = app_send_manual_payment_activation_notification_if_needed($pdo, $targetUserId, $previousStatus, 'Activo');
+
+                if (($emailSent ?? false) && $masterAccess) {
+                    $emailPopupMessage = 'Se envio correctamente el correo de confirmacion de acceso al foro a '
+                        . ($targetUserEmail !== '' ? $targetUserEmail : 'este usuario')
+                        . '.';
+                }
+
+                if (!($emailSent ?? false) && $masterAccess) {
+                    $emailPopupTitle = 'No se envio el correo';
+                    $emailPopupType = 'error';
+                    $emailPopupMessage = app_mail_last_error() !== ''
+                        ? app_mail_last_error()
+                        : 'El sistema no devolvio detalle adicional sobre el fallo del correo.';
+                }
+            }
+
+            $mensaje = $action === 'aprobar'
+                ? (($emailSent ?? false)
+                    ? 'Pago aprobado y cuenta marcada como Activo.'
+                    : 'Pago aprobado y cuenta marcada como Activo, pero el correo de confirmacion al usuario no pudo enviarse. Revisa la configuracion de correo del servidor.')
+                : 'El usuario fue regresado a Pendiente de pago.';
+            $mensajeTipo = $action === 'aprobar' && !($emailSent ?? true) ? 'error' : 'success';
+        }
     }
 }
 
@@ -88,16 +115,16 @@ $stats = [
     'activos' => 0,
 ];
 
-$stats['pendientes_pago'] = (int) $pdo->query("SELECT COUNT(*) FROM usuarios WHERE rol = 'Asociado' AND estatus = 'Pendiente de pago'")->fetchColumn();
-$stats['pagos_reportados'] = (int) $pdo->query("SELECT COUNT(*) FROM usuarios WHERE rol = 'Asociado' AND estatus = 'Pago reportado'")->fetchColumn();
-$stats['pagos_en_proceso'] = (int) $pdo->query("SELECT COUNT(*) FROM usuarios WHERE rol = 'Asociado' AND estatus = 'Pago en proceso'")->fetchColumn();
-$stats['activos'] = (int) $pdo->query("SELECT COUNT(*) FROM usuarios WHERE rol = 'Asociado' AND estatus IN ('Activo', 'Afiliado', 'Aprobado', 'Confirmado', 'Pagado')")->fetchColumn();
+$stats['pendientes_pago'] = (int)$pdo->query("SELECT COUNT(*) FROM usuarios WHERE rol = 'Asociado' AND estatus = 'Pendiente de pago'")->fetchColumn();
+$stats['pagos_reportados'] = (int)$pdo->query("SELECT COUNT(*) FROM usuarios WHERE rol = 'Asociado' AND estatus = 'Pago reportado'")->fetchColumn();
+$stats['pagos_en_proceso'] = (int)$pdo->query("SELECT COUNT(*) FROM usuarios WHERE rol = 'Asociado' AND estatus = 'Pago en proceso'")->fetchColumn();
+$stats['activos'] = (int)$pdo->query("SELECT COUNT(*) FROM usuarios WHERE rol = 'Asociado' AND estatus IN ('Activo', 'Afiliado', 'Aprobado', 'Confirmado', 'Pagado')")->fetchColumn();
 
 $stmt = $pdo->query("
     SELECT id, nombre, email, estatus, referencia_pago, pago_reportado_at, comprobante_pago, creado_at
     FROM usuarios
     $where
-    ORDER BY 
+    ORDER BY
         CASE estatus
             WHEN 'Pago reportado' THEN 1
             WHEN 'Pago en proceso' THEN 2
@@ -168,23 +195,68 @@ $usuarios = $stmt->fetchAll();
             <?php endif; ?>
 
             <div class="grid grid-cols-1 gap-4 md:grid-cols-4">
-                <div class="rounded-2xl bg-white p-5 border border-gray-100 shadow-sm">
+                <div class="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
                     <p class="text-xs font-bold uppercase tracking-wide text-gray-400">Pendiente de pago</p>
                     <p class="mt-2 text-3xl font-bold text-slate-900"><?php echo number_format($stats['pendientes_pago']); ?></p>
                 </div>
-                <div class="rounded-2xl bg-white p-5 border border-gray-100 shadow-sm">
+                <div class="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
                     <p class="text-xs font-bold uppercase tracking-wide text-gray-400">Pago reportado</p>
                     <p class="mt-2 text-3xl font-bold text-amber-600"><?php echo number_format($stats['pagos_reportados']); ?></p>
                 </div>
-                <div class="rounded-2xl bg-white p-5 border border-gray-100 shadow-sm">
+                <div class="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
                     <p class="text-xs font-bold uppercase tracking-wide text-gray-400">Pago en proceso</p>
                     <p class="mt-2 text-3xl font-bold text-sky-600"><?php echo number_format($stats['pagos_en_proceso']); ?></p>
                 </div>
-                <div class="rounded-2xl bg-white p-5 border border-gray-100 shadow-sm">
+                <div class="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
                     <p class="text-xs font-bold uppercase tracking-wide text-gray-400">Activos</p>
                     <p class="mt-2 text-3xl font-bold text-emerald-600"><?php echo number_format($stats['activos']); ?></p>
                 </div>
             </div>
+
+            <section class="rounded-[2rem] border border-gray-100 bg-white p-6 shadow-sm">
+                <div class="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+                    <div>
+                        <p class="text-xs font-bold uppercase tracking-[0.18em] text-slate-400">Monto de afiliacion</p>
+                        <h2 class="mt-2 text-3xl font-black text-slate-900">$<?php echo number_format($membershipFeeAmount, 2, '.', ','); ?> <?php echo htmlspecialchars($membershipFeeCurrency, ENT_QUOTES, 'UTF-8'); ?></h2>
+                        <p class="mt-2 text-sm text-slate-500">Este monto se usa en la solicitud de afiliacion, la confirmacion de pago y el checkout de la pasarela.</p>
+                    </div>
+
+                    <form method="POST" class="grid w-full max-w-2xl gap-3">
+                        <input type="hidden" name="action" value="actualizar_monto">
+                        <div class="grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end">
+                            <div>
+                                <label for="membership_fee_amount" class="mb-2 block text-xs font-bold uppercase tracking-[0.18em] text-slate-500">Editar monto</label>
+                                <input
+                                    id="membership_fee_amount"
+                                    type="number"
+                                    name="membership_fee_amount"
+                                    min="0.01"
+                                    step="0.01"
+                                    required
+                                    value="<?php echo htmlspecialchars(number_format($membershipFeeAmount, 2, '.', ''), ENT_QUOTES, 'UTF-8'); ?>"
+                                    class="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-base font-semibold text-slate-900 outline-none transition focus:border-blue-400 focus:bg-white focus:ring-2 focus:ring-blue-100"
+                                >
+                            </div>
+                            <button type="submit" class="inline-flex items-center justify-center rounded-2xl bg-[#5282B2] px-5 py-3 text-sm font-bold text-white transition hover:bg-blue-700">
+                                Guardar monto
+                            </button>
+                        </div>
+
+                        <div class="flex flex-wrap gap-2">
+                            <button type="button" data-set-amount="10.00" class="inline-flex items-center justify-center rounded-full border border-amber-200 bg-amber-50 px-4 py-2 text-xs font-bold text-amber-800 transition hover:bg-amber-100">
+                                Prueba Clip: $10.00
+                            </button>
+                            <button type="button" data-set-amount="1000.00" class="inline-flex items-center justify-center rounded-full border border-slate-200 bg-slate-50 px-4 py-2 text-xs font-bold text-slate-700 transition hover:bg-slate-100">
+                                Monto real: $1,000.00
+                            </button>
+                        </div>
+
+                        <p class="text-xs text-slate-500">
+                            Usa los presets para cambiar rapido entre el monto de prueba y el monto anual real.
+                        </p>
+                    </form>
+                </div>
+            </section>
 
             <form method="GET" class="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm">
                 <div class="flex flex-col gap-3 sm:flex-row sm:items-center">
@@ -194,7 +266,7 @@ $usuarios = $stmt->fetchAll();
                         <option value="aprobados" <?php echo $filtro === 'aprobados' ? 'selected' : ''; ?>>Solo activos</option>
                         <option value="todos" <?php echo $filtro === 'todos' ? 'selected' : ''; ?>>Todos</option>
                     </select>
-                    <button type="submit" class="inline-flex items-center justify-center rounded-xl bg-[#5282B2] px-5 py-2 text-sm font-bold text-white hover:bg-blue-700 transition">
+                    <button type="submit" class="inline-flex items-center justify-center rounded-xl bg-[#5282B2] px-5 py-2 text-sm font-bold text-white transition hover:bg-blue-700">
                         Aplicar filtro
                     </button>
                 </div>
@@ -208,7 +280,7 @@ $usuarios = $stmt->fetchAll();
                 <div class="grid gap-5">
                     <?php foreach ($usuarios as $usuario): ?>
                         <?php
-                        $estatus = (string) ($usuario['estatus'] ?? '');
+                        $estatus = (string)($usuario['estatus'] ?? '');
                         $badgeClass = 'bg-slate-100 text-slate-700';
                         if ($estatus === 'Pago reportado') {
                             $badgeClass = 'bg-amber-100 text-amber-800';
@@ -219,28 +291,28 @@ $usuarios = $stmt->fetchAll();
                         } elseif ($estatus === 'Pendiente de pago') {
                             $badgeClass = 'bg-blue-100 text-blue-800';
                         }
-                        $comprobante = trim((string) ($usuario['comprobante_pago'] ?? ''));
+                        $comprobante = trim((string)($usuario['comprobante_pago'] ?? ''));
                         $comprobanteUrl = $comprobante !== '' ? uploaded_file_url('comprobantes_pago', $comprobante, true) : '';
                         ?>
                         <article class="rounded-[2rem] border border-gray-100 bg-white p-6 shadow-sm">
                             <div class="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
                                 <div class="min-w-0 flex-1">
                                     <div class="flex flex-wrap items-center gap-3">
-                                        <h2 class="text-xl font-bold text-slate-900"><?php echo htmlspecialchars((string) ($usuario['nombre'] ?? ''), ENT_QUOTES, 'UTF-8'); ?></h2>
+                                        <h2 class="text-xl font-bold text-slate-900"><?php echo htmlspecialchars((string)($usuario['nombre'] ?? ''), ENT_QUOTES, 'UTF-8'); ?></h2>
                                         <span class="rounded-full px-3 py-1 text-xs font-bold <?php echo $badgeClass; ?>">
                                             <?php echo htmlspecialchars($estatus, ENT_QUOTES, 'UTF-8'); ?>
                                         </span>
                                     </div>
-                                    <p class="mt-1 text-sm text-slate-500"><?php echo htmlspecialchars((string) ($usuario['email'] ?? ''), ENT_QUOTES, 'UTF-8'); ?></p>
+                                    <p class="mt-1 text-sm text-slate-500"><?php echo htmlspecialchars((string)($usuario['email'] ?? ''), ENT_QUOTES, 'UTF-8'); ?></p>
 
                                     <div class="mt-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
                                         <div class="rounded-2xl bg-slate-50 p-4">
                                             <p class="text-xs font-bold uppercase tracking-wide text-slate-400">Referencia</p>
-                                            <p class="mt-2 text-sm font-semibold text-slate-900"><?php echo htmlspecialchars((string) ($usuario['referencia_pago'] ?? 'Sin referencia'), ENT_QUOTES, 'UTF-8'); ?></p>
+                                            <p class="mt-2 text-sm font-semibold text-slate-900"><?php echo htmlspecialchars((string)($usuario['referencia_pago'] ?? 'Sin referencia'), ENT_QUOTES, 'UTF-8'); ?></p>
                                         </div>
                                         <div class="rounded-2xl bg-slate-50 p-4">
                                             <p class="text-xs font-bold uppercase tracking-wide text-slate-400">Pago reportado</p>
-                                            <p class="mt-2 text-sm font-semibold text-slate-900"><?php echo htmlspecialchars((string) ($usuario['pago_reportado_at'] ?? 'Aún no'), ENT_QUOTES, 'UTF-8'); ?></p>
+                                            <p class="mt-2 text-sm font-semibold text-slate-900"><?php echo htmlspecialchars((string)($usuario['pago_reportado_at'] ?? 'Aun no'), ENT_QUOTES, 'UTF-8'); ?></p>
                                         </div>
                                         <div class="rounded-2xl bg-slate-50 p-4">
                                             <p class="text-xs font-bold uppercase tracking-wide text-slate-400">Comprobante</p>
@@ -256,23 +328,23 @@ $usuarios = $stmt->fetchAll();
                                         <div class="rounded-2xl bg-slate-50 p-4">
                                             <p class="text-xs font-bold uppercase tracking-wide text-slate-400">Acciones</p>
                                             <div class="mt-2 flex flex-wrap gap-2">
-                                                <a href="<?php echo BASE_URL; ?>/editar_asociado.php?id=<?php echo (int) $usuario['id']; ?>" class="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-700 hover:bg-slate-100">
+                                                <a href="<?php echo BASE_URL; ?>/editar_asociado.php?id=<?php echo (int)$usuario['id']; ?>" class="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-700 hover:bg-slate-100">
                                                     Editar
                                                 </a>
                                                 <?php if (!app_is_membership_active_status($estatus)): ?>
                                                     <form method="POST">
-                                                        <input type="hidden" name="user_id" value="<?php echo (int) $usuario['id']; ?>">
+                                                        <input type="hidden" name="user_id" value="<?php echo (int)$usuario['id']; ?>">
                                                         <input type="hidden" name="action" value="aprobar">
-                                                        <button type="submit" class="inline-flex items-center justify-center rounded-xl bg-emerald-600 px-3 py-2 text-xs font-bold text-white hover:bg-emerald-700 transition">
+                                                        <button type="submit" class="inline-flex items-center justify-center rounded-xl bg-emerald-600 px-3 py-2 text-xs font-bold text-white transition hover:bg-emerald-700">
                                                             Aprobar pago
                                                         </button>
                                                     </form>
                                                 <?php endif; ?>
                                                 <?php if ($estatus !== 'Pendiente de pago'): ?>
                                                     <form method="POST">
-                                                        <input type="hidden" name="user_id" value="<?php echo (int) $usuario['id']; ?>">
+                                                        <input type="hidden" name="user_id" value="<?php echo (int)$usuario['id']; ?>">
                                                         <input type="hidden" name="action" value="revertir">
-                                                        <button type="submit" class="inline-flex items-center justify-center rounded-xl bg-slate-700 px-3 py-2 text-xs font-bold text-white hover:bg-slate-800 transition">
+                                                        <button type="submit" class="inline-flex items-center justify-center rounded-xl bg-slate-700 px-3 py-2 text-xs font-bold text-white transition hover:bg-slate-800">
                                                             Regresar a pendiente
                                                         </button>
                                                     </form>
@@ -307,5 +379,21 @@ $usuarios = $stmt->fetchAll();
         }());
     </script>
     <?php endif; ?>
+    <script>
+        (function () {
+            const amountInput = document.getElementById('membership_fee_amount');
+            if (!amountInput) {
+                return;
+            }
+
+            document.querySelectorAll('[data-set-amount]').forEach((button) => {
+                button.addEventListener('click', () => {
+                    amountInput.value = button.getAttribute('data-set-amount') || amountInput.value;
+                    amountInput.focus();
+                    amountInput.select();
+                });
+            });
+        }());
+    </script>
 </body>
 </html>

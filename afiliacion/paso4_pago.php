@@ -16,7 +16,7 @@ $panelInicial = ($mensajeError !== '' || !empty($datos['referencia_pago'])) ? 'm
 
 <div class="animate-fadeIn">
     <h2 class="text-2xl font-bold text-slate-800">Metodo de Pago</h2>
-    <p class="mt-1 mb-6 max-w-3xl text-sm leading-6 text-slate-500">Paso 3 de 3: durante las pruebas el cobro en linea se procesara por <strong>$10.00 MXN</strong> con Clip y la comprobacion manual permanece disponible para revision interna.</p>
+    <p class="mt-1 mb-6 max-w-3xl text-sm leading-6 text-slate-500">Paso 3 de 3: durante las pruebas el cobro en linea se procesara por <strong>$<?php echo htmlspecialchars($montoTotal, ENT_QUOTES, 'UTF-8'); ?> MXN</strong> con Clip y la comprobacion manual permanece disponible para revision interna.</p>
 
     <?php if ($mensajeError !== ''): ?>
         <div class="mb-6 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
@@ -50,7 +50,7 @@ $panelInicial = ($mensajeError !== '' || !empty($datos['referencia_pago'])) ? 'm
                 <?php /* Mercado Pago y PayPal quedaron intencionalmente fuera del frontend de afiliacion. */ ?>
                 <div class="mb-5 rounded-2xl border border-violet-100 bg-violet-50/80 p-5 text-sm leading-6 text-violet-900">
                     <p class="font-semibold text-violet-950">Checkout en linea con Clip</p>
-                    <p class="mt-2">Genera un link de pago seguro para completar tu afiliacion. En este ambiente de pruebas el cargo es de $10.00 MXN. Cuando Clip confirme la operacion, el sistema actualizara tu estatus y te llevara a tu portal.</p>
+                    <p class="mt-2">Genera un link de pago seguro para completar tu afiliacion. En este ambiente de pruebas el cargo es de $<?php echo htmlspecialchars($montoTotal, ENT_QUOTES, 'UTF-8'); ?> MXN. Cuando Clip confirme la operacion, el sistema actualizara tu estatus y te llevara a tu portal.</p>
                 </div>
 
                 <div class="rounded-[2rem] border border-slate-200 bg-slate-50 p-4 sm:p-6 xl:p-7">
