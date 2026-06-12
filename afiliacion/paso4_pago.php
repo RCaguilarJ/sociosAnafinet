@@ -16,7 +16,7 @@ $panelInicial = ($mensajeError !== '' || !empty($datos['referencia_pago'])) ? 'm
 
 <div class="animate-fadeIn">
     <h2 class="text-2xl font-bold text-slate-800">Metodo de Pago</h2>
-    <p class="mt-1 mb-6 text-sm text-slate-500">Paso 3 de 3: el pago en linea ahora se genera con Clip y la comprobacion manual permanece disponible para revision interna.</p>
+    <p class="mt-1 mb-6 max-w-3xl text-sm leading-6 text-slate-500">Paso 3 de 3: durante las pruebas el cobro en linea se procesara por <strong>$10.00 MXN</strong> con Clip y la comprobacion manual permanece disponible para revision interna.</p>
 
     <?php if ($mensajeError !== ''): ?>
         <div class="mb-6 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
@@ -26,13 +26,13 @@ $panelInicial = ($mensajeError !== '' || !empty($datos['referencia_pago'])) ? 'm
 
     <div class="overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-sm">
         <div class="border-b border-slate-200 bg-slate-50 p-6">
-            <div class="flex items-center justify-between gap-4">
+            <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                     <p class="text-xs font-bold uppercase tracking-[0.18em] text-slate-400">Cuota de afiliacion</p>
                     <h3 class="mt-2 text-3xl font-bold text-slate-900">$<?php echo htmlspecialchars($montoTotal, ENT_QUOTES, 'UTF-8'); ?> MXN</h3>
-                    <p class="mt-2 text-sm text-slate-500"><?php echo htmlspecialchars($conceptoPago, ENT_QUOTES, 'UTF-8'); ?> · Cuota anual</p>
+                    <p class="mt-2 text-sm text-slate-500"><?php echo htmlspecialchars($conceptoPago, ENT_QUOTES, 'UTF-8'); ?> - Cuota anual</p>
                 </div>
-                <span class="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-700">Pago seguro</span>
+                <span class="inline-flex w-fit rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-700">Pago seguro</span>
             </div>
         </div>
 
@@ -50,12 +50,12 @@ $panelInicial = ($mensajeError !== '' || !empty($datos['referencia_pago'])) ? 'm
                 <?php /* Mercado Pago y PayPal quedaron intencionalmente fuera del frontend de afiliacion. */ ?>
                 <div class="mb-5 rounded-2xl border border-violet-100 bg-violet-50/80 p-5 text-sm leading-6 text-violet-900">
                     <p class="font-semibold text-violet-950">Checkout en linea con Clip</p>
-                    <p class="mt-2">Genera un link de pago seguro para completar tu afiliacion. Cuando Clip confirme la operacion, el sistema actualizara tu estatus y te llevara a tu portal.</p>
+                    <p class="mt-2">Genera un link de pago seguro para completar tu afiliacion. En este ambiente de pruebas el cargo es de $10.00 MXN. Cuando Clip confirme la operacion, el sistema actualizara tu estatus y te llevara a tu portal.</p>
                 </div>
 
-                <div class="rounded-[2rem] border border-slate-200 bg-slate-50 p-4 sm:p-5 lg:p-6">
-                    <div class="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1.12fr)_minmax(19rem,22rem)] xl:items-start">
-                        <div class="space-y-5">
+                <div class="rounded-[2rem] border border-slate-200 bg-slate-50 p-4 sm:p-6 xl:p-7">
+                    <div class="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1.45fr)_minmax(18rem,20rem)] xl:items-start">
+                        <div class="min-w-0 space-y-6">
                             <div class="flex flex-wrap gap-2">
                                 <span class="rounded-full bg-violet-100 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.18em] text-violet-800">Clip</span>
                                 <span class="rounded-full bg-white px-3 py-1 text-[11px] font-bold uppercase tracking-[0.18em] text-slate-500 ring-1 ring-slate-200">Tarjeta</span>
@@ -65,31 +65,31 @@ $panelInicial = ($mensajeError !== '' || !empty($datos['referencia_pago'])) ? 'm
 
                             <div>
                                 <p class="text-xs font-bold uppercase tracking-[0.18em] text-slate-400">Flujo activo</p>
-                                <h3 class="mt-2 text-[clamp(2rem,5vw,3rem)] font-bold leading-tight text-slate-900">Pagar con Clip</h3>
-                                <p class="mt-3 max-w-2xl text-sm leading-8 text-slate-600 sm:text-[15px]">
+                                <h3 class="mt-2 max-w-xl text-[clamp(2rem,5vw,3rem)] font-bold leading-tight text-slate-900">Pagar con Clip</h3>
+                                <p class="mt-3 max-w-2xl text-sm leading-7 text-slate-600 sm:text-[15px] xl:text-base">
                                     El sistema creara tu usuario en estado pendiente y abrira el checkout de Clip para que completes el pago.
                                 </p>
                             </div>
 
                             <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                                <div class="rounded-3xl border border-slate-200 bg-white p-5 sm:min-h-[168px]">
+                                <div class="rounded-3xl border border-slate-200 bg-white p-5 sm:min-h-[168px] xl:p-6">
                                     <p class="text-xs font-bold uppercase tracking-[0.18em] text-slate-400">Importe</p>
-                                    <div class="mt-4 space-y-2">
-                                        <span class="block text-[clamp(2rem,6vw,2.8rem)] font-black leading-[0.95] tracking-[-0.05em] text-slate-900 tabular-nums">$<?php echo htmlspecialchars($montoTotal, ENT_QUOTES, 'UTF-8'); ?></span>
+                                    <div class="mt-4 min-w-0 space-y-2">
+                                        <span class="block whitespace-nowrap text-[clamp(1.85rem,4vw,2.45rem)] font-black leading-[0.95] tracking-[-0.05em] text-slate-900 tabular-nums">$<?php echo htmlspecialchars($montoTotal, ENT_QUOTES, 'UTF-8'); ?></span>
                                         <span class="block text-sm font-bold uppercase tracking-[0.18em] text-slate-500">MXN</span>
                                     </div>
                                 </div>
-                                <div class="rounded-3xl border border-slate-200 bg-white p-5 sm:min-h-[168px]">
+                                <div class="rounded-3xl border border-slate-200 bg-white p-5 sm:min-h-[168px] xl:p-6">
                                     <p class="text-xs font-bold uppercase tracking-[0.18em] text-slate-400">Vigencia</p>
                                     <p class="mt-4 text-lg font-semibold leading-7 text-slate-900">Membresia anual</p>
                                 </div>
                             </div>
                         </div>
 
-                        <div class="mx-auto w-full max-w-md rounded-[1.75rem] border border-slate-200 bg-white p-5 shadow-sm sm:p-6 xl:mx-0 xl:max-w-none">
+                        <div class="mx-auto w-full max-w-lg rounded-[1.75rem] border border-slate-200 bg-white p-5 shadow-sm sm:p-6 xl:mx-0 xl:max-w-none">
                             <p class="text-xs font-bold uppercase tracking-[0.18em] text-slate-400">Resumen</p>
-                            <div class="mt-3 text-[clamp(2.5rem,7vw,3.6rem)] font-black leading-none tracking-[-0.05em] text-slate-900 tabular-nums">$<?php echo htmlspecialchars($montoTotal, ENT_QUOTES, 'UTF-8'); ?></div>
-                            <p class="mt-4 text-sm leading-8 text-slate-600 sm:text-[15px]">Cuota anual de la membresia. El link de pago se genera al continuar.</p>
+                            <div class="mt-3 text-[clamp(2.35rem,5vw,3.35rem)] font-black leading-none tracking-[-0.05em] text-slate-900 tabular-nums">$<?php echo htmlspecialchars($montoTotal, ENT_QUOTES, 'UTF-8'); ?></div>
+                            <p class="mt-4 text-sm leading-7 text-slate-600 sm:text-[15px]">Cuota anual de la membresia. El link de pago se genera al continuar.</p>
 
                             <?php if (!$clipHabilitado): ?>
                                 <div class="mt-5 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-semibold text-amber-800">

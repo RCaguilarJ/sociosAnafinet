@@ -327,30 +327,47 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $asociado) {
                 </button>
             </form>
             <div class="mt-8 border-t border-gray-100 pt-6">
-                <div class="rounded-2xl border border-red-100 bg-red-50 p-4">
-                    <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                        <div>
-                            <h2 class="text-sm font-bold uppercase tracking-[0.18em] text-red-700">Zona delicada</h2>
-                            <p class="mt-2 text-sm leading-6 text-red-900">
-                                Eliminar al asociado borra su registro, historial de pagos, actividad vinculada y archivos asociados. Despues podra volver a solicitar su afiliacion con el mismo correo.
+                <div class="overflow-hidden rounded-[1.75rem] border border-red-200 bg-gradient-to-br from-red-50 via-rose-50 to-white shadow-sm">
+                    <div class="border-b border-red-100 bg-red-100/70 px-5 py-4">
+                        <div class="flex items-center gap-3">
+                            <span class="inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-red-600 text-white shadow-lg shadow-red-200">
+                                <i class="fa-solid fa-triangle-exclamation"></i>
+                            </span>
+                            <div>
+                                <h2 class="text-sm font-black uppercase tracking-[0.2em] text-red-800">Zona delicada</h2>
+                                <p class="mt-1 text-sm font-semibold text-red-900">Esta accion elimina al asociado de forma permanente.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="space-y-5 px-5 py-5">
+                        <div class="rounded-2xl border border-red-100 bg-white/90 p-4">
+                            <p class="text-sm leading-7 text-slate-800">
+                                Se borrara su registro, historial de pagos, actividad vinculada y archivos asociados. Despues podra volver a solicitar su afiliacion con el mismo correo.
                             </p>
                         </div>
+
+                        <div class="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-medium leading-6 text-amber-900">
+                            Antes de continuar confirma que ya no necesitas conservar el expediente actual del asociado.
+                        </div>
+
                         <form method="POST" onsubmit="return confirm('Se eliminara por completo este asociado y su correo quedara libre para un nuevo registro. ¿Deseas continuar?');" class="shrink-0">
                             <input type="hidden" name="action" value="delete">
                             <button
                                 type="submit"
-                                class="inline-flex w-full items-center justify-center rounded-xl bg-red-600 px-5 py-3 text-sm font-bold text-white shadow-lg shadow-red-100 transition hover:bg-red-700 sm:w-auto"
+                                class="inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-red-600 px-5 py-4 text-sm font-bold text-white shadow-lg shadow-red-200 transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-60"
                                 <?php echo ($editId === (int)$userId || is_admin_role((string)($asociado['rol'] ?? ''))) ? 'disabled' : ''; ?>
                             >
+                                <i class="fa-solid fa-trash-can"></i>
                                 Eliminar asociado por completo
                             </button>
                         </form>
+                        <?php if ($editId === (int)$userId): ?>
+                            <p class="text-xs font-semibold text-red-700">No puedes eliminar tu propia cuenta desde esta pantalla.</p>
+                        <?php elseif (is_admin_role((string)($asociado['rol'] ?? ''))): ?>
+                            <p class="text-xs font-semibold text-red-700">La eliminacion completa desde esta vista esta reservada para usuarios con rol de asociado.</p>
+                        <?php endif; ?>
                     </div>
-                    <?php if ($editId === (int)$userId): ?>
-                        <p class="mt-3 text-xs font-semibold text-red-700">No puedes eliminar tu propia cuenta desde esta pantalla.</p>
-                    <?php elseif (is_admin_role((string)($asociado['rol'] ?? ''))): ?>
-                        <p class="mt-3 text-xs font-semibold text-red-700">La eliminacion completa desde esta vista esta reservada para usuarios con rol de asociado.</p>
-                    <?php endif; ?>
                 </div>
             </div>
             <?php endif; ?>

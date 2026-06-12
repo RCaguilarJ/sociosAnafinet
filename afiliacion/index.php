@@ -16,6 +16,8 @@ $ordenPasos = [1, 2, 4];
 $indicePaso = array_search($paso, $ordenPasos, true);
 $pasoVisual = $indicePaso === false ? 1 : $indicePaso + 1;
 $totalPasos = count($ordenPasos);
+$pageWidthClass = $paso === 4 ? 'max-w-6xl' : 'max-w-2xl';
+$cardPaddingClass = $paso === 4 ? 'p-6 md:p-10 xl:p-14' : 'p-8 md:p-12';
 ?>
 
 <!DOCTYPE html>
@@ -29,7 +31,7 @@ $totalPasos = count($ordenPasos);
 </head>
 <body class="bg-slate-100 min-h-screen">
 
-    <div class="max-w-2xl mx-auto pt-10 pb-20 px-4">
+    <div class="<?php echo $pageWidthClass; ?> mx-auto pt-10 pb-20 px-4 lg:px-6">
         <img src="<?php echo BASE_URL; ?>/logo_anafinet_favicon.png" class="h-16 mx-auto mb-8" alt="Anafinet">
 
         <div class="mb-8">
@@ -45,7 +47,7 @@ $totalPasos = count($ordenPasos);
             </div>
         </div>
 
-        <div class="bg-white rounded-[2rem] shadow-xl p-8 md:p-12 border border-gray-100">
+        <div class="bg-white rounded-[2rem] shadow-xl <?php echo $cardPaddingClass; ?> border border-gray-100">
             <?php
             switch ($paso) {
                 case 1:
