@@ -365,6 +365,9 @@ if (!function_exists('app_send_native_mail')) {
 }
 
 if (!function_exists('app_smtp_read_response')) {
+    /**
+     * @param resource $socket
+     */
     function app_smtp_read_response($socket): string
     {
         $response = '';
@@ -393,6 +396,9 @@ if (!function_exists('app_smtp_expect_code')) {
 }
 
 if (!function_exists('app_smtp_write_command')) {
+    /**
+     * @param resource $socket
+     */
     function app_smtp_write_command($socket, string $command): bool
     {
         return fwrite($socket, $command) !== false;

@@ -100,6 +100,19 @@ register_shutdown_function(function (): void {
     render_dashboard_failure_page('Se produjo un error fatal al cargar el dashboard.', $details);
 });
 
+$videos_count = 0;
+$docs_count = 0;
+$asociados_count = 0;
+$foro_count = 0;
+$dashboardStatsUnavailable = false;
+$demoMode = false;
+$userStatus = '';
+$masterAccess = false;
+$displayUserName = '';
+$membershipExpiresAt = '';
+$membershipDaysRemaining = null;
+$loginDebugMessage = '';
+
 try {
     require_once __DIR__ . '/bootstrap.php';
     require_once __DIR__ . '/role_helpers.php';
@@ -125,18 +138,10 @@ try {
         exit();
     }
 
-    $videos_count = 0;
-    $docs_count = 0;
-    $asociados_count = 0;
-    $foro_count = 0;
-    $dashboardStatsUnavailable = false;
     $demoMode = !($pdo instanceof PDO) && app_demo_mode_enabled();
     $userStatus = $_SESSION['user_estatus'] ?? '';
     $masterAccess = current_user_has_master_access($pdo ?? null, (int)($_SESSION['user_id'] ?? 0));
     $displayUserName = app_display_user_name((string)($_SESSION['user_name'] ?? ''), (string)($_SESSION['user_rol'] ?? ''));
-    $membershipExpiresAt = '';
-    $membershipDaysRemaining = null;
-    $loginDebugMessage = '';
 
     if (app_session_debug_enabled() && (string)($_GET['login_debug'] ?? '') === 'auth_ok') {
         $loginDebugMessage = 'Diagnostico login: auth.php autentico correctamente al usuario '
