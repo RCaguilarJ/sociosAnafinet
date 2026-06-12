@@ -106,6 +106,10 @@ $panelInicial = ($mensajeError !== '' || !empty($datos['referencia_pago'])) ? 'm
                                     Pagar con Clip
                                 </button>
                             </form>
+
+                            <a href="<?php echo BASE_URL; ?>/afiliacion/index.php?paso=2" class="mt-4 block text-center text-sm font-bold text-gray-500 transition-all hover:text-gray-700">
+                                Anterior
+                            </a>
                         </div>
                     </div>
                 </div>
