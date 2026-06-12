@@ -61,23 +61,49 @@ if (!function_exists('app_delete_user_completely')) {
                 app_ensure_payment_settings_schema($pdo);
             }
 
+            $dynamicDeleteStatements = [];
+            try {
+                $fkStmt = $pdo->query(
+                    "SELECT TABLE_NAME, COLUMN_NAME
+                     FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE
+                     WHERE TABLE_SCHEMA = DATABASE()
+                       AND REFERENCED_TABLE_NAME = 'usuarios'
+                       AND REFERENCED_COLUMN_NAME = 'id'
+                     ORDER BY TABLE_NAME, COLUMN_NAME"
+                );
+                $fkRows = $fkStmt ? $fkStmt->fetchAll(PDO::FETCH_ASSOC) : [];
+                foreach ($fkRows as $fkRow) {
+                    $tableName = trim((string)($fkRow['TABLE_NAME'] ?? ''));
+                    $columnName = trim((string)($fkRow['COLUMN_NAME'] ?? ''));
+                    if ($tableName === '' || $columnName === '' || $tableName === 'usuarios') {
+                        continue;
+                    }
+
+                    $dynamicDeleteStatements[] = sprintf(
+                        'DELETE FROM `%s` WHERE `%s` = ?',
+                        str_replace('`', '``', $tableName),
+                        str_replace('`', '``', $columnName)
+                    );
+                }
+            } catch (Throwable $e) {
+                error_log('Delete affiliate FK discovery failed for user ' . $userId . ': ' . $e->getMessage());
+            }
+
             $deleteStatements = [
-                'DELETE FROM app_notifications WHERE user_id = ?',
-                'DELETE FROM actividad_usuario WHERE usuario_id = ?',
-                'DELETE FROM foro_likes WHERE usuario_id = ?',
-                'DELETE FROM foro_respuestas WHERE usuario_id = ?',
                 'DELETE FROM foro_likes WHERE tema_id IN (SELECT id FROM foro_temas WHERE usuario_id = ?)',
                 'DELETE FROM foro_respuestas WHERE tema_id IN (SELECT id FROM foro_temas WHERE usuario_id = ?)',
                 'DELETE FROM foro_temas WHERE usuario_id = ?',
                 'DELETE FROM pagos_membresia WHERE user_id = ?',
             ];
 
+            $deleteStatements = array_values(array_unique(array_merge($dynamicDeleteStatements, $deleteStatements)));
+
             foreach ($deleteStatements as $sql) {
                 try {
                     $deleteStmt = $pdo->prepare($sql);
                     $deleteStmt->execute([$userId]);
                 } catch (Throwable $e) {
-                    // Some legacy installations may not have every related table yet.
+                    error_log('Delete affiliate related cleanup skipped for user ' . $userId . ' with SQL [' . $sql . ']: ' . $e->getMessage());
                 }
             }
 
@@ -99,6 +125,7 @@ if (!function_exists('app_delete_user_completely')) {
             if ($pdo->inTransaction()) {
                 $pdo->rollBack();
             }
+            error_log('Delete affiliate failed for user ' . $userId . ': ' . $e->getMessage());
             throw $e;
         }
 
@@ -141,13 +168,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $asociado) {
     if ($action === 'delete') {
         $targetRole = trim((string)($asociado['rol'] ?? ''));
         $targetStatus = trim((string)($asociado['estatus'] ?? ''));
+        $targetRoleNormalized = normalize_text_value($targetRole);
+        $targetStatusNormalized = normalize_text_value($targetStatus);
         if ($editId === (int)$userId) {
             $mensaje = 'No puedes eliminar tu propia cuenta desde esta pantalla.';
             $mensajeTipo = 'error';
         } elseif (is_admin_role($targetRole)) {
             $mensaje = 'Desde esta pantalla solo se permite eliminar asociados.';
             $mensajeTipo = 'error';
-        } elseif ($targetRole !== '' || strcasecmp($targetStatus, 'Suspendido') !== 0) {
+        } elseif ($targetRoleNormalized !== '' || $targetStatusNormalized !== 'suspendido') {
             $mensaje = 'Para eliminar al afiliado primero deja el rol vacio y cambia el estatus a Suspendido.';
             $mensajeTipo = 'error';
         } else {
@@ -360,10 +389,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $asociado) {
                 <?php
                 $deleteRoleValue = trim((string)($asociado['rol'] ?? ''));
                 $deleteStatusValue = trim((string)($asociado['estatus'] ?? ''));
+                $deleteRoleNormalized = normalize_text_value($deleteRoleValue);
+                $deleteStatusNormalized = normalize_text_value($deleteStatusValue);
                 $canDeleteAffiliate = $editId !== (int)$userId
                     && !is_admin_role($deleteRoleValue)
-                    && $deleteRoleValue === ''
-                    && strcasecmp($deleteStatusValue, 'Suspendido') === 0;
+                    && $deleteRoleNormalized === ''
+                    && $deleteStatusNormalized === 'suspendido';
                 ?>
                 <div class="overflow-hidden rounded-[1.75rem] border border-red-200 bg-gradient-to-br from-red-50 via-rose-50 to-white shadow-sm">
                     <div class="border-b border-red-100 bg-red-100/70 px-5 py-4">
