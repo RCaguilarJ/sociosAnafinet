@@ -242,17 +242,8 @@ $usuarios = $stmt->fetchAll();
                             </button>
                         </div>
 
-                        <div class="flex flex-wrap gap-2">
-                            <button type="button" data-set-amount="10.00" class="inline-flex items-center justify-center rounded-full border border-amber-200 bg-amber-50 px-4 py-2 text-xs font-bold text-amber-800 transition hover:bg-amber-100">
-                                Prueba Clip: $10.00
-                            </button>
-                            <button type="button" data-set-amount="1000.00" class="inline-flex items-center justify-center rounded-full border border-slate-200 bg-slate-50 px-4 py-2 text-xs font-bold text-slate-700 transition hover:bg-slate-100">
-                                Monto real: $1,000.00
-                            </button>
-                        </div>
-
                         <p class="text-xs text-slate-500">
-                            Usa los presets para cambiar rapido entre el monto de prueba y el monto anual real.
+                            El monto guardado se aplica al checkout de Clip, a la solicitud de afiliacion y a la confirmacion manual del pago.
                         </p>
                     </form>
                 </div>
@@ -379,21 +370,5 @@ $usuarios = $stmt->fetchAll();
         }());
     </script>
     <?php endif; ?>
-    <script>
-        (function () {
-            const amountInput = document.getElementById('membership_fee_amount');
-            if (!amountInput) {
-                return;
-            }
-
-            document.querySelectorAll('[data-set-amount]').forEach((button) => {
-                button.addEventListener('click', () => {
-                    amountInput.value = button.getAttribute('data-set-amount') || amountInput.value;
-                    amountInput.focus();
-                    amountInput.select();
-                });
-            });
-        }());
-    </script>
 </body>
 </html>

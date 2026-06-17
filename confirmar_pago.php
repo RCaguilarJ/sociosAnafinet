@@ -150,11 +150,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['reportar_transferenci
     exit();
 }
 
-$montoPagoFloat = function_exists('app_membership_fee_amount') ? app_membership_fee_amount() : 1000.00;
+$montoPagoFloat = function_exists('app_membership_fee_amount') ? app_membership_fee_amount() : 2500.00;
 $montoTotal = number_format($montoPagoFloat, 2, '.', ',');
 $conceptoPago = function_exists('app_membership_fee_label')
     ? app_membership_fee_label()
-    : 'Membresia Anafinet';
+    : 'Membresia anual Anafinet';
 $clipHabilitado = function_exists('app_clip_enabled') ? app_clip_enabled() : false;
 
 $stmtUser = $pdo->prepare(

@@ -109,7 +109,7 @@ function app_set_payment_setting(PDO $pdo, string $key, string $value): void
 
 function app_membership_fee_amount(): float
 {
-    $defaultAmount = (float)env_value('MEMBERSHIP_FEE_AMOUNT', '1000.00');
+    $defaultAmount = (float)env_value('MEMBERSHIP_FEE_AMOUNT', '2500.00');
     $configuredAmount = app_payment_setting_value('membership_fee_amount');
     if ($configuredAmount === null) {
         return $defaultAmount;
@@ -131,7 +131,7 @@ function app_membership_fee_currency(): string
 
 function app_membership_fee_label(): string
 {
-    return (string)env_value('MEMBERSHIP_FEE_LABEL', 'Membresia Anafinet');
+    return (string)env_value('MEMBERSHIP_FEE_LABEL', 'Membresia anual Anafinet');
 }
 
 function app_payment_env_has_real_value(string $value): bool
@@ -691,6 +691,7 @@ function app_send_manual_payment_received_notifications(PDO $pdo, int $userId, s
     $paymentPageUrl = $portalUrl !== '' ? $portalUrl . '/confirmar_pago.php' : '';
     $adminPageUrl = $portalUrl !== '' ? $portalUrl . '/revisar_pagos.php' : '';
     $amountLabel = app_payment_money_label(app_membership_fee_amount(), app_membership_fee_currency());
+    $conceptLabel = app_membership_fee_label();
     $reportedAtLabel = date('Y-m-d H:i:s');
     $mailOptions = app_manual_payment_mail_options();
 
@@ -698,10 +699,10 @@ function app_send_manual_payment_received_notifications(PDO $pdo, int $userId, s
         $userSubject = 'Recibimos tu comprobante de pago en Anafinet';
         $userIntroHtml = '<p style="margin:0 0 16px 0;">Hola ' . htmlspecialchars($userName, ENT_QUOTES, 'UTF-8') . '.</p>'
             . '<p style="margin:0 0 16px 0;">Recibimos correctamente tu comprobante de pago y ya quedo registrado en Anafinet.</p>'
-            . '<p style="margin:0;">Tesoreria revisara el monto, la cuenta de deposito y la evidencia adjunta. En cuanto quede aprobado, tu acceso se activara.</p>';
+            . '<p style="margin:0;">Tesoreria revisara el monto, la cuenta de deposito y la evidencia adjunta. En cuanto quede aprobado, tu acceso anual se activara.</p>';
         $userSummaryHtml = app_mail_payment_summary_rows([
             'Estatus' => 'Comprobante recibido',
-            'Concepto' => 'Afiliacion Anafinet',
+            'Concepto' => $conceptLabel,
             'Monto esperado' => $amountLabel,
             'Referencia' => $reference,
             'Revision' => 'Validacion manual por tesoreria',
@@ -721,9 +722,9 @@ function app_send_manual_payment_received_notifications(PDO $pdo, int $userId, s
         );
         $userText = "Hola {$userName}.\n\n"
             . "Recibimos correctamente tu comprobante de pago y ya quedo registrado en Anafinet.\n"
-            . "Tesoreria revisara el monto, la cuenta de deposito y la evidencia adjunta. En cuanto quede aprobado, tu acceso se activara.\n"
+            . "Tesoreria revisara el monto, la cuenta de deposito y la evidencia adjunta. En cuanto quede aprobado, tu acceso anual se activara.\n"
             . "Estatus: Comprobante recibido\n"
-            . "Concepto: Afiliacion Anafinet\n"
+            . "Concepto: {$conceptLabel}\n"
             . "Monto esperado: {$amountLabel}\n"
             . "Referencia: {$reference}\n"
             . "Revision: Validacion manual por tesoreria\n"
@@ -741,6 +742,7 @@ function app_send_manual_payment_received_notifications(PDO $pdo, int $userId, s
         $adminSummaryHtml = app_mail_payment_summary_rows([
             'Nombre' => $userName,
             'Email' => $userEmail,
+            'Concepto' => $conceptLabel,
             'Referencia' => $reference,
             'Monto esperado' => $amountLabel,
             'Fecha de registro' => $reportedAtLabel,
@@ -765,6 +767,7 @@ function app_send_manual_payment_received_notifications(PDO $pdo, int $userId, s
         $adminText = "Se registro un nuevo comprobante de pago manual para revision.\n"
             . "Nombre: {$userName}\n"
             . "Email: {$userEmail}\n"
+            . "Concepto: {$conceptLabel}\n"
             . "Referencia: {$reference}\n"
             . "Monto esperado: {$amountLabel}\n"
             . "Fecha de registro: {$reportedAtLabel}\n"
@@ -797,6 +800,7 @@ function app_send_manual_payment_approved_notification(PDO $pdo, int $userId): b
     $dashboardUrl = $portalUrl !== '' ? $portalUrl . '/dashboard.php' : '';
     $approvedAtLabel = date('Y-m-d H:i:s');
     $amountLabel = app_payment_money_label(app_membership_fee_amount(), app_membership_fee_currency());
+    $conceptLabel = app_membership_fee_label();
     $mailOptions = app_manual_payment_mail_options();
 
     $subject = 'Tu comprobante fue aprobado y tu acceso ya esta activo';
@@ -805,7 +809,7 @@ function app_send_manual_payment_approved_notification(PDO $pdo, int $userId): b
         . '<p style="margin:0;">Tu afiliacion ya esta activa y puedes entrar a tu panel para usar el portal completo.</p>';
     $summaryHtml = app_mail_payment_summary_rows([
         'Estatus' => 'Pago aprobado manualmente',
-        'Concepto' => 'Afiliacion Anafinet',
+        'Concepto' => $conceptLabel,
         'Monto validado' => $amountLabel,
         'Acceso' => 'Portal completo habilitado',
         'Fecha de aprobacion' => $approvedAtLabel,
@@ -827,7 +831,7 @@ function app_send_manual_payment_approved_notification(PDO $pdo, int $userId): b
         . "Tu comprobante fue validado correctamente por tesoreria.\n"
         . "Tu afiliacion ya esta activa y puedes entrar a tu panel para usar el portal completo.\n"
         . "Estatus: Pago aprobado manualmente\n"
-        . "Concepto: Afiliacion Anafinet\n"
+        . "Concepto: {$conceptLabel}\n"
         . "Monto validado: {$amountLabel}\n"
         . "Acceso: Portal completo habilitado\n"
         . "Fecha de aprobacion: {$approvedAtLabel}\n"
@@ -887,6 +891,8 @@ function app_send_membership_payment_notifications(PDO $pdo, string $externalRef
     $userName = trim((string)($user['nombre'] ?? 'Asociado'));
     $userEmail = trim((string)($user['email'] ?? ''));
     $adminEmail = app_payment_admin_email();
+    $conceptLabel = app_membership_fee_label();
+    $mailOptions = app_manual_payment_mail_options();
 
     if (($payment['notification_admin_sent_at'] ?? null) === null && filter_var($adminEmail, FILTER_VALIDATE_EMAIL)) {
         if ($context === 'signup') {
@@ -899,6 +905,7 @@ function app_send_membership_payment_notifications(PDO $pdo, string $externalRef
                 app_mail_payment_summary_rows([
                     'Nombre' => $userName,
                     'Email' => $userEmail,
+                    'Concepto' => $conceptLabel,
                     'Pasarela' => $providerLabel,
                     'Monto' => $amountLabel,
                     'Fecha de pago' => $paidAtLabel,
@@ -910,6 +917,7 @@ function app_send_membership_payment_notifications(PDO $pdo, string $externalRef
             $adminText = "Se confirmo un pago exitoso de afiliacion para un nuevo usuario.\n"
                 . "Nombre: {$userName}\n"
                 . "Email: {$userEmail}\n"
+                . "Concepto: {$conceptLabel}\n"
                 . "Pasarela: {$providerLabel}\n"
                 . "Monto: {$amountLabel}\n"
                 . "Fecha de pago: {$paidAtLabel}\n";
@@ -923,6 +931,7 @@ function app_send_membership_payment_notifications(PDO $pdo, string $externalRef
                 app_mail_payment_summary_rows([
                     'Nombre' => $userName,
                     'Email' => $userEmail,
+                    'Concepto' => $conceptLabel,
                     'Pasarela' => $providerLabel,
                     'Monto' => $amountLabel,
                     'Fecha de pago' => $paidAtLabel,
@@ -934,12 +943,13 @@ function app_send_membership_payment_notifications(PDO $pdo, string $externalRef
             $adminText = "Se confirmo un pago exitoso de renovacion para un usuario existente.\n"
                 . "Nombre: {$userName}\n"
                 . "Email: {$userEmail}\n"
+                . "Concepto: {$conceptLabel}\n"
                 . "Pasarela: {$providerLabel}\n"
                 . "Monto: {$amountLabel}\n"
                 . "Fecha de pago: {$paidAtLabel}\n";
         }
 
-        if (app_send_html_email($adminEmail, $adminSubject, $adminHtml, $adminText)) {
+        if (app_send_html_email($adminEmail, $adminSubject, $adminHtml, $adminText, $mailOptions)) {
             $stmt = $pdo->prepare('UPDATE pagos_membresia SET notification_admin_sent_at = NOW() WHERE external_reference = ?');
             $stmt->execute([$externalReference]);
         } else {
@@ -951,11 +961,11 @@ function app_send_membership_payment_notifications(PDO $pdo, string $externalRef
         if ($context === 'signup') {
             $userSubject = 'Tu pago y afiliacion en Anafinet fueron confirmados';
             $userIntroHtml = '<p style="margin:0 0 16px 0;">Hola ' . htmlspecialchars($userName, ENT_QUOTES, 'UTF-8') . '.</p>'
-                . '<p style="margin:0 0 16px 0;">Tu pago se confirmo correctamente y tu afiliacion a Anafinet quedo completada con exito.</p>'
-                . '<p style="margin:0;">Ya puedes entrar a tu panel y comenzar a usar los beneficios de tu membresia.</p>';
+                . '<p style="margin:0 0 16px 0;">Tu pago anual se confirmo correctamente y tu afiliacion a Anafinet quedo completada con exito.</p>'
+                . '<p style="margin:0;">Ya puedes entrar a tu panel y comenzar a usar los beneficios de tu membresia anual.</p>';
             $userSummaryHtml = app_mail_payment_summary_rows([
                 'Estatus' => 'Pago confirmado',
-                'Concepto' => 'Afiliacion Anafinet',
+                'Concepto' => $conceptLabel,
                 'Pasarela' => $providerLabel,
                 'Monto' => $amountLabel,
                 'Fecha de pago' => $paidAtLabel,
@@ -973,10 +983,10 @@ function app_send_membership_payment_notifications(PDO $pdo, string $externalRef
                 'Tu pago fue confirmado y tu afiliacion a Anafinet ya esta activa.'
             );
             $userText = "Hola {$userName}.\n\n"
-                . "Tu pago se confirmo correctamente y tu afiliacion a Anafinet quedo completada con exito.\n"
+                . "Tu pago anual se confirmo correctamente y tu afiliacion a Anafinet quedo completada con exito.\n"
                 . "Tu afiliacion ya esta activa.\n"
                 . "Estatus: Pago confirmado\n"
-                . "Concepto: Afiliacion Anafinet\n"
+                . "Concepto: {$conceptLabel}\n"
                 . "Pasarela: {$providerLabel}\n"
                 . "Monto: {$amountLabel}\n"
                 . "Fecha de pago: {$paidAtLabel}\n"
@@ -985,11 +995,11 @@ function app_send_membership_payment_notifications(PDO $pdo, string $externalRef
         } else {
             $userSubject = 'Tu renovacion en Anafinet fue exitosa';
             $userIntroHtml = '<p style="margin:0 0 16px 0;">Hola ' . htmlspecialchars($userName, ENT_QUOTES, 'UTF-8') . '.</p>'
-                . '<p style="margin:0 0 16px 0;">Tu renovacion como usuario fue confirmada exitosamente.</p>'
-                . '<p style="margin:0;">Tu acceso permanece activo y puedes seguir usando tu panel con normalidad.</p>';
+                . '<p style="margin:0 0 16px 0;">Tu renovacion anual fue confirmada exitosamente.</p>'
+                . '<p style="margin:0;">Tu acceso anual permanece activo y puedes seguir usando tu panel con normalidad.</p>';
             $userSummaryHtml = app_mail_payment_summary_rows([
                 'Estatus' => 'Renovacion confirmada',
-                'Concepto' => 'Renovacion de membresia',
+                'Concepto' => $conceptLabel,
                 'Pasarela' => $providerLabel,
                 'Monto' => $amountLabel,
                 'Fecha de pago' => $paidAtLabel,
@@ -1008,16 +1018,16 @@ function app_send_membership_payment_notifications(PDO $pdo, string $externalRef
                 'Tu renovacion en Anafinet fue confirmada exitosamente.'
             );
             $userText = "Hola {$userName}.\n\n"
-                . "Tu renovacion como usuario fue confirmada exitosamente.\n"
+                . "Tu renovacion anual fue confirmada exitosamente.\n"
                 . "Estatus: Renovacion confirmada\n"
-                . "Concepto: Renovacion de membresia\n"
+                . "Concepto: {$conceptLabel}\n"
                 . "Pasarela: {$providerLabel}\n"
                 . "Monto: {$amountLabel}\n"
                 . "Fecha de pago: {$paidAtLabel}\n"
                 . ($dashboardUrl !== '' ? "Panel: {$dashboardUrl}\n" : '');
         }
 
-        if (app_send_html_email($userEmail, $userSubject, $userHtml, $userText)) {
+        if (app_send_html_email($userEmail, $userSubject, $userHtml, $userText, $mailOptions)) {
             $stmt = $pdo->prepare('UPDATE pagos_membresia SET notification_user_sent_at = NOW() WHERE external_reference = ?');
             $stmt->execute([$externalReference]);
         } else {
