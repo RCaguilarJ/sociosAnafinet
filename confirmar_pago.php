@@ -123,7 +123,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && $isClipReturn) {
         $paymentStatus = (string)($syncedPayment['payment_status'] ?? '');
 
         if ($paymentStatus === 'approved') {
-            $_SESSION['payment_flash_message'] = 'Tu renovacion fue confirmada exitosamente. Tambien recibiras un correo con la confirmacion de tu pago.';
+            $_SESSION['payment_flash_message'] = 'Tu pago en Clip fue confirmado exitosamente. Tambien recibiras el correo de activacion de acceso al foro.';
             $_SESSION['payment_flash_type'] = 'success';
         } elseif ($paymentStatus === 'processing' || $paymentStatus === 'checkout_created') {
             $_SESSION['payment_flash_message'] = 'Tu pago en Clip esta en proceso. Te enviaremos un correo con la confirmacion y podras revisar nuevamente en unos minutos.';

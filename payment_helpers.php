@@ -779,69 +779,114 @@ function app_send_manual_payment_received_notifications(PDO $pdo, int $userId, s
     }
 }
 
-function app_send_manual_payment_approved_notification(PDO $pdo, int $userId): bool
+function app_send_membership_access_activated_email(PDO $pdo, int $userId, string $source = 'manual'): bool
 {
     $user = app_fetch_membership_user($pdo, $userId);
     if (!is_array($user)) {
         app_mail_set_last_error('No se encontro el usuario para enviar la confirmacion de acceso.');
-        error_log('Manual payment approved notification skipped: user not found for ID ' . $userId);
+        error_log('Membership access notification skipped: user not found for ID ' . $userId);
         return false;
     }
 
     $userEmail = trim((string)($user['email'] ?? ''));
     if (!filter_var($userEmail, FILTER_VALIDATE_EMAIL)) {
         app_mail_set_last_error('El usuario no tiene un email valido para recibir la confirmacion de acceso.');
-        error_log('Manual payment approved notification skipped: invalid email for user ' . $userId . ' (' . $userEmail . ')');
+        error_log('Membership access notification skipped: invalid email for user ' . $userId . ' (' . $userEmail . ')');
         return false;
     }
 
     $userName = trim((string)($user['nombre'] ?? 'Asociado'));
     $portalUrl = app_public_base_url();
+    $forumUrl = $portalUrl !== '' ? $portalUrl . '/foro.php' : '';
     $dashboardUrl = $portalUrl !== '' ? $portalUrl . '/dashboard.php' : '';
-    $approvedAtLabel = date('Y-m-d H:i:s');
-    $amountLabel = app_payment_money_label(app_membership_fee_amount(), app_membership_fee_currency());
-    $conceptLabel = app_membership_fee_label();
+    $buttonUrl = $forumUrl !== '' ? $forumUrl : $dashboardUrl;
     $mailOptions = app_manual_payment_mail_options();
+    $normalizedSource = strtolower(trim($source));
+    $approvalLine = $normalizedSource === 'clip'
+        ? 'Te informamos que tu pago ha sido validado correctamente por nuestro equipo de finanzas.'
+        : 'Te informamos que tu comprobante de pago ha sido validado correctamente por nuestro equipo de finanzas.';
 
-    $subject = 'Tu comprobante fue aprobado y tu acceso ya esta activo';
-    $introHtml = '<p style="margin:0 0 16px 0;">Hola ' . htmlspecialchars($userName, ENT_QUOTES, 'UTF-8') . '.</p>'
-        . '<p style="margin:0 0 16px 0;">Tu comprobante fue validado correctamente por tesoreria.</p>'
-        . '<p style="margin:0;">Tu afiliacion ya esta activa y puedes entrar a tu panel para usar el portal completo.</p>';
-    $summaryHtml = app_mail_payment_summary_rows([
-        'Estatus' => 'Pago aprobado manualmente',
-        'Concepto' => $conceptLabel,
-        'Monto validado' => $amountLabel,
-        'Acceso' => 'Portal completo habilitado',
-        'Fecha de aprobacion' => $approvedAtLabel,
-    ]);
-    $buttonHtml = app_mail_button($dashboardUrl, 'Entrar a mi panel');
-    $footerHtml = $dashboardUrl !== ''
-        ? '<p style="margin:0;">Si el boton no funciona, copia y pega este enlace en tu navegador:<br><a href="' . htmlspecialchars($dashboardUrl, ENT_QUOTES, 'UTF-8') . '" style="color:#2563EB;">' . htmlspecialchars($dashboardUrl, ENT_QUOTES, 'UTF-8') . '</a></p>'
-        : '';
+    $subject = 'Pago verificado: tu cuenta de acceso al foro esta activa';
+    $introHtml = '<p>Hola <strong>' . htmlspecialchars($userName, ENT_QUOTES, 'UTF-8') . '</strong>,</p>'
+        . '<p>' . htmlspecialchars($approvalLine, ENT_QUOTES, 'UTF-8') . '</p>'
+        . '<p>A partir de este momento, tu membresia se encuentra <strong>Activa</strong>. Ya puedes ingresar a todas las salas de discusion y compartir con la comunidad.</p>';
+    $buttonHtml = app_mail_button($buttonUrl, 'Disfrutar del Foro Fiscal');
+    $footerHtml = 'Si tienes inconvenientes para iniciar sesion, responde directamente a este correo.';
     $html = app_mail_wrap_layout(
-        'Pago aprobado',
-        'Tu afiliacion ya esta activa',
+        'Pago verificado',
+        'Tu pago ha sido aprobado',
         $introHtml,
-        $summaryHtml,
+        '',
         $buttonHtml,
         $footerHtml,
-        'Tu comprobante fue aprobado y tu acceso al portal ya esta activo.'
+        'Tu cuenta de acceso al foro ya esta activa.'
     );
     $text = "Hola {$userName}.\n\n"
-        . "Tu comprobante fue validado correctamente por tesoreria.\n"
-        . "Tu afiliacion ya esta activa y puedes entrar a tu panel para usar el portal completo.\n"
-        . "Estatus: Pago aprobado manualmente\n"
-        . "Concepto: {$conceptLabel}\n"
-        . "Monto validado: {$amountLabel}\n"
-        . "Acceso: Portal completo habilitado\n"
-        . "Fecha de aprobacion: {$approvedAtLabel}\n"
-        . ($dashboardUrl !== '' ? "Panel: {$dashboardUrl}\n" : '');
+        . $approvalLine . "\n\n"
+        . "A partir de este momento, tu membresia se encuentra activa. Ya puedes ingresar a todas las salas de discusion y compartir con la comunidad.\n"
+        . ($buttonUrl !== '' ? "Acceso: {$buttonUrl}\n\n" : "\n")
+        . "Si tienes inconvenientes para iniciar sesion, responde directamente a este correo.\n";
+
     $sent = app_send_html_email($userEmail, $subject, $html, $text, $mailOptions);
     if (!$sent) {
-        error_log('Manual payment approved notification failed for user ' . $userId . ' (' . $userEmail . ')');
+        error_log('Membership access notification failed for user ' . $userId . ' (' . $userEmail . ') source=' . $normalizedSource);
     }
 
     return $sent;
+}
+
+function app_send_clip_payment_admin_notification(
+    string $adminEmail,
+    string $userName,
+    string $userEmail,
+    string $conceptLabel,
+    string $amountLabel,
+    string $paidAtLabel,
+    string $adminPageUrl,
+    array $mailOptions
+): bool {
+    $adminSubject = 'Pago con Clip confirmado: ' . $userName;
+    $adminIntroHtml = '<p style="margin:0 0 16px 0;">Se confirmo automaticamente un pago exitoso realizado por Clip.</p>'
+        . '<p style="margin:0;">La afiliacion ya fue activada para el usuario y el acceso al foro quedo habilitado sin revision manual.</p>';
+    $adminSummaryHtml = app_mail_payment_summary_rows([
+        'Nombre' => $userName,
+        'Email' => $userEmail,
+        'Concepto' => $conceptLabel,
+        'Pasarela' => 'Clip',
+        'Monto' => $amountLabel,
+        'Fecha de pago' => $paidAtLabel,
+        'Acceso' => 'Foro activo',
+    ]);
+    $adminButtonHtml = app_mail_button($adminPageUrl, 'Revisar pago en el panel');
+    $adminFooterHtml = $adminPageUrl !== ''
+        ? '<p style="margin:0;">Panel administrativo:<br><a href="' . htmlspecialchars($adminPageUrl, ENT_QUOTES, 'UTF-8') . '" style="color:#2563EB;">' . htmlspecialchars($adminPageUrl, ENT_QUOTES, 'UTF-8') . '</a></p>'
+        : '';
+    $adminHtml = app_mail_wrap_layout(
+        'Pago confirmado',
+        'Pago validado automaticamente por Clip',
+        $adminIntroHtml,
+        $adminSummaryHtml,
+        $adminButtonHtml,
+        $adminFooterHtml,
+        'Clip confirmo el pago y la cuenta ya fue activada automaticamente.'
+    );
+    $adminText = "Se confirmo automaticamente un pago exitoso realizado por Clip.\n"
+        . "La afiliacion ya fue activada para el usuario y el acceso al foro quedo habilitado sin revision manual.\n"
+        . "Nombre: {$userName}\n"
+        . "Email: {$userEmail}\n"
+        . "Concepto: {$conceptLabel}\n"
+        . "Pasarela: Clip\n"
+        . "Monto: {$amountLabel}\n"
+        . "Fecha de pago: {$paidAtLabel}\n"
+        . "Acceso: Foro activo\n"
+        . ($adminPageUrl !== '' ? "Panel: {$adminPageUrl}\n" : '');
+
+    return app_send_html_email($adminEmail, $adminSubject, $adminHtml, $adminText, $mailOptions);
+}
+
+function app_send_manual_payment_approved_notification(PDO $pdo, int $userId): bool
+{
+    return app_send_membership_access_activated_email($pdo, $userId, 'manual');
 }
 
 function app_send_manual_payment_activation_notification_if_needed(PDO $pdo, int $userId, string $previousStatus, string $newStatus): bool
@@ -879,7 +924,8 @@ function app_send_membership_payment_notifications(PDO $pdo, string $externalRef
         $stmt->execute([$context, $externalReference]);
     }
 
-    $providerLabel = app_payment_provider_label((string)($payment['provider'] ?? ''));
+    $provider = strtolower(trim((string)($payment['provider'] ?? '')));
+    $providerLabel = app_payment_provider_label($provider);
     $amountLabel = app_payment_money_label(
         (float)($payment['amount'] ?? app_membership_fee_amount()),
         (string)($payment['currency'] ?? app_membership_fee_currency())
@@ -887,6 +933,7 @@ function app_send_membership_payment_notifications(PDO $pdo, string $externalRef
     $paidAt = (string)($payment['paid_at'] ?? '');
     $paidAtLabel = $paidAt !== '' ? $paidAt : date('Y-m-d H:i:s');
     $portalUrl = app_public_base_url();
+    $adminPageUrl = $portalUrl !== '' ? $portalUrl . '/revisar_pagos.php' : '';
     $dashboardUrl = $portalUrl !== '' ? $portalUrl . '/dashboard.php' : '';
     $userName = trim((string)($user['nombre'] ?? 'Asociado'));
     $userEmail = trim((string)($user['email'] ?? ''));
@@ -895,7 +942,19 @@ function app_send_membership_payment_notifications(PDO $pdo, string $externalRef
     $mailOptions = app_manual_payment_mail_options();
 
     if (($payment['notification_admin_sent_at'] ?? null) === null && filter_var($adminEmail, FILTER_VALIDATE_EMAIL)) {
-        if ($context === 'signup') {
+        $sentAdmin = false;
+        if ($provider === 'clip') {
+            $sentAdmin = app_send_clip_payment_admin_notification(
+                $adminEmail,
+                $userName,
+                $userEmail,
+                $conceptLabel,
+                $amountLabel,
+                $paidAtLabel,
+                $adminPageUrl,
+                $mailOptions
+            );
+        } elseif ($context === 'signup') {
             $adminSubject = 'Nuevo usuario con afiliacion pagada: ' . $userName;
             $adminHtml = app_mail_wrap_layout(
                 'Pago confirmado',
@@ -921,6 +980,7 @@ function app_send_membership_payment_notifications(PDO $pdo, string $externalRef
                 . "Pasarela: {$providerLabel}\n"
                 . "Monto: {$amountLabel}\n"
                 . "Fecha de pago: {$paidAtLabel}\n";
+            $sentAdmin = app_send_html_email($adminEmail, $adminSubject, $adminHtml, $adminText, $mailOptions);
         } else {
             $adminSubject = 'Renovacion pagada correctamente: ' . $userName;
             $adminHtml = app_mail_wrap_layout(
@@ -947,9 +1007,10 @@ function app_send_membership_payment_notifications(PDO $pdo, string $externalRef
                 . "Pasarela: {$providerLabel}\n"
                 . "Monto: {$amountLabel}\n"
                 . "Fecha de pago: {$paidAtLabel}\n";
+            $sentAdmin = app_send_html_email($adminEmail, $adminSubject, $adminHtml, $adminText, $mailOptions);
         }
 
-        if (app_send_html_email($adminEmail, $adminSubject, $adminHtml, $adminText, $mailOptions)) {
+        if ($sentAdmin ?? false) {
             $stmt = $pdo->prepare('UPDATE pagos_membresia SET notification_admin_sent_at = NOW() WHERE external_reference = ?');
             $stmt->execute([$externalReference]);
         } else {
@@ -958,7 +1019,10 @@ function app_send_membership_payment_notifications(PDO $pdo, string $externalRef
     }
 
     if (($payment['notification_user_sent_at'] ?? null) === null && filter_var($userEmail, FILTER_VALIDATE_EMAIL)) {
-        if ($context === 'signup') {
+        $sent = false;
+        if ($provider === 'clip') {
+            $sent = app_send_membership_access_activated_email($pdo, $userId, 'clip');
+        } elseif ($context === 'signup') {
             $userSubject = 'Tu pago y afiliacion en Anafinet fueron confirmados';
             $userIntroHtml = '<p style="margin:0 0 16px 0;">Hola ' . htmlspecialchars($userName, ENT_QUOTES, 'UTF-8') . '.</p>'
                 . '<p style="margin:0 0 16px 0;">Tu pago anual se confirmo correctamente y tu afiliacion a Anafinet quedo completada con exito.</p>'
@@ -992,6 +1056,7 @@ function app_send_membership_payment_notifications(PDO $pdo, string $externalRef
                 . "Fecha de pago: {$paidAtLabel}\n"
                 . "Te damos la bienvenida a la afiliacion.\n"
                 . ($dashboardUrl !== '' ? "Panel: {$dashboardUrl}\n" : '');
+            $sent = app_send_html_email($userEmail, $userSubject, $userHtml, $userText, $mailOptions);
         } else {
             $userSubject = 'Tu renovacion en Anafinet fue exitosa';
             $userIntroHtml = '<p style="margin:0 0 16px 0;">Hola ' . htmlspecialchars($userName, ENT_QUOTES, 'UTF-8') . '.</p>'
@@ -1025,9 +1090,10 @@ function app_send_membership_payment_notifications(PDO $pdo, string $externalRef
                 . "Monto: {$amountLabel}\n"
                 . "Fecha de pago: {$paidAtLabel}\n"
                 . ($dashboardUrl !== '' ? "Panel: {$dashboardUrl}\n" : '');
+            $sent = app_send_html_email($userEmail, $userSubject, $userHtml, $userText, $mailOptions);
         }
 
-        if (app_send_html_email($userEmail, $userSubject, $userHtml, $userText, $mailOptions)) {
+        if ($sent ?? false) {
             $stmt = $pdo->prepare('UPDATE pagos_membresia SET notification_user_sent_at = NOW() WHERE external_reference = ?');
             $stmt->execute([$externalReference]);
         } else {

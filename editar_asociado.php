@@ -217,36 +217,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $asociado) {
 
         // Si cambia de inactivo/procesando a un estado activo, mandamos el correo corporativo[cite: 4]
         if ($activatedByStatusChange) {
-
-            // Contenido dinámico del correo usando tus estilos en mail_helpers[cite: 3]
-            $introActivacion = "<p>Hola <strong>" . app_mail_html_escape($nombre) . "</strong>,</p>"
-                             . "<p>Te informamos que tu comprobante de pago ha sido validado correctamente por nuestro equipo de finanzas.</p>"
-                             . "<p>A partir de este momento, tu membresía se encuentra **Activa**. Ya puedes ingresar a todas las salas de discusión y compartir con la comunidad.</p>";
-            
-            $buttonForo = app_mail_button(BASE_URL . '/foro.php', 'Disfrutar del Foro Fiscal');
-            
-            $htmlActivacion = app_mail_wrap_layout(
-                'Verificación Exitosa',
-                '¡Tu pago ha sido aprobado!',
-                $introActivacion,
-                '', // Sin tabla de resumen
-                $buttonForo,
-                'Si tienes inconvenientes para iniciar sesión, responde directamente a este correo.',
-                'Bienvenido al Foro Fiscal Anafinet'
-            );
-
-            // Enviamos el correo forzando que el remitente sea tesoreria@anafinet.mx[cite: 3]
-            $emailSent = app_send_html_email(
-                $email,
-                '¡Pago Verificado! Tu cuenta de acceso al foro está activa',
-                $htmlActivacion,
-                null,
-                [
-                    'from_email' => 'noreply@anafinet.mx',
-                    'from_name'  => 'Tesorería Anafinet'
-                    , 'reply_to'   => 'tesoreria@anafinet.mx'
-                ]
-            );
+            $emailSent = app_send_membership_access_activated_email($pdo, $editId, 'manual');
         }
 
         // Controladores visuales del log maestro del dashboard[cite: 4]
